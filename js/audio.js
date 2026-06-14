@@ -36,7 +36,7 @@
     coral:     { tonic: 60, bpm: 130, density: 0.6, lead: "square",   bells: false, waves: false, prog: ["I", "IV", "V", "I"] },
     kelp:      { tonic: 57, bpm: 110, density: 0.5, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"] },
     trench:    { tonic: 48, bpm: 96,  density: 0.42, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "V", "I"] },
-    sanctuary: { tonic: 64, bpm: 132, density: 0.6, lead: "square",   bells: true,  waves: false, prog: ["I", "V", "IV", "I"] },
+    sanctuary: { tonic: 67, bpm: 96,  density: 0.5, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
     arctic:    { tonic: 67, bpm: 84,  density: 0.45, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
     ancient:   { tonic: 50, bpm: 104, density: 0.55, lead: "square",   bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
     // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power

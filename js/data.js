@@ -23,96 +23,55 @@
   // depth is in "meters" used by the gameplay (world pixels = meters * PXPM).
   const LOCATIONS = {
     coral: {
-      id: "coral",
-      name: "Coral Coast",
+      id: "coral", name: "Coral Coast",
       blurb: "Sun-dappled shallows bursting with colour. A gentle place to start.",
-      maxDepth: 280,
-      worldWidth: 2400,
-      topColor: "#39c4d6",
-      deepColor: "#063a6b",
-      shinyBonus: 0,
-      unlocked: true,
-      cost: 0,
+      maxDepth: 280, worldWidth: 2400, topColor: "#39c4d6", deepColor: "#063a6b",
+      shinyBonus: 0, unlocked: true, cost: 0,
       sky: { top: "#9fd8ff", bottom: "#e6f7ff" },
     },
     river: {
-      id: "river",
-      name: "River Run",
+      id: "river", name: "River Run",
       blurb: "A bright freshwater river winding between the coast and the kelp — trout, pike, catfish and more.",
-      maxDepth: 220,
-      worldWidth: 2200,
-      topColor: "#4a9ec4",
-      deepColor: "#143a2a",
-      shinyBonus: 0,
-      unlocked: false,
-      cost: 500,
+      maxDepth: 220, worldWidth: 2200, topColor: "#4a9ec4", deepColor: "#143a2a",
+      shinyBonus: 0, unlocked: false, cost: 500,
       sky: { top: "#bfe8ff", bottom: "#eafce0" },
     },
     kelp: {
-      id: "kelp",
-      name: "Kelp Forest",
+      id: "kelp", name: "Kelp Forest",
       blurb: "Towering green columns hide clever, slippery creatures.",
-      maxDepth: 520,
-      worldWidth: 2600,
-      topColor: "#2f9e8f",
-      deepColor: "#04332f",
-      shinyBonus: 0,
-      unlocked: false,
-      cost: 1200,
+      maxDepth: 520, worldWidth: 2600, topColor: "#2f9e8f", deepColor: "#04332f",
+      shinyBonus: 0, unlocked: false, cost: 1200,
       sky: { top: "#9fb6b0", bottom: "#d6e6dc" },
     },
-    trench: {
-      id: "trench",
-      name: "Sunken Trench",
-      blurb: "A crushing abyss. The rarest monsters lurk in the dark below.",
-      maxDepth: 1200,
-      worldWidth: 2600,
-      topColor: "#13496e",
-      deepColor: "#01040c",
-      shinyBonus: 0,
-      unlocked: false,
-      cost: 6000,
-      sky: { top: "#86b4d4", bottom: "#cfe8f2" },
-    },
-    sanctuary: {
-      id: "sanctuary",
-      name: "Starlight Sanctuary",
-      blurb: "A shimmering, otherworldly reef where the water glitters with stars. Shinies thrive here.",
-      maxDepth: 900,
-      worldWidth: 2600,
-      topColor: "#5a3ea8",
-      deepColor: "#0a0226",
-      shinyBonus: 0.04, // elevated shiny odds (the true shiny haven comes post-Kraken)
-      starfield: true,
-      unlocked: false,
-      cost: 18000,
-      sky: { top: "#160b32", bottom: "#3a2a6a", night: true },
-    },
     arctic: {
-      id: "arctic",
-      name: "Arctic Shelf",
+      id: "arctic", name: "Arctic Shelf",
       blurb: "Frigid water beneath the ice. Belugas, narwhals and pale giants drift through the cold.",
-      maxDepth: 700,
-      worldWidth: 2600,
-      topColor: "#6fb0d0",
-      deepColor: "#08243a",
-      shinyBonus: 0,
-      unlocked: false,
-      cost: 9000,
+      maxDepth: 700, worldWidth: 2600, topColor: "#6fb0d0", deepColor: "#08243a",
+      shinyBonus: 0, unlocked: false, cost: 4000,
       sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
     },
     ancient: {
-      id: "ancient",
-      name: "Fossil Abyss",
+      id: "ancient", name: "Fossil Abyss",
       blurb: "A primordial sea sealed in the deep, where prehistoric monsters never went extinct.",
-      maxDepth: 1000,
-      worldWidth: 2600,
-      topColor: "#5e7050",
-      deepColor: "#160f04",
-      shinyBonus: 0,
-      unlocked: false,
-      cost: 25000,
+      maxDepth: 1000, worldWidth: 2600, topColor: "#5e7050", deepColor: "#160f04",
+      shinyBonus: 0, unlocked: false, cost: 9000,
       sky: { top: "#cdbb8a", bottom: "#ece0c0" },
+    },
+    trench: {
+      id: "trench", name: "Sunken Trench",
+      blurb: "The deepest, final frontier — a crushing abyss where the Kraken itself waits.",
+      maxDepth: 1400, worldWidth: 2600, topColor: "#13496e", deepColor: "#01040c",
+      shinyBonus: 0, unlocked: false, cost: 20000,
+      requireAreas: ["river", "kelp", "arctic", "ancient"], // always the last to unlock
+      sky: { top: "#86b4d4", bottom: "#cfe8f2" },
+    },
+    sanctuary: {
+      id: "sanctuary", name: "Starlight Sanctuary",
+      blurb: "A post-game paradise where EVERY creature in the sea gathers — and shinies bloom like stars.",
+      maxDepth: 900, worldWidth: 2600, topColor: "#5a3ea8", deepColor: "#0a0226",
+      shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 50000,
+      requireBosses: true, // only buyable once the Kraken & blobfish are both caught
+      sky: { top: "#160b32", bottom: "#3a2a6a", night: true },
     },
   };
 
@@ -200,7 +159,7 @@
     { id: "perch",      name: "Perch",         area: "river", rarity: "common",   size: 1, value: 30,  minDepth: 10,  color: "#5a7a3a", shape: "fish" },
     { id: "salmon",     name: "Salmon",        area: "river", rarity: "uncommon", size: 2, value: 90,  minDepth: 20,  color: "#e07a6a", shape: "fish" },
     { id: "catfish",    name: "Catfish",       area: "river", rarity: "uncommon", size: 2, value: 110, minDepth: 40,  color: "#6a5a4a", shape: "fish" },
-    { id: "pike",       name: "Pike",          area: "river", rarity: "rare",     size: 3, value: 260, minDepth: 60,  color: "#4a6a4a", shape: "fish" },
+    { id: "pike",       name: "Pike",          area: "river", rarity: "rare",     size: 3, value: 260, minDepth: 60,  color: "#4a6a4a", shape: "longfish" },
     { id: "rivereel",   name: "River Eel",     area: "river", rarity: "rare",     size: 2, value: 300, minDepth: 80,  color: "#5c6a3a", shape: "eel" },
     { id: "sturgeon",   name: "Sturgeon",      area: "river", rarity: "epic",     size: 5, value: 900, minDepth: 100, color: "#7a8a6a", shape: "fish" },
 
@@ -265,7 +224,7 @@
     { id: "arcticcod",  name: "Arctic Cod",   area: "arctic", rarity: "common",   size: 1, value: 50,   minDepth: 0,   color: "#9fb6c4", shape: "longfish" },
     { id: "capelin",    name: "Capelin",      area: "arctic", rarity: "common",   size: 1, value: 60,   minDepth: 20,  color: "#bcc9d2", shape: "longfish" },
     { id: "arcticchar", name: "Arctic Char",  area: "arctic", rarity: "uncommon", size: 1, value: 150,  minDepth: 40,  color: "#e07a8a", shape: "fish" },
-    { id: "halibut",    name: "Halibut",      area: "arctic", rarity: "uncommon", size: 3, value: 260,  minDepth: 120, color: "#5a6a78", shape: "ray" },
+    { id: "halibut",    name: "Halibut",      area: "arctic", rarity: "uncommon", size: 3, value: 260,  minDepth: 120, color: "#5a6a78", shape: "flatfish" },
     { id: "wolffish",   name: "Wolffish",     area: "arctic", rarity: "rare",     size: 2, value: 380,  minDepth: 180, color: "#6a7080", shape: "eel" },
     { id: "beluga",     name: "Beluga",       area: "arctic", rarity: "rare",     size: 6, value: 900,  minDepth: 150, color: "#eef4f8", shape: "whale" },
     { id: "narwhal",    name: "Narwhal",      area: "arctic", rarity: "epic",     size: 6, value: 1700, minDepth: 250, color: "#bcd0dc", shape: "narwhal" },
@@ -305,10 +264,9 @@
     "reefshark", "sandtiger",            // Coral Coast
     "pike", "sturgeon",                  // River Run
     "giantsquid", "sunfish",             // Kelp Forest
-    "anglerfish", "frilledshark", "greatwhite", // Sunken Trench
-    "prismtang", "galaxywhale",          // Starlight Sanctuary
     "greenlandshark", "narwhal",         // Arctic Shelf
     "megalodon", "mosasaur",             // Fossil Abyss
+    "anglerfish", "frilledshark", "greatwhite", // Sunken Trench (final)
   ];
 
   // Build a quick lookup

@@ -286,6 +286,15 @@
       ".bBBLLLLBBb.",
       "..AAA.AAA...",
     ],
+    flatfish: [
+      "....E.E.......",
+      "..bBBBBBBBBBb.",
+      "fbBBBBBBBBBBBBb",
+      "fBBLLLLLLLLLLBM",
+      "fbBBBBBBBBBBBBb",
+      "..bBBBBBBBBBb.",
+      "....FF..FF....",
+    ],
     tang: [
       ".....FFF.....",
       "...FFBBBFF...",
@@ -502,7 +511,7 @@
     angler: "angler", lantern: "lantern", kraken: "kraken", blob: "blob",
     crab: "crab", lobster: "lobster", starfish: "starfish", urchin: "urchin", bug: "bug",
     narwhal: "narwhal", coelacanth: "coelacanth", mosasaur: "mosasaur", armored: "armored",
-    trilobite: "trilobite", ammonite: "ammonite", tang: "tang",
+    trilobite: "trilobite", ammonite: "ammonite", tang: "tang", flatfish: "flatfish",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 

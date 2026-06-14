@@ -142,8 +142,9 @@
   function spawnCreature(initial) {
     var loc = D.LOCATIONS[run.area];
     if (run.creatures.length > 7) return;
+    var allContent = loc.allContent;
     var pool = D.CREATURES.map(function (id) { return D.FISH_BY_ID[id]; })
-      .filter(function (c) { return c.area === run.area; });
+      .filter(function (c) { return allContent || c.area === run.area; });
     if (!pool.length) return;
     // rarity-weighted pick (commoner creatures appear more)
     var total = 0, weights = pool.map(function (c) { var w = D.RARITY[c.rarity].weight; total += w; return w; });
@@ -317,9 +318,10 @@
 
   function eligibleFish(areaId, rarity, depthM) {
     var out = [];
+    var allContent = D.LOCATIONS[areaId] && D.LOCATIONS[areaId].allContent; // Sanctuary: everything
     for (var i = 0; i < D.FISH.length; i++) {
       var f = D.FISH[i];
-      if (f.area !== areaId) continue;
+      if (!allContent && f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
       if (f.isKraken || f.isBlob || f.creature || f.bird) continue;
       if (depthM < f.minDepth) continue;
@@ -424,10 +426,19 @@
     for (var i = 0; i < D.REQUIRED_FISH.length; i++) if (state.discovered[D.REQUIRED_FISH[i]]) n++;
     return n;
   }
-  // TRUE 100% — every catalogued fish AND every secret (later: birds + creatures).
+  // TRUE 100% — every catalogued fish/creature/bird + every secret across the
+  // reachable world (the post-game Sanctuary is excluded so the Kraken stays
+  // obtainable before it's unlocked).
   function trueComplete() {
-    for (var i = 0; i < D.COMPLETION_FISH.length; i++) if (!state.discovered[D.COMPLETION_FISH[i]]) return false;
-    for (var j = 0; j < D.FISH.length; j++) { var f = D.FISH[j]; if (f.secret && !state.discovered[f.id]) return false; }
+    for (var i = 0; i < D.COMPLETION_FISH.length; i++) {
+      var cf = D.FISH_BY_ID[D.COMPLETION_FISH[i]];
+      if (cf.area === "sanctuary") continue;
+      if (!state.discovered[cf.id]) return false;
+    }
+    for (var j = 0; j < D.FISH.length; j++) {
+      var f = D.FISH[j];
+      if (f.secret && f.area !== "sanctuary" && !state.discovered[f.id]) return false;
+    }
     return true;
   }
   // What (if anything) should rise in the Trench right now? Blobfish first —
@@ -802,7 +813,8 @@
 
   function spawnAmbientBird() {
     if (!run) return;
-    var pool = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return d.area === run.area; });
+    var allContent = D.LOCATIONS[run.area].allContent;
+    var pool = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return allContent || d.area === run.area; });
     if (!pool.length) return;
     var ambient = 0;
     for (var i = 0; i < run.birds.length; i++) if (run.birds[i].mode === "ambient") ambient++;
@@ -843,7 +855,7 @@
   function useSeed(birdId) {
     if (!run || run.diver.y > 26) { toast("Scatter seed at the surface!", "bad"); return; }
     var def = D.FISH_BY_ID[birdId];
-    if (def.area !== run.area) { toast(def.name + " doesn't visit here.", "bad"); return; }
+    if (def.area !== run.area && !D.LOCATIONS[run.area].allContent) { toast(def.name + " doesn't visit here.", "bad"); return; }
     if (!(state.seeds[birdId] > 0)) { toast("No " + def.name + " seed — buy some at the Seed Shop.", "bad"); return; }
     state.seeds[birdId]--; saveGame();
     run.birds.push({
@@ -1792,12 +1804,14 @@
 
     if (!state.krakenCaught) {
       if (trueComplete()) {
-        html += '<div class="kraken-alert">🦑 100% complete!! The <b>TRUE Kraken</b> now stirs in the deepest <b>Sunken Trench</b>. Go and face it.</div>';
+        html += '<div class="kraken-alert">🦑 100% complete!! The <b>TRUE Kraken</b> now stirs in the deepest <b>Sunken Trench</b>. Go and face it with harpoons.</div>';
       } else if (requiredMet() && !state.blobfishCaught) {
         html += '<div class="kraken-alert">🦑 You\'ve caught every <b>required</b> fish... surely the Kraken awaits in the deep <b>Sunken Trench</b>? Dive and find out.</div>';
       } else if (state.blobfishCaught) {
         html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything</b> caught. You\'re at ' + Object.keys(state.discovered).length + '... keep going!</div>';
       }
+    } else if (state.blobfishCaught && !state.areas.sanctuary) {
+      html += '<div class="kraken-alert">✦ Every boss is beaten! The <b>Starlight Sanctuary</b> can now be unlocked ($50k) — <b>every</b> creature gathers there, with sky-high shiny odds. 🗺️</div>';
     }
     html += '</div>';
     ov.innerHTML = html;
@@ -2263,6 +2277,15 @@
     for (var id in D.LOCATIONS) {
       var loc = D.LOCATIONS[id];
       var unlocked = state.areas[id];
+      // gating: Trench needs the earlier areas first; Sanctuary needs both bosses
+      var gate = null;
+      if (!unlocked && loc.requireAreas) {
+        var missing = loc.requireAreas.filter(function (a) { return !state.areas[a]; });
+        if (missing.length) gate = "Unlock the earlier dive sites first";
+      }
+      if (!unlocked && loc.requireBosses && !(state.krakenCaught && state.blobfishCaught)) {
+        gate = "🔒 Defeat the Kraken (and the blobfish) to unlock";
+      }
       html += '<div class="area-card ' + (unlocked ? '' : 'locked') + (id === "sanctuary" ? ' sanctuary' : '') + '">'
         + '<div class="area-info"><b>' + loc.name + '</b>'
         + '<p>' + loc.blurb + '</p>'
@@ -2270,7 +2293,9 @@
         + '<div class="area-act">'
         + (unlocked
             ? '<button data-go="' + id + '">Dive Here</button>'
-            : '<button data-unlock="' + id + '" ' + (state.money < loc.cost ? 'disabled' : '') + '>Unlock $' + fmt(loc.cost) + '</button>')
+            : gate
+              ? '<span class="pv-locked">' + gate + '</span>'
+              : '<button data-unlock="' + id + '" ' + (state.money < loc.cost ? 'disabled' : '') + '>Unlock $' + fmt(loc.cost) + '</button>')
         + '</div></div>';
     }
     html += '</div></div>';
@@ -2484,7 +2509,8 @@
 
   // in-water quick picker: scatter a seed for one of this area's birds
   function showSeedPicker() {
-    var birds = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return d.area === run.area; });
+    var allC = D.LOCATIONS[run.area].allContent;
+    var birds = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return allC || d.area === run.area; });
     var ov = document.createElement("div");
     ov.className = "overlay open"; ov.style.zIndex = 40;
     var h = '<div class="panel" style="max-width:380px"><h2>🌾 Scatter Seed</h2>'
