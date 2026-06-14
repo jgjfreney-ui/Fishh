@@ -52,6 +52,9 @@ npm run apk            # copies web assets, syncs Capacitor, builds debug APK
 
 ## Features
 
+- 🎨 **Pixel-art graphics** — hand-crafted sprites with distinct silhouettes
+  per creature, layered parallax backgrounds (coral, kelp, vents, starlight),
+  god-rays, caustics, and bioluminescent/shiny glow lighting
 - 🐟 **40+ fish** across four dive sites, each with rarity tiers
   (Common → Mythic)
 - 📏 **Fish size / inventory system** — a whale eats far more cargo space than

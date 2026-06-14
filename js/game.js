@@ -116,9 +116,50 @@
       diveDepthReached: 0,
     };
     placeWrecks(loc);
+    generateDecor(loc);
     // initial population
     for (var i = 0; i < 14; i++) spawnFish(true);
     state.stats.dives++;
+  }
+
+  // per-area decoration recipe: seabed flora/rock + a couple of background ridges
+  var DECOR = {
+    coral:     { plants: ["coral", "coral", "anemone"], plantColors: ["#ff6f91", "#ff9f43", "#5ad1c8", "#c77dff"], rock: "#3a5a6b", floor: "#2a6e7a" },
+    kelp:      { plants: ["kelp", "kelp", "coral"], plantColors: ["#3fa34d", "#5cc46a", "#2f8f6f"], rock: "#244a3a", floor: "#1c3f33" },
+    trench:    { plants: ["vent", "rock", "rock"], plantColors: ["#6b4a8f", "#8a5a32", "#3a4a55"], rock: "#1a232c", floor: "#0a1119" },
+    sanctuary: { plants: ["crystal", "crystal", "coral"], plantColors: ["#a07bff", "#7affd0", "#ff8be0", "#9fd8ff"], rock: "#2a1e55", floor: "#1a0f3a" },
+  };
+
+  function generateDecor(loc) {
+    run.decor = [];
+    run.hills = [];
+    var d = DECOR[loc.id] || DECOR.coral;
+    var floorY = loc.maxDepth * PXPM;
+    // background ridges (parallax)
+    for (var h = 0; h < 2; h++) {
+      var pts = [];
+      var layerY = floorY - 40 - h * 50;
+      for (var px = -100; px < loc.worldWidth + 100; px += 90) {
+        pts.push({ x: px, y: layerY - Math.abs(Math.sin(px * 0.013 + h * 2)) * (60 + h * 30) });
+      }
+      run.hills.push({ pts: pts, parallax: 0.45 + h * 0.18, color: h === 0 ? d.rock : mix(d.rock, "#000000", 0.4), baseY: floorY });
+    }
+    // seabed plants/rocks along the floor
+    var n = Math.round(loc.worldWidth / 70);
+    for (var i = 0; i < n; i++) {
+      var type = d.plants[(Math.random() * d.plants.length) | 0];
+      run.decor.push({
+        type: type,
+        x: Math.random() * loc.worldWidth,
+        y: floorY - 2,
+        size: 0.7 + Math.random() * 0.9,
+        sway: Math.random() * 6.28,
+        color: d.plantColors[(Math.random() * d.plantColors.length) | 0],
+      });
+    }
+    run.floorY = floorY;
+    run.floorColor = d.floor;
+    run.rockColor = d.rock;
   }
 
   function placeWrecks(loc) {
@@ -341,6 +382,7 @@
     canvas.style.width = W + "px";
     canvas.style.height = H + "px";
     ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+    ctx.imageSmoothingEnabled = false; // crisp pixel-art upscaling
   }
 
   // ---------------------------------------------------------------------
@@ -473,9 +515,9 @@
       if (ff.life <= 0) run.floaters.splice(fl, 1);
     }
 
-    // camera
-    cam.x = clamp(diver.x - W / 2, 0, Math.max(0, loc.worldWidth - W));
-    cam.y = clamp(diver.y - H / 2, 0, Math.max(0, loc.maxDepth * PXPM + 120 - H));
+    // camera (snapped to the pixel grid so sprites stay crisp)
+    cam.x = Math.round(clamp(diver.x - W / 2, 0, Math.max(0, loc.worldWidth - W)));
+    cam.y = Math.round(clamp(diver.y - H / 2, 0, Math.max(0, loc.maxDepth * PXPM + 120 - H)));
 
     updateHud();
   }
@@ -580,77 +622,229 @@
     var loc = D.LOCATIONS[run.area];
     ctx.clearRect(0, 0, W, H);
 
-    // water gradient by depth band visible
-    var grad = ctx.createLinearGradient(0, 0, 0, H);
-    var topd = depthFactor(cam.y, loc);
-    var botd = depthFactor(cam.y + H, loc);
-    grad.addColorStop(0, mix(loc.topColor, loc.deepColor, topd));
-    grad.addColorStop(1, mix(loc.topColor, loc.deepColor, botd));
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, H);
-
-    // starfield for sanctuary
-    if (loc.starfield) drawStarfield();
-
-    // surface line / boat
-    if (cam.y < 60) {
-      var sy = 16 - cam.y;
-      ctx.fillStyle = "rgba(255,255,255,0.12)";
-      ctx.fillRect(0, 0, W, Math.max(0, sy));
-      // boat
-      drawBoat(loc.worldWidth / 2 - cam.x, 14 - cam.y);
-    }
-
-    // wrecks
-    for (var i = 0; i < run.wrecks.length; i++) drawWreck(run.wrecks[i]);
-
-    // light vignette in the deep
     var darkness = depthFactor(run.diver.y, loc);
 
-    // treasures
+    // --- background, lighting & scenery ---
+    drawBackground(loc);
+    drawHills(loc);
+    drawSeabed(loc);
+    if (cam.y < 90) drawSurface(loc);
+
+    // --- scene objects ---
+    for (var i = 0; i < run.wrecks.length; i++) drawWreck(run.wrecks[i]);
     for (var t = 0; t < run.treasures.length; t++) drawTreasure(run.treasures[t]);
-
-    // fish
     for (var f = 0; f < run.fish.length; f++) drawFishEntity(run.fish[f]);
-
-    // bubbles
-    ctx.fillStyle = "rgba(255,255,255,0.35)";
-    for (var b = 0; b < run.bubbles.length; b++) {
-      var bb = run.bubbles[b];
-      ctx.beginPath(); ctx.arc(bb.x - cam.x, bb.y - cam.y, bb.r, 0, 7); ctx.fill();
-    }
-
-    // diver
+    drawBubbles();
     drawDiver();
 
-    // reel indicator
-    if (run.target && run.reel > 0.02) drawReel();
+    // --- volumetric lighting / depth darkness ---
+    drawLighting(loc, darkness);
 
-    // floaters
+    // --- UI overlays (crisp) ---
+    if (run.target && run.reel > 0.02) drawReel();
     for (var fl = 0; fl < run.floaters.length; fl++) {
       var ff = run.floaters[fl];
       ctx.globalAlpha = clamp(ff.life, 0, 1);
-      ctx.fillStyle = ff.color;
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
       ctx.font = "bold 14px 'Segoe UI', sans-serif";
       ctx.textAlign = "center";
+      ctx.fillText(ff.text, ff.x - cam.x + 1, ff.y - cam.y + 1);
+      ctx.fillStyle = ff.color;
       ctx.fillText(ff.text, ff.x - cam.x, ff.y - cam.y);
       ctx.globalAlpha = 1;
     }
+    drawFishLabels();
 
-    // darkness overlay in deep water (dive light cuts a hole)
-    if (darkness > 0.25) {
-      var dx = run.diver.x - cam.x, dy = run.diver.y - cam.y;
+    if (joy.active) drawJoystick();
+  }
+
+  // ---------------------------------------------------------------------
+  //  Background / scenery / lighting (pixel-art glow-up)
+  // ---------------------------------------------------------------------
+  function drawBackground(loc) {
+    var grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, mix(loc.topColor, loc.deepColor, depthFactor(cam.y, loc)));
+    grad.addColorStop(1, mix(loc.topColor, loc.deepColor, depthFactor(cam.y + H, loc)));
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    if (loc.starfield) drawStarfield();
+
+    // god rays from the surface (fade with depth)
+    var rayStrength = 1 - clamp(cam.y / (520), 0, 1);
+    if (rayStrength > 0.02) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      for (var i = 0; i < 6; i++) {
+        var bx = ((i * 220 + Math.sin(run.time * 0.2 + i) * 40) - cam.x * 0.3);
+        bx = ((bx % (W + 400)) + (W + 400)) % (W + 400) - 200;
+        var grd = ctx.createLinearGradient(bx, 0, bx + 60, H);
+        var a = 0.05 * rayStrength;
+        grd.addColorStop(0, "rgba(255,255,240," + a + ")");
+        grd.addColorStop(1, "rgba(255,255,240,0)");
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.moveTo(bx, 0); ctx.lineTo(bx + 70, 0);
+        ctx.lineTo(bx + 180, H); ctx.lineTo(bx + 60, H);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // drifting plankton motes
+    ctx.save();
+    ctx.fillStyle = loc.starfield ? "rgba(200,180,255,0.5)" : "rgba(220,240,255,0.35)";
+    for (var p = 0; p < 40; p++) {
+      var px = ((p * 211 - cam.x * 0.6 + run.time * 8) % W + W) % W;
+      var py = ((p * 97 + Math.sin(run.time * 0.5 + p) * 12 - cam.y * 0.6) % H + H) % H;
+      var s = p % 4 === 0 ? 2 : 1;
+      ctx.fillRect(px | 0, py | 0, s, s);
+    }
+    ctx.restore();
+  }
+
+  function drawHills(loc) {
+    for (var h = 0; h < run.hills.length; h++) {
+      var hill = run.hills[h];
+      ctx.fillStyle = hill.color;
+      ctx.beginPath();
+      ctx.moveTo(-50, H + 60);
+      for (var i = 0; i < hill.pts.length; i++) {
+        var pt = hill.pts[i];
+        // horizontal parallax only; depth (y) tracks the camera 1:1
+        ctx.lineTo(pt.x - cam.x * hill.parallax, pt.y - cam.y);
+      }
+      ctx.lineTo(W + 50, H + 60);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  function drawSeabed(loc) {
+    var fy = run.floorY - cam.y;
+    if (fy < H + 60) {
+      // floor slab
+      ctx.fillStyle = run.floorColor;
+      ctx.fillRect(0, fy, W, H - fy + 60);
+      // chunky pixel rim
+      ctx.fillStyle = mix(run.floorColor, "#ffffff", 0.12);
+      for (var rx = 0; rx < W; rx += 8) {
+        var bump = (Math.sin((rx + cam.x) * 0.05) > 0.3) ? 4 : 0;
+        ctx.fillRect(rx, fy - bump, 8, 6 + bump);
+      }
+    }
+    // plants / rocks
+    for (var i = 0; i < run.decor.length; i++) {
+      var d = run.decor[i];
+      var x = d.x - cam.x, y = d.y - cam.y;
+      if (x < -60 || x > W + 60 || y < -40 || y > H + 120) continue;
+      drawPlant(d, x, y);
+    }
+  }
+
+  function drawPlant(d, x, y) {
+    var sway = Math.sin(run.time * 1.2 + d.sway) * 4 * d.size;
+    ctx.save();
+    ctx.translate(x, y);
+    if (d.type === "kelp") {
+      ctx.fillStyle = d.color;
+      var segs = 6 + (d.size * 4 | 0);
+      for (var s = 0; s < segs; s++) {
+        var t = s / segs;
+        ctx.fillRect(Math.round(sway * t * 1.4) - 3, -s * 8 - 8, 6, 8);
+      }
+    } else if (d.type === "coral") {
+      ctx.fillStyle = d.color;
+      ctx.fillRect(-3, -10, 6, 12);
+      ctx.fillRect(-10, -16, 6, 10);
+      ctx.fillRect(5, -18, 6, 12);
+      ctx.fillRect(-2, -22, 6, 12);
+    } else if (d.type === "anemone") {
+      ctx.fillStyle = d.color;
+      for (var a = -3; a <= 3; a++) {
+        ctx.fillRect(a * 4, -8 - Math.abs(Math.sin(run.time + a + d.sway)) * 10, 3, 12);
+      }
+    } else if (d.type === "crystal") {
+      ctx.fillStyle = d.color;
+      ctx.beginPath();
+      ctx.moveTo(0, -26 * d.size); ctx.lineTo(7, -4); ctx.lineTo(-7, -4); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = mix(d.color, "#ffffff", 0.5);
+      ctx.fillRect(-2, -22 * d.size, 2, 18 * d.size);
+    } else if (d.type === "vent") {
+      ctx.fillStyle = run.rockColor;
+      ctx.fillRect(-9, -16, 18, 18);
+      ctx.fillStyle = "#3a2030";
+      ctx.fillRect(-4, -22, 8, 8);
+      // rising smoke
+      ctx.fillStyle = "rgba(120,90,110,0.35)";
+      for (var v = 0; v < 4; v++) {
+        var sy = (-20 - ((run.time * 18 + v * 22) % 80));
+        ctx.fillRect(-3 + Math.sin(run.time + v) * 3, sy, 6, 6);
+      }
+    } else { // rock
+      ctx.fillStyle = run.rockColor;
+      ctx.fillRect(-12 * d.size, -10 * d.size, 24 * d.size, 12 * d.size);
+      ctx.fillStyle = mix(run.rockColor, "#ffffff", 0.1);
+      ctx.fillRect(-12 * d.size, -10 * d.size, 24 * d.size, 3);
+    }
+    ctx.restore();
+  }
+
+  function drawSurface(loc) {
+    var sy = 14 - cam.y;
+    // bright surface band with caustic shimmer
+    var g = ctx.createLinearGradient(0, 0, 0, Math.max(8, sy + 30));
+    g.addColorStop(0, "rgba(255,255,255,0.30)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, Math.max(0, sy + 30));
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = "rgba(255,255,255,0.10)";
+    for (var cxp = 0; cxp < W; cxp += 6) {
+      var hh = 2 + Math.sin((cxp + cam.x) * 0.08 + run.time * 2) * 2;
+      ctx.fillRect(cxp, Math.max(0, sy) , 6, Math.max(1, hh));
+    }
+    ctx.restore();
+    drawBoat(loc.worldWidth / 2 - cam.x, 14 - cam.y);
+  }
+
+  function drawBubbles() {
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    for (var b = 0; b < run.bubbles.length; b++) {
+      var bb = run.bubbles[b];
+      var x = (bb.x - cam.x) | 0, y = (bb.y - cam.y) | 0, s = Math.max(1, bb.r | 0);
+      ctx.fillRect(x, y, s, s);
+    }
+  }
+
+  function drawGlow(x, y, r, color, alpha) {
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    var g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, rgba(color, alpha));
+    g.addColorStop(1, rgba(color, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawLighting(loc, darkness) {
+    var dx = run.diver.x - cam.x, dy = run.diver.y - cam.y;
+    // warm dive-light glow that grows useful as it gets darker
+    if (darkness > 0.2) {
+      drawGlow(dx, dy, 130 + lightRadius(), "#ffe7a8", Math.min(0.5, darkness * 0.5));
+    }
+    // depth darkness vignette with a clear hole around the diver
+    if (darkness > 0.22) {
       var lr = 150 + lightRadius();
-      var rg = ctx.createRadialGradient(dx, dy, lr * 0.3, dx, dy, lr);
-      var a = Math.min(0.82, (darkness - 0.25) * 1.4);
-      rg.addColorStop(0, "rgba(0,0,10,0)");
-      rg.addColorStop(1, "rgba(0,0,12," + a + ")");
+      var rg = ctx.createRadialGradient(dx, dy, lr * 0.35, dx, dy, lr * 1.15);
+      var a = Math.min(0.86, (darkness - 0.22) * 1.5);
+      rg.addColorStop(0, "rgba(0,0,8,0)");
+      rg.addColorStop(1, "rgba(0,0,10," + a + ")");
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, W, H);
     }
-
-    // touch joystick
-    if (joy.active) drawJoystick();
   }
 
   function drawJoystick() {
@@ -714,17 +908,18 @@
   }
 
   function drawTreasure(tr) {
-    var x = tr.x - cam.x, y = tr.y - cam.y + Math.sin(tr.phase) * 3;
-    ctx.save();
-    ctx.translate(x, y);
-    var glow = 0.5 + 0.5 * Math.sin(tr.phase * 2);
-    ctx.shadowColor = tr.def.color; ctx.shadowBlur = 8 + glow * 10;
+    var x = (tr.x - cam.x) | 0, y = (tr.y - cam.y + Math.sin(tr.phase) * 3) | 0;
+    var pulse = 0.5 + 0.5 * Math.sin(tr.phase * 2);
+    drawGlow(x, y, 14 + pulse * 8, tr.def.color, 0.55);
+    // chunky pixel gem
     ctx.fillStyle = tr.def.color;
-    ctx.beginPath(); ctx.arc(0, 0, 7, 0, 7); ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = "rgba(255,255,255,0.8)";
-    ctx.beginPath(); ctx.arc(-2, -2, 2, 0, 7); ctx.fill();
-    ctx.restore();
+    ctx.fillRect(x - 2, y - 6, 4, 2);
+    ctx.fillRect(x - 4, y - 4, 8, 2);
+    ctx.fillRect(x - 6, y - 2, 12, 4);
+    ctx.fillRect(x - 4, y + 2, 8, 2);
+    ctx.fillRect(x - 2, y + 4, 4, 2);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(x - 3, y - 2, 2, 2);
   }
 
   function drawReel() {
@@ -740,145 +935,64 @@
 
   function drawDiver() {
     var x = run.diver.x - cam.x, y = run.diver.y - cam.y;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(run.diver.face, 1);
-    // tank
-    ctx.fillStyle = "#2c3e50";
-    ctx.fillRect(-10, -8, 7, 16);
-    // body
-    ctx.fillStyle = "#1f6f8b";
-    ctx.beginPath(); ctx.ellipse(0, 0, 11, 9, 0, 0, 7); ctx.fill();
-    // head/mask
-    ctx.fillStyle = "#e8f6ff";
-    ctx.beginPath(); ctx.arc(8, -2, 6, 0, 7); ctx.fill();
-    ctx.fillStyle = "#0b3d5c";
-    ctx.beginPath(); ctx.arc(9, -2, 3.5, 0, 7); ctx.fill();
-    // fin
-    ctx.fillStyle = "#16505e";
-    ctx.beginPath(); ctx.moveTo(-10, -2); ctx.lineTo(-20, -8); ctx.lineTo(-16, 0); ctx.closePath(); ctx.fill();
-    ctx.restore();
-
     // catch radius ring (subtle)
     ctx.strokeStyle = "rgba(255,255,255,0.08)";
     ctx.beginPath(); ctx.arc(x, y, catchRadius(), 0, 7); ctx.stroke();
+    SPRITES.draw(ctx, "diver", x, y, { flip: run.diver.face < 0, targetH: 30 });
   }
 
-  // Fish drawing — varied by shape
+  function fishTargetH(f) { return f.isKraken ? 150 : 16 + f.size * 6; }
+
+  function fishGlow(f) {
+    if (f.isKraken) return { color: f.shiny ? "#fff2a0" : "#ff5b7f", alpha: 0.55 };
+    if (f.shiny) return { color: "#fff0a0", alpha: 0.38 };
+    var d = f.def;
+    var biolum = d.glow || d.shape === "jelly" || d.shape === "angler" || d.shape === "lantern"
+      || (d.area === "trench" && D.RARITY[d.rarity].order >= 2) || d.area === "sanctuary";
+    if (biolum) return { color: d.color, alpha: 0.26 };
+    return null;
+  }
+
+  // Fish drawing — pixel sprites with glow & sparkle
   function drawFishEntity(f) {
     var x = f.x - cam.x, y = f.y - cam.y;
-    if (x < -120 || x > W + 120 || y < -120 || y > H + 120) return;
-    var dir = f.vx >= 0 ? 1 : -1;
-    var r = 8 + f.size * 3.2;
-    var col = f.shiny ? shinyColor(f.def.color) : f.def.color;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(dir, 1);
-    if (f.shiny) { ctx.shadowColor = col; ctx.shadowBlur = 14; }
-    ctx.fillStyle = col;
-    var s = f.def.shape;
+    var th = fishTargetH(f);
+    if (x < -200 || x > W + 200 || y < -200 || y > H + 200) return;
+    var arch = SPRITES.archetypeForShape(f.def.shape);
+    var flip = f.vx < 0; // sprites face right by default
 
-    if (s === "fish" || s === "lantern" || s === "angler") {
-      ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.6, 0, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(-r - r * 0.7, -r * 0.5); ctx.lineTo(-r - r * 0.7, r * 0.5); ctx.closePath(); ctx.fill();
-      if (s === "lantern" || s === "angler") {
-        ctx.fillStyle = "#fdfd8a";
-        ctx.beginPath(); ctx.arc(r * 0.9, -r * 0.7, 3, 0, 7); ctx.fill();
+    var glow = fishGlow(f);
+    if (glow) drawGlow(x, y, th * 0.95, glow.color, glow.alpha);
+
+    SPRITES.draw(ctx, arch, x, y, {
+      color: f.def.color, accent: f.def.accent, shiny: f.shiny, flip: flip, targetH: th,
+    });
+
+    if (f.shiny) {
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      for (var s = 0; s < 3; s++) {
+        var a = run.time * 3 + s * 2.1 + f.phase;
+        if (Math.sin(a) > 0.55) {
+          ctx.fillRect((x + Math.cos(a * 1.7) * th * 0.42) | 0, (y + Math.sin(a * 1.3) * th * 0.32) | 0, 2, 2);
+        }
       }
-      eye(r * 0.5, -r * 0.15, r * 0.16);
-    } else if (s === "round") {
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.9, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(-r * 0.8, 0); ctx.lineTo(-r * 1.4, -r * 0.5); ctx.lineTo(-r * 1.4, r * 0.5); ctx.closePath(); ctx.fill();
-      eye(r * 0.4, -r * 0.1, r * 0.15);
-    } else if (s === "shark" || s === "hammer" || s === "sword") {
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 1.4, r * 0.55, 0, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(-r * 1.4, 0); ctx.lineTo(-r * 2, -r * 0.8); ctx.lineTo(-r * 1.6, 0); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(0, -r * 0.5); ctx.lineTo(r * 0.3, -r * 1.3); ctx.lineTo(r * 0.5, -r * 0.5); ctx.closePath(); ctx.fill();
-      if (s === "sword") { ctx.fillRect(r * 1.3, -2, r * 0.9, 4); }
-      if (s === "hammer") { ctx.fillRect(r * 1.2, -r * 0.7, 5, r * 1.4); }
-      eye(r * 1.0, -r * 0.15, r * 0.13);
-    } else if (s === "whale") {
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 1.7, r * 0.85, 0, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(-r * 1.7, 0); ctx.lineTo(-r * 2.4, -r); ctx.lineTo(-r * 2.4, r); ctx.closePath(); ctx.fill();
-      eye(r * 1.2, -r * 0.2, r * 0.12);
-    } else if (s === "turtle") {
-      ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.8, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = "#3a6b46"; ctx.beginPath(); ctx.ellipse(0, 0, r * 0.7, r * 0.55, 0, 0, 7); ctx.fill();
-      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(r, -r * 0.2, r * 0.3, 0, 7); ctx.fill();
-      eye(r * 1.05, -r * 0.25, r * 0.1);
-    } else if (s === "ray") {
-      ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(-r * 1.6, -r, -r * 1.8, 0); ctx.quadraticCurveTo(-r * 1.6, r, 0, 0); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(r * 0.2, 0, r * 0.9, r * 0.5, 0, 0, 7); ctx.fill();
-      ctx.fillRect(-r * 1.8, -1.5, -r, 3);
-    } else if (s === "eel") {
-      ctx.beginPath();
-      for (var i = -1; i <= 1; i += 0.1) {
-        var px = i * r * 1.8, py = Math.sin(i * 4 + f.phase) * r * 0.35;
-        if (i === -1) ctx.moveTo(px, py - 4); else ctx.lineTo(px, py - 4);
-      }
-      for (var j = 1; j >= -1; j -= 0.1) {
-        var px2 = j * r * 1.8, py2 = Math.sin(j * 4 + f.phase) * r * 0.35;
-        ctx.lineTo(px2, py2 + 4);
-      }
-      ctx.closePath(); ctx.fill();
-      eye(r * 1.5, -4, r * 0.12);
-    } else if (s === "squid" || s === "octopus") {
-      ctx.beginPath(); ctx.ellipse(0, -r * 0.3, r * 0.8, r, 0, 0, 7); ctx.fill();
-      for (var ti = -3; ti <= 3; ti++) {
-        ctx.beginPath();
-        ctx.moveTo(ti * 3, r * 0.5);
-        ctx.quadraticCurveTo(ti * 4, r * 1.3 + Math.sin(f.phase + ti) * 4, ti * 5, r * 1.7);
-        ctx.lineWidth = 3; ctx.strokeStyle = col; ctx.stroke();
-      }
-      ctx.fillStyle = "#fff"; eye(-r * 0.25, -r * 0.4, r * 0.18); eye(r * 0.25, -r * 0.4, r * 0.18);
-    } else if (s === "jelly") {
-      ctx.globalAlpha = 0.85;
-      ctx.beginPath(); ctx.arc(0, 0, r * 0.9, Math.PI, 0); ctx.fill();
-      for (var ji = -2; ji <= 2; ji++) {
-        ctx.beginPath(); ctx.moveTo(ji * 4, 0);
-        ctx.quadraticCurveTo(ji * 4 + Math.sin(f.phase + ji) * 3, r, ji * 4, r * 1.4);
-        ctx.lineWidth = 2; ctx.strokeStyle = col; ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-    } else if (s === "seahorse") {
-      ctx.beginPath(); ctx.arc(0, -r * 0.3, r * 0.5, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(0, r * 0.4, r * 0.4, r * 0.7, 0, 0, 7); ctx.fill();
-      eye(r * 0.2, -r * 0.4, r * 0.1);
-    } else if (s === "otter") {
-      ctx.beginPath(); ctx.ellipse(0, 0, r * 1.2, r * 0.6, 0, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.arc(r, -r * 0.3, r * 0.45, 0, 7); ctx.fill();
-      eye(r * 1.1, -r * 0.4, r * 0.1);
-    } else if (s === "kraken") {
-      ctx.shadowColor = col; ctx.shadowBlur = 24;
-      ctx.beginPath(); ctx.ellipse(0, -r * 0.4, r * 1.1, r * 1.3, 0, 0, 7); ctx.fill();
-      for (var ki = -4; ki <= 4; ki++) {
-        ctx.beginPath();
-        ctx.moveTo(ki * 5, r * 0.7);
-        ctx.quadraticCurveTo(ki * 8 + Math.sin(f.phase * 1.5 + ki) * 14, r * 2 + 20, ki * 10, r * 3);
-        ctx.lineWidth = 6; ctx.strokeStyle = col; ctx.stroke();
-      }
-      ctx.fillStyle = f.shiny ? "#fff7a0" : "#ffd24a";
-      eye(-r * 0.4, -r * 0.5, r * 0.3); eye(r * 0.4, -r * 0.5, r * 0.3);
-    } else {
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill();
     }
-    ctx.shadowBlur = 0;
-    ctx.restore();
+  }
 
-    // name label for rare+ when close
-    var distToDiver = Math.hypot(f.x - run.diver.x, f.y - run.diver.y);
-    if ((D.RARITY[f.def.rarity].order >= 2 || f.shiny) && distToDiver < 220) {
+  // rare/shiny name labels, drawn crisp on top of the pixel scene
+  function drawFishLabels() {
+    ctx.textAlign = "center";
+    ctx.font = "11px 'Segoe UI', sans-serif";
+    for (var i = 0; i < run.fish.length; i++) {
+      var f = run.fish[i];
+      var dist = Math.hypot(f.x - run.diver.x, f.y - run.diver.y);
+      if (!((D.RARITY[f.def.rarity].order >= 2 || f.shiny) && dist < 220)) continue;
+      var x = f.x - cam.x, y = f.y - cam.y - fishTargetH(f) * 0.6 - 8;
+      var label = (f.shiny ? "✦" : "") + f.def.name;
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillText(label, x + 1, y + 1);
       ctx.fillStyle = f.shiny ? "#ffe66d" : D.RARITY[f.def.rarity].color;
-      ctx.font = "11px 'Segoe UI', sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText((f.shiny ? "✦" : "") + f.def.name, x, y - r - 8);
-    }
-
-    function eye(ex, ey, er) {
-      ctx.save();
-      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ex, ey, er, 0, 7); ctx.fill();
-      ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(ex + er * 0.3, ey, er * 0.5, 0, 7); ctx.fill();
-      ctx.restore();
+      ctx.fillText(label, x, y);
     }
   }
 
@@ -1199,6 +1313,20 @@
     showShop();
   }
 
+  // pixel sprite image (data URL) for a Collection card
+  var collSpriteCache = {};
+  function collSprite(f, found, shiny, hidden) {
+    var key = f.id + (found ? (shiny ? "s" : "f") : (hidden ? "h" : "m"));
+    if (collSpriteCache[key]) return collSpriteCache[key];
+    var arch = SPRITES.archetypeForShape(f.shape);
+    var url;
+    if (hidden) url = SPRITES.dataURL(arch, { silhouette: "#0e1822", scale: 4 });
+    else if (found) url = SPRITES.dataURL(arch, { color: f.color, accent: f.accent, shiny: shiny, scale: 4 });
+    else url = SPRITES.dataURL(arch, { silhouette: "#16242f", scale: 4 });
+    collSpriteCache[key] = url;
+    return url;
+  }
+
   // ----- Collection -----
   function showCollection() {
     var ov = overlay("shop");
@@ -1223,7 +1351,7 @@
         if (sh) shinyFound++;
         var hidden = f.secret && !found && !state.hints[f.id];
         html += '<div class="coll-card ' + (found ? 'found' : 'missing') + ' r-' + f.rarity + '">';
-        html += '<div class="coll-sprite" style="background:' + (found ? f.color : '#1a2733') + '"></div>';
+        html += '<div class="coll-sprite" style="background-image:url(' + collSprite(f, found, sh, hidden) + ')"></div>';
         html += '<div class="coll-name">' + (hidden ? "???" : f.name) + (sh ? ' <span class="shiny-tag">✦</span>' : '') + '</div>';
         html += '<div class="coll-meta">' + D.RARITY[f.rarity].name
           + (found ? ' · ' + (state.counts[f.id] || 0) + ' caught' : '')
@@ -1237,7 +1365,7 @@
     var k = D.FISH_BY_ID.kraken;
     html += '<h3>The Legend</h3><div class="coll-grid">';
     html += '<div class="coll-card ' + (state.krakenCaught ? 'found' : 'missing') + ' r-mythic">'
-      + '<div class="coll-sprite" style="background:' + (state.krakenCaught ? k.color : '#1a2733') + '"></div>'
+      + '<div class="coll-sprite" style="background-image:url(' + collSprite(k, state.krakenCaught, state.krakenShiny, false) + ')"></div>'
       + '<div class="coll-name">' + (state.krakenCaught ? "The Kraken" : "???") + (state.krakenShiny ? ' <span class="shiny-tag">✦</span>' : '') + '</div>'
       + '<div class="coll-meta">' + (state.krakenCaught ? "Vanquished" : "Catch every other fish to summon it") + '</div></div>';
     html += '</div>';
@@ -1362,6 +1490,7 @@
     return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," + Math.round(a[1] + (b[1] - a[1]) * t) + "," + Math.round(a[2] + (b[2] - a[2]) * t) + ")";
   }
   function hex(h) { h = h.replace("#", ""); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; }
+  function rgba(h, a) { var c = hex(h); return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + a + ")"; }
   function shinyColor(base) {
     // shift hue toward a glittery alt palette
     var c = hex(base);
@@ -1391,6 +1520,17 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 
-  // expose a tiny debug handle
-  window.DEEPSEA = { state: function () { return state; }, run: function () { return run; } };
+  // expose a tiny debug handle (also used by the headless smoke test)
+  window.DEEPSEA = {
+    state: function () { return state; },
+    run: function () { return run; },
+    _test: {
+      newGame: function () { activeSlot = 1; state = defaultState(); },
+      unlockAll: function () { for (var a in state.areas) state.areas[a] = true; },
+      dive: function (area) { startDive(area); },
+      frame: function (dt) { if (scene === "dive" && run) { update(dt || 0.016); render(); } },
+      spawnKraken: spawnKraken,
+      forceShinyNext: function () { state.charms.shiny = 999; },
+    },
+  };
 })();

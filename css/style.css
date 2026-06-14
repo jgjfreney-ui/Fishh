@@ -241,10 +241,15 @@ button.big { padding: 16px; font-size: 16px; font-weight: 600; }
 .coll-card.r-mythic { border-color: rgba(255, 91, 127, 0.6); }
 .coll-card.r-epic { border-color: rgba(185, 107, 255, 0.5); }
 .coll-sprite {
-  width: 46px; height: 46px;
-  border-radius: 50%;
+  width: 64px; height: 48px;
+  border-radius: 8px;
   margin: 0 auto 6px;
-  box-shadow: inset -6px -6px 10px rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.25);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 .coll-name { font-size: 13px; font-weight: 600; }
 .coll-meta { font-size: 11px; opacity: 0.65; }
