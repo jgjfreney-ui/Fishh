@@ -1406,6 +1406,10 @@
   // ---------------------------------------------------------------------
   function toast(msg, kind, dur) {
     var host = document.getElementById("toasts");
+    // never let toasts blanket the screen: drop the oldest if too many stack up
+    while (host.children.length >= 4) host.removeChild(host.firstChild);
+    // skip exact duplicate of the most recent toast still showing
+    if (host.lastChild && host.lastChild.textContent === msg) return;
     var el = document.createElement("div");
     el.className = "toast " + (kind || "");
     el.textContent = msg;
