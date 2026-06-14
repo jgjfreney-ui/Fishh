@@ -46,6 +46,7 @@
       seeds: {},        // birdId -> seed count
       harpoons: 0,      // ammo for boss fights
       nextNight: false, // is the NEXT dive at night? (alternates each dive)
+      achievements: {}, // achievementId -> timestamp earned
     };
   }
 
@@ -66,6 +67,7 @@
 
   function saveGame() {
     if (activeSlot == null || !state) return;
+    checkAchievements();
     try {
       localStorage.setItem(SAVE_PREFIX + activeSlot, JSON.stringify(state));
     } catch (e) {
@@ -566,6 +568,37 @@
   // area bosses: appear once every regular fish in their area is caught
   var AREA_BOSS_BY_AREA = {};
   D.FISH.forEach(function (f) { if (f.areaBoss) AREA_BOSS_BY_AREA[f.area] = f.id; });
+
+  // ----- Achievements -----
+  function discCount() { return Object.keys(state.discovered).length; }
+  function shinyCount() { return Object.keys(state.shinyFound).length; }
+  function bossesBeaten() { var n = 0; for (var k in state.areaBossCaught) if (state.areaBossCaught[k]) n++; return n; }
+  var ACHIEVEMENTS = [
+    { id: "earn10k",  name: "Pocket Money",     desc: "Earn $10,000 in total",   check: function () { return state.stats.earned >= 10000; } },
+    { id: "earn100k", name: "Big Hauls",        desc: "Earn $100,000 in total",  check: function () { return state.stats.earned >= 100000; } },
+    { id: "earn1m",   name: "Millionaire",      desc: "Earn $1,000,000 in total",check: function () { return state.stats.earned >= 1000000; } },
+    { id: "fish10",   name: "Getting Started",  desc: "Discover 10 species",     check: function () { return discCount() >= 10; } },
+    { id: "fish50",   name: "Naturalist",       desc: "Discover 50 species",     check: function () { return discCount() >= 50; } },
+    { id: "fish100",  name: "Marine Biologist", desc: "Discover 100 species",    check: function () { return discCount() >= 100; } },
+    { id: "shiny1",   name: "Ooh, Shiny!",      desc: "Find your first shiny",   check: function () { return shinyCount() >= 1; } },
+    { id: "shiny10",  name: "Shiny Hunter",     desc: "Find 10 shiny species",   check: function () { return shinyCount() >= 10; } },
+    { id: "boss1",    name: "Giant Slayer",     desc: "Defeat any area boss",    check: function () { return bossesBeaten() >= 1; } },
+    { id: "bossAll",  name: "Apex Predator",    desc: "Defeat every area boss",  check: function () { return bossesBeaten() >= Object.keys(AREA_BOSS_BY_AREA).length; } },
+    { id: "secret1",  name: "Hidden Depths",    desc: "Catch a secret fish",     check: function () { for (var i = 0; i < D.FISH.length; i++) { var f = D.FISH[i]; if (f.secret && state.discovered[f.id]) return true; } return false; } },
+    { id: "deep1000", name: "Into the Abyss",   desc: "Dive to 1000m deep",      check: function () { return state.stats.maxDepth >= 1000; } },
+    { id: "backrooms",name: "You Shouldn't Be Here", desc: "Find the Backrooms",  check: function () { return !!state.areas.backrooms; } },
+    { id: "kraken",   name: "The Legend",       desc: "Catch the Kraken",        check: function () { return state.krakenCaught; } },
+  ];
+  function checkAchievements() {
+    if (!state.achievements) state.achievements = {};
+    for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+      var a = ACHIEVEMENTS[i];
+      if (!state.achievements[a.id] && a.check()) {
+        state.achievements[a.id] = Date.now();
+        toast("🏆 Achievement: " + a.name, "epic", 3200);
+      }
+    }
+  }
   function areaBossForArea(area) {
     var id = AREA_BOSS_BY_AREA[area];
     if (!id || state.areaBossCaught[id]) return null;
@@ -2107,6 +2140,7 @@
     html += '<button id="btn-seedshop" class="big">🌾 Seed Shop</button>';
     html += '<button id="btn-items" class="big">🎒 Items</button>';
     html += '<button id="btn-treasures" class="big">🏺 Treasures</button>';
+    html += '<button id="btn-achievements" class="big">🏆 Achievements</button>';
     html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
     html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
     html += '<button id="btn-menu" class="big">💾 Save &amp; Menu</button>';
@@ -2138,6 +2172,7 @@
     bind("btn-seedshop", showSeedShop);
     bind("btn-items", showInventory);
     bind("btn-treasures", showTreasureGallery);
+    bind("btn-achievements", showAchievements);
     bind("btn-trade", function () { lastGiftCode = null; showTrade(); });
     bind("btn-rename", function () {
       askText("Name your captain", state.username || "Diver", function (name) {
@@ -3181,6 +3216,26 @@
         saveGame(); showInventory();
       };
     });
+  }
+
+  // ----- Achievements panel -----
+  function showAchievements() {
+    if (!state.achievements) state.achievements = {};
+    var ov = overlay("shop");
+    var got = 0; for (var g = 0; g < ACHIEVEMENTS.length; g++) if (state.achievements[ACHIEVEMENTS[g].id]) got++;
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🏆 Achievements</h2>'
+      + '<div class="money-line">' + got + ' / ' + ACHIEVEMENTS.length + '</div>'
+      + '<button class="close" data-close="shop">✕</button></div><div class="stats-list">';
+    ACHIEVEMENTS.forEach(function (a) {
+      var done = !!state.achievements[a.id];
+      html += '<div class="shop-item"><div class="si-info"><b>' + (done ? '🏆 ' : '🔒 ') + a.name + '</b>'
+        + '<p>' + a.desc + '</p></div>'
+        + '<div class="si-buy">' + (done ? '<span class="lvl">✓</span>' : '<span class="tiny">—</span>') + '</div></div>';
+    });
+    html += '</div></div>';
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
   }
 
   // ----- Treasure gallery -----
