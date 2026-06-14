@@ -113,7 +113,7 @@
     { id: "frilledshark",name: "Frilled Shark",area: "trench", rarity: "epic",     size: 5, value: 1500, minDepth: 600, color: "#4a3f4f", shape: "shark" },
     { id: "colossalsquid",name:"Colossal Squid",area:"trench", rarity: "legendary",size: 7, value: 4200, minDepth: 800, color: "#b03c5a", shape: "squid" },
     { id: "spermwhale",  name: "Sperm Whale",  area: "trench", rarity: "legendary",size: 8, value: 5200, minDepth: 700, color: "#5a5f6b", shape: "whale" },
-    { id: "megalodon",   name: "Megalodon",    area: "trench", rarity: "legendary",size: 9, value: 6800, minDepth: 950, color: "#3c4650", shape: "shark" },
+    { id: "greatwhite",  name: "Great White Shark", area: "trench", rarity: "legendary", size: 8, value: 6800, minDepth: 850, color: "#8a97a0", shape: "shark" },
 
     // ---- Starlight Sanctuary ----
     { id: "starjelly",   name: "Starlight Jelly", area: "sanctuary", rarity: "common",   size: 1, value: 60,   minDepth: 0,   color: "#9fd8ff", shape: "jelly" },
@@ -122,6 +122,44 @@
     { id: "nebulaeel",   name: "Nebula Eel",      area: "sanctuary", rarity: "rare",     size: 3, value: 560,  minDepth: 220, color: "#c46bff", shape: "eel" },
     { id: "prismtang",   name: "Prismatic Tang",  area: "sanctuary", rarity: "epic",     size: 2, value: 1400, minDepth: 300, color: "#ff8be0", shape: "fish" },
     { id: "galaxywhale", name: "Galaxy Whale",    area: "sanctuary", rarity: "legendary",size: 8, value: 6000, minDepth: 500, color: "#3a2c78", shape: "whale" },
+
+    // ======== Wave 2 content: +5 per area ========
+    // ---- Coral Coast ----
+    { id: "damselfish", name: "Damselfish",   area: "coral", rarity: "common",   size: 1, value: 24,  minDepth: 0,   color: "#3a7bd5", shape: "fish" },
+    { id: "butterflyfish", name: "Butterflyfish", area: "coral", rarity: "uncommon", size: 1, value: 72, minDepth: 30, color: "#ffcf3a", shape: "fish" },
+    { id: "moorishidol", name: "Moorish Idol", area: "coral", rarity: "uncommon", size: 1, value: 90,  minDepth: 50,  color: "#f0e6c8", shape: "fish" },
+    { id: "triggerfish", name: "Triggerfish",  area: "coral", rarity: "rare",     size: 2, value: 230, minDepth: 90,  color: "#2f8f7a", shape: "fish" },
+    { id: "sandtiger",  name: "Sand Tiger Shark", area: "coral", rarity: "epic",  size: 4, value: 1000, minDepth: 150, color: "#9aa6ad", shape: "shark" },
+
+    // ---- Kelp Forest ----
+    { id: "kelpfish",   name: "Kelpfish",      area: "kelp", rarity: "common",   size: 1, value: 30,  minDepth: 0,   color: "#5a8f3a", shape: "fish" },
+    { id: "rockfish",   name: "Rockfish",      area: "kelp", rarity: "common",   size: 2, value: 44,  minDepth: 40,  color: "#b05a4a", shape: "fish" },
+    { id: "garibaldi",  name: "Garibaldi",     area: "kelp", rarity: "uncommon", size: 1, value: 95,  minDepth: 30,  color: "#ff7a18", shape: "fish" },
+    { id: "wolfeel",    name: "Wolf Eel",      area: "kelp", rarity: "rare",     size: 3, value: 340, minDepth: 180, color: "#6a6a5a", shape: "eel" },
+    { id: "sunfish",    name: "Ocean Sunfish", area: "kelp", rarity: "epic",     size: 6, value: 1500, minDepth: 220, color: "#9fb4c4", shape: "round" },
+
+    // ---- Sunken Trench ----
+    { id: "barreleye",  name: "Barreleye",     area: "trench", rarity: "uncommon", size: 1, value: 150, minDepth: 250, color: "#2a3a44", shape: "round", glow: true },
+    { id: "blackdragon",name: "Black Dragonfish", area: "trench", rarity: "rare",  size: 2, value: 400, minDepth: 450, color: "#241f33", shape: "eel", glow: true },
+    { id: "dumbo",      name: "Dumbo Octopus", area: "trench", rarity: "rare",     size: 3, value: 480, minDepth: 520, color: "#c06a8a", shape: "octopus" },
+    { id: "fangtooth",  name: "Fangtooth",     area: "trench", rarity: "rare",     size: 1, value: 360, minDepth: 600, color: "#3a3a44", shape: "round" },
+    { id: "oarfish",    name: "Giant Oarfish", area: "trench", rarity: "legendary",size: 8, value: 5600, minDepth: 700, color: "#cfd6e0", shape: "eel" },
+
+    // ---- Starlight Sanctuary ----
+    { id: "moonfish",   name: "Moonfish",      area: "sanctuary", rarity: "common",   size: 1, value: 64,  minDepth: 0,   color: "#cfe6ff", shape: "round" },
+    { id: "cometfish",  name: "Comet Fish",    area: "sanctuary", rarity: "uncommon", size: 2, value: 160, minDepth: 60,  color: "#9fd8ff", shape: "fish" },
+    { id: "astraljelly",name: "Astral Jelly",  area: "sanctuary", rarity: "rare",     size: 1, value: 540, minDepth: 140, color: "#c46bff", shape: "jelly" },
+    { id: "solarray",   name: "Solar Ray",     area: "sanctuary", rarity: "epic",     size: 5, value: 1500, minDepth: 320, color: "#ffd86b", shape: "ray" },
+    { id: "voidwhale",  name: "Void Whale",    area: "sanctuary", rarity: "legendary",size: 8, value: 6400, minDepth: 520, color: "#2a2350", shape: "whale" },
+
+    // ======== River Run (zone built later — fish data is ready) ========
+    { id: "rivertrout", name: "River Trout",   area: "river", rarity: "common",   size: 1, value: 26,  minDepth: 0,   color: "#8a9a5a", shape: "fish" },
+    { id: "perch",      name: "Perch",         area: "river", rarity: "common",   size: 1, value: 30,  minDepth: 10,  color: "#5a7a3a", shape: "fish" },
+    { id: "salmon",     name: "Salmon",        area: "river", rarity: "uncommon", size: 2, value: 90,  minDepth: 20,  color: "#e07a6a", shape: "fish" },
+    { id: "catfish",    name: "Catfish",       area: "river", rarity: "uncommon", size: 2, value: 110, minDepth: 40,  color: "#6a5a4a", shape: "fish" },
+    { id: "pike",       name: "Pike",          area: "river", rarity: "rare",     size: 3, value: 260, minDepth: 60,  color: "#4a6a4a", shape: "fish" },
+    { id: "rivereel",   name: "River Eel",     area: "river", rarity: "rare",     size: 2, value: 300, minDepth: 80,  color: "#5c6a3a", shape: "eel" },
+    { id: "sturgeon",   name: "Sturgeon",      area: "river", rarity: "epic",     size: 5, value: 900, minDepth: 100, color: "#7a8a6a", shape: "fish" },
 
     // ---- Secret fish (need a purchased hint + a condition; spawn rarely) ----
     { id: "goldenkoi",  name: "Golden Koi",    area: "coral",     rarity: "mythic", size: 2, value: 2600, minDepth: 0,   color: "#ffd54a", shape: "fish",  secret: true,
@@ -148,9 +186,11 @@
   FISH.forEach(function (f) { FISH_BY_ID[f.id] = f; });
 
   // Fish that count toward "catch everything to summon the Kraken".
-  // (Everything except the Kraken and the optional secrets.)
+  // (Everything except the Kraken and the optional secrets, and only in
+  // areas that actually exist yet — so not-yet-built zones like the River
+  // don't make completion impossible.)
   const COMPLETION_FISH = FISH.filter(function (f) {
-    return !f.isKraken && !f.secret;
+    return !f.isKraken && !f.secret && LOCATIONS[f.area];
   }).map(function (f) { return f.id; });
 
   // --- Treasures (from shipwrecks) --------------------------------------

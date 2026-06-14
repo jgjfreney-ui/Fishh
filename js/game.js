@@ -335,7 +335,7 @@
     var def = pool[(Math.random() * pool.length) | 0];
 
     // Secrets / mythics are extra rare even once eligible
-    if (def.secret && Math.random() > 0.12) return;
+    if (def.secret && Math.random() > 0.6) return; // hint owned → show up readily
 
     var shiny = Math.random() < shinyChance(run.area);
 
