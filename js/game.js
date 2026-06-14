@@ -23,7 +23,9 @@
       money: 0,
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0 },
       charms: { rarity: 0, shiny: 0 },
-      areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false, cave: false, cloud: false, sanctuary: false },
+      areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
+               forest: false, swamp: false, boneyard: false, backrooms: false, japan: false, secretcave: false,
+               cave: false, cloud: false, sanctuary: false },
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -184,6 +186,12 @@
     opensea:   { plants: ["rock", "coral", "rock"], plantColors: ["#2a6a9a", "#3a8aaa", "#4a6a8a"], rock: "#1a3a5a", floor: "#123048" },
     cave:      { plants: ["crystal", "vent", "rock"], plantColors: ["#8affc0", "#7a5a9a", "#4a3a5a"], rock: "#1a151f", floor: "#0a0710" },
     cloud:     { plants: ["coral", "coral", "rock"], plantColors: ["#bfe0c0", "#a0d8e8", "#cfeaff"], rock: "#9fc0d8", floor: "#7fae8a" },
+    forest:    { plants: ["kelp", "kelp", "coral"], plantColors: ["#3f8f3d", "#6cae4a", "#2f7f3f", "#8a9a4a"], rock: "#3a4a2a", floor: "#2a3a18" },
+    swamp:     { plants: ["kelp", "anemone", "rock"], plantColors: ["#5a6a2a", "#7a8a3a", "#3a4a1a"], rock: "#3a3a22", floor: "#2a2a12" },
+    boneyard:  { plants: ["rock", "crystal", "rock"], plantColors: ["#d8d2c0", "#bcb6a4", "#8a8474"], rock: "#2a2e34", floor: "#14181e" },
+    backrooms: { plants: ["rock", "rock", "rock"], plantColors: ["#c8b84a", "#b8a838", "#9a8a28"], rock: "#a89838", floor: "#8a7a28" },
+    japan:     { plants: ["coral", "kelp", "coral"], plantColors: ["#e0556a", "#ff9a4a", "#5cc46a", "#ffd6e0"], rock: "#3a4a6a", floor: "#23304a" },
+    secretcave:{ plants: ["crystal", "vent", "rock"], plantColors: ["#9fffd0", "#8a7ad0", "#5a4a6a"], rock: "#141019", floor: "#08060c" },
   };
 
   function generateDecor(loc) {
@@ -206,7 +214,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -345,6 +353,7 @@
       if (f.night && !isNight) continue;           // nocturnal species only at night
       if (f.day && isNight) continue;              // diurnal species only in daylight
       if (f.area === "sanctuary" && areaId !== "sanctuary") continue; // starlight species stay in the Sanctuary
+      if (D.LOCATIONS[f.area] && D.LOCATIONS[f.area].secret && f.area !== areaId) continue; // secret-area species don't leak into Cloud/Gloom
       if (birdPool) {
         if (!f.bird || f.rarity !== rarity) continue;
         out.push(f); continue;                     // no depth/secret gating for the sky
@@ -376,6 +385,12 @@
     if (c.lowOxygen && run.oxygen / run.maxO > 0.32) return false; // a bit easier to reach
     if (c.fast && Math.hypot(run.diver.vx, run.diver.vy) < speed() * 0.8) return false;
     if (c.still && (run.stillTimer || 0) < 2) return false;
+    if (c.corner) { // lurk at a far corner of the rooms
+      var cl = D.LOCATIONS[run.area];
+      var nx = run.diver.x < 140 || run.diver.x > cl.worldWidth - 140;
+      var ny = run.diver.y < 90 || run.diver.y > cl.maxDepth * PXPM - 90;
+      if (!(nx && ny)) return false;
+    }
     return true;
   }
 
@@ -474,20 +489,49 @@
     for (var i = 0; i < D.REQUIRED_FISH.length; i++) if (state.discovered[D.REQUIRED_FISH[i]]) n++;
     return n;
   }
-  // TRUE 100% — every catalogued fish/creature/bird + every secret across the
-  // reachable world (the post-game Sanctuary is excluded so the Kraken stays
-  // obtainable before it's unlocked).
+  // TRUE 100% — every catalogued fish/creature/bird + every secret in the SEVEN
+  // CORE areas. The bonus zones (Sanctuary, Cloud, Gloom, Boneyard, Swamp,
+  // Grove, Backrooms, Hidden Coast, Hollow Deep) are extras, so the Kraken
+  // stays reachable without hunting down every hidden corner of the map.
+  var CORE_AREAS = { coral: 1, river: 1, kelp: 1, arctic: 1, ancient: 1, opensea: 1, trench: 1 };
   function trueComplete() {
     for (var i = 0; i < D.COMPLETION_FISH.length; i++) {
       var cf = D.FISH_BY_ID[D.COMPLETION_FISH[i]];
-      if (cf.area === "sanctuary") continue;
+      if (!CORE_AREAS[cf.area]) continue;
       if (!state.discovered[cf.id]) return false;
     }
     for (var j = 0; j < D.FISH.length; j++) {
       var f = D.FISH[j];
-      if (f.secret && f.area !== "sanctuary" && !state.discovered[f.id]) return false;
+      if (f.secret && CORE_AREAS[f.area] && !state.discovered[f.id]) return false;
     }
     return true;
+  }
+  // every ordinary (non-secret/boss/creature/bird) fish in an area discovered?
+  function areaFishComplete(area) {
+    for (var i = 0; i < D.FISH.length; i++) {
+      var f = D.FISH[i];
+      if (f.area !== area || f.areaBoss || f.secret || f.creature || f.bird) continue;
+      if (!state.discovered[f.id]) return false;
+    }
+    return true;
+  }
+  function unlockSecretArea(id, msg) {
+    if (state.areas[id]) return;
+    state.areas[id] = true; saveGame();
+    toast(msg, "epic", 5000);
+    if (window.AUDIO) AUDIO.rumble();
+  }
+  // hidden-area discovery checks, run every dive frame
+  function checkSecretUnlocks(loc, depthM) {
+    var d = run.diver;
+    // Backrooms: slip through the sea floor at the very LEFT edge of the Kelp Forest
+    if (run.area === "kelp" && !state.areas.backrooms && d.x < 26 && d.y > loc.maxDepth * PXPM - 46) {
+      unlockSecretArea("backrooms", "🚪 You squeeze through a crack in the sea floor... and fall into THE BACKROOMS. (Now in Change Area.)");
+    }
+    // Hidden Coast: swim off the RIGHT edge of the River once every river fish is caught
+    if (run.area === "river" && !state.areas.japan && d.x > loc.worldWidth - 18 && areaFishComplete("river")) {
+      unlockSecretArea("japan", "⛩️ The river mouth opens onto a HIDDEN COAST! (Now in Change Area.)");
+    }
   }
   // gating helpers for the Cloud Reaches (all birds) & Gloom Cavern (all
   // creatures — excluding the cave's own, to avoid a chicken-and-egg lock).
@@ -688,6 +732,7 @@
     run.spin = (run.spin || 0) * 0.995; // slow decay (gives time to complete the loop)
 
     var depthM = diver.y / PXPM;
+    checkSecretUnlocks(loc, depthM);
     run.diveDepthReached = Math.max(run.diveDepthReached, depthM);
     if (depthM > state.stats.maxDepth) state.stats.maxDepth = Math.floor(depthM);
 
@@ -2139,6 +2184,10 @@
     scene = "dive";
     newRun(areaId);
     state.lastArea = areaId;
+    // Hollow Deep opens to those who enter the Gloom Cavern with NO boss gear active
+    if (areaId === "cave" && !anyBossItemOn() && !state.areas.secretcave) {
+      unlockSecretArea("secretcave", "🕯️ Carrying no boss relics, you drift into a hidden pocket of the cavern — the HOLLOW DEEP opens. (Now in Change Area.)");
+    }
     if (window.AUDIO) AUDIO.playArea(areaId, run && run.night);
   }
 
@@ -2245,7 +2294,11 @@
     // HINTS
     html += '<div class="tab-body' + bodyClass("hints") + '" data-body="hints">';
     html += '<p class="tiny">Every area hides a <b>secret fish</b>. Buy its hint here, then meet the condition while diving.</p>';
-    D.FISH.filter(function (f) { return f.secret && D.LOCATIONS[f.area]; }).forEach(function (f) {
+    D.FISH.filter(function (f) {
+      if (!f.secret || !D.LOCATIONS[f.area]) return false;
+      if (D.LOCATIONS[f.area].secret && !state.areas[f.area]) return false; // don't spoil undiscovered secret areas
+      return true;
+    }).forEach(function (f) {
       var owned = state.hints[f.id];
       var found = state.discovered[f.id];
       var cost = 1000;
@@ -2385,7 +2438,7 @@
   function showAquarium() {
     closeOverlay("modal"); closeOverlay("shop"); sellHud(false);
     scene = "aquarium";
-    aqua = { areaList: Object.keys(D.LOCATIONS), idx: 0, time: 0, entities: [], diverActive: false, night: false,
+    aqua = { areaList: Object.keys(D.LOCATIONS).filter(function (a) { return !(D.LOCATIONS[a].secret && !state.areas[a]); }), idx: 0, time: 0, entities: [], diverActive: false, night: false,
       diver: { x: W / 2, y: H / 2, vx: 0, vy: 0, face: 1 } };
     setupTank(0);
     var dn = document.getElementById("aqua-daynight"); if (dn) dn.textContent = "🌙";
@@ -2529,6 +2582,7 @@
       + ' required fish caught (marked 🗝️). <span class="tiny">...or so the legend says.</span></div>';
 
     for (var areaId in D.LOCATIONS) {
+      if (D.LOCATIONS[areaId].secret && !state.areas[areaId]) continue; // hide undiscovered secret areas
       var fishes = byArea[areaId] || [];
       if (!fishes.length) continue;
       html += '<h3>' + D.LOCATIONS[areaId].name + '</h3><div class="coll-grid">';
@@ -2732,6 +2786,7 @@
     for (var id in D.LOCATIONS) {
       var loc = D.LOCATIONS[id];
       var unlocked = state.areas[id];
+      if (loc.secret && !unlocked) continue; // hidden until you discover it
       // gating: Trench needs the earlier areas first; Sanctuary needs both bosses
       var gate = null;
       if (!unlocked && loc.requireAreas) {

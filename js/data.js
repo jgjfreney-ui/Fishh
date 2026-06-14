@@ -74,6 +74,48 @@
       requireAreas: ["river", "kelp", "arctic", "ancient", "opensea"], // always the last to unlock
       sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
+    forest: {
+      id: "forest", name: "Sunken Grove", tint: "#5fae4a",
+      blurb: "A drowned old-growth forest — sun filters through towering submerged trees draped in green.",
+      maxDepth: 600, worldWidth: 2600, topColor: "#3f8f5a", deepColor: "#0a2415",
+      shinyBonus: 0, unlocked: false, cost: 130000,
+      sky: { top: "#bfe8c0", bottom: "#eafce0" },
+    },
+    swamp: {
+      id: "swamp", name: "Mangrove Swamp", tint: "#7a8a3a",
+      blurb: "Murky brackish water thick with roots and gators. Watch the shallows.",
+      maxDepth: 500, worldWidth: 2400, topColor: "#5a6a3a", deepColor: "#16200c",
+      shinyBonus: 0, unlocked: false, cost: 180000,
+      sky: { top: "#aebf8a", bottom: "#d6e0b0" },
+    },
+    boneyard: {
+      id: "boneyard", name: "The Boneyard", tint: "#d8d2c0",
+      blurb: "A vast whale-fall graveyard where titans came to die. Bones glow pale in the gloom.",
+      maxDepth: 1200, worldWidth: 2600, topColor: "#3a4450", deepColor: "#05070a",
+      shinyBonus: 0.05, unlocked: false, cost: 250000,
+      sky: { top: "#8a96a4", bottom: "#cdd6de" },
+    },
+    backrooms: {
+      id: "backrooms", name: "The Backrooms", tint: "#d8c84a", secret: true,
+      blurb: "You weren't supposed to find this. Endless damp yellow rooms, humming lights, water that shouldn't be here.",
+      maxDepth: 700, worldWidth: 3000, topColor: "#c8b84a", deepColor: "#5a5018",
+      shinyBonus: 0.15, unlocked: false, cost: 0,
+      sky: { top: "#d8c860", bottom: "#b8a838" },
+    },
+    japan: {
+      id: "japan", name: "Hidden Coast", tint: "#e0556a", secret: true,
+      blurb: "A secret koi-filled coast beneath red torii gates — and something colossal sleeping offshore.",
+      maxDepth: 900, worldWidth: 2800, topColor: "#3a6fb0", deepColor: "#0a1a3a",
+      shinyBonus: 0.1, unlocked: false, cost: 0,
+      sky: { top: "#ffd6e0", bottom: "#ffeef2" },
+    },
+    secretcave: {
+      id: "secretcave", name: "Hollow Deep", tint: "#9a8ad0", secret: true,
+      blurb: "A still, lightless pocket of the cavern that only opens to those who arrive unarmed by boss relics.",
+      maxDepth: 700, worldWidth: 2200, topColor: "#26303a", deepColor: "#03040a",
+      shinyBonus: 0.1, unlocked: false, cost: 0,
+      sky: { top: "#1a2230", bottom: "#0a0e16" },
+    },
     cave: {
       id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
       blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
@@ -246,12 +288,12 @@
     { id: "abalone",    name: "Abalone",      area: "kelp",  creature: true, rarity: "uncommon",  size: 1, value: 150,  color: "#8a7a9a", shape: "urchin" },
     { id: "seacucumber",name: "Sea Cucumber", area: "trench", creature: true, rarity: "rare",     size: 2, value: 380,  color: "#6a4a5a", shape: "bug" },
     { id: "voidstar",   name: "Void Star",    area: "sanctuary", creature: true, rarity: "legendary", size: 1, value: 1800, color: "#9f7bff", shape: "starfish" },
-    // ---- Gloom Cavern's own creatures (only found drifting in the cave) ----
-    { id: "cavefish",   name: "Blind Cavefish", area: "cave", creature: true, rarity: "common",    size: 1, value: 140,  color: "#e8dcd0", shape: "fish" },
-    { id: "olm",        name: "Olm",            area: "cave", creature: true, rarity: "uncommon",  size: 1, value: 240,  color: "#f0d6cc", shape: "eel" },
-    { id: "ghostshrimp",name: "Ghost Shrimp",   area: "cave", creature: true, rarity: "rare",      size: 1, value: 360,  color: "#cfe0e8", shape: "bug" },
-    { id: "cavecrab",   name: "Cave Crab",      area: "cave", creature: true, rarity: "uncommon",  size: 2, value: 300,  color: "#7a5a4a", shape: "crab" },
-    { id: "glowsnail",  name: "Glow Snail",     area: "cave", creature: true, rarity: "epic",      size: 1, value: 900,  color: "#8affc0", shape: "urchin" },
+    // ---- Hollow Deep (the secret cave) — its own creatures + fish ----
+    // (Gloom Cavern itself now just gathers all the PRE-EXISTING creatures.)
+    { id: "cavefish",   name: "Blind Cavefish", area: "secretcave", rarity: "common",   size: 1, value: 140,  minDepth: 0, color: "#e8dcd0", shape: "fish" },
+    { id: "ghostshrimp",name: "Ghost Shrimp",   area: "secretcave", creature: true, rarity: "rare",      size: 1, value: 360,  color: "#cfe0e8", shape: "bug" },
+    { id: "cavecrab",   name: "Cave Crab",      area: "secretcave", creature: true, rarity: "uncommon",  size: 2, value: 300,  color: "#7a5a4a", shape: "crab" },
+    { id: "glowsnail",  name: "Glow Snail",     area: "secretcave", creature: true, rarity: "epic",      size: 1, value: 900,  color: "#8affc0", shape: "urchin" },
 
     // ======== Nocturnal fish (ONLY appear on night dives) — 2 per area ========
     { id: "lanterneye",  name: "Lantern-eye",      area: "coral",   night: true, rarity: "rare",  size: 2, value: 360,  minDepth: 60,  color: "#2a6a7a", accent: "#7afcff", shape: "lanternjaw" },
@@ -292,6 +334,61 @@
     // ---- one nocturnal bird + one nocturnal sea creature (night only) ----
     { id: "nightowl",   name: "Night Owl",      area: "river", bird: true, night: true, rarity: "rare", size: 2, value: 520, color: "#6a5a4a", accent: "#e0d2b0", shape: "owl", seedCost: 800 },
     { id: "fireflysquid", name: "Firefly Squid", area: "kelp", creature: true, night: true, rarity: "rare", size: 1, value: 420, color: "#3a4a8a", accent: "#7afcff", shape: "slug" },
+
+    // ======== Sunken Grove (forest) ========
+    { id: "grovefish",  name: "Grovefish",    area: "forest", rarity: "common",   size: 1, value: 60,  minDepth: 0,   color: "#6cae4a", shape: "fish" },
+    { id: "mossback",   name: "Mossback Turtle", area: "forest", rarity: "uncommon", size: 3, value: 280, minDepth: 40, color: "#4f7a3a", shape: "turtle" },
+    { id: "branchpike", name: "Branch Pike",  area: "forest", rarity: "uncommon", size: 2, value: 220, minDepth: 30,  color: "#7a6a3a", shape: "longfish" },
+    { id: "canopyray",  name: "Canopy Ray",   area: "forest", rarity: "rare",     size: 4, value: 540, minDepth: 120, color: "#5a8a4a", shape: "ray" },
+    { id: "willoweel",  name: "Willow Eel",   area: "forest", rarity: "rare",     size: 3, value: 480, minDepth: 180, color: "#3a6a3a", shape: "eel" },
+    { id: "ancientcarp",name: "Ancient Carp", area: "forest", rarity: "epic",     size: 5, value: 1500,minDepth: 300, color: "#8a9a4a", shape: "fish" },
+    { id: "grovebeetle",name: "Grove Beetle", area: "forest", creature: true, rarity: "common", size: 1, value: 90, color: "#4a6a2a", shape: "bug" },
+    { id: "grovewarden",name: "Grove Warden", area: "forest", areaBoss: true, rarity: "mythic", size: 12, value: 14000, minDepth: 200, color: "#3a5a2a", accent: "#9fe0a0", shape: "mosasaur", hp: 4, reward: "" },
+
+    // ======== Mangrove Swamp ========
+    { id: "swamppike",  name: "Swamp Pike",   area: "swamp", rarity: "common",   size: 2, value: 70,  minDepth: 0,   color: "#5a6a3a", shape: "longfish" },
+    { id: "gar",        name: "Alligator Gar",area: "swamp", rarity: "uncommon", size: 3, value: 260, minDepth: 30,  color: "#6a5a3a", shape: "eel" },
+    { id: "bullfrogfish",name: "Bullfrog Fish",area: "swamp", rarity: "uncommon", size: 2, value: 200, minDepth: 0,  color: "#6a8a3a", shape: "round" },
+    { id: "snapper",    name: "Snapping Turtle", area: "swamp", rarity: "rare", size: 3, value: 420, minDepth: 60,   color: "#3a4a2a", shape: "turtle" },
+    { id: "mudcat",     name: "Mud Catfish",  area: "swamp", rarity: "rare",     size: 3, value: 480, minDepth: 120, color: "#4a3a2a", shape: "catfish" },
+    { id: "swampgator", name: "Baby Gator",   area: "swamp", rarity: "epic",     size: 5, value: 1400,minDepth: 200, color: "#3a4a28", shape: "crocodile" },
+    { id: "swampcrab",  name: "Marsh Crab",   area: "swamp", creature: true, rarity: "common", size: 1, value: 80, color: "#7a5a3a", shape: "crab" },
+    { id: "swampcroc",  name: "Swamp Croc",   area: "swamp", areaBoss: true, rarity: "mythic", size: 12, value: 16000, minDepth: 200, color: "#2f3a22", accent: "#aebf6a", shape: "crocodile", hp: 4, reward: "" },
+
+    // ======== The Boneyard ========
+    { id: "bonefish",   name: "Bonefish",     area: "boneyard", rarity: "common",   size: 1, value: 110, minDepth: 0,   color: "#e8e2d0", shape: "fish" },
+    { id: "ribeel",     name: "Rib Eel",      area: "boneyard", rarity: "uncommon", size: 3, value: 320, minDepth: 80,  color: "#d8d0bc", shape: "eel" },
+    { id: "fossilray",  name: "Fossil Ray",   area: "boneyard", rarity: "rare",     size: 4, value: 620, minDepth: 200, color: "#c8c0aa", shape: "ray" },
+    { id: "skullsquid", name: "Skull Squid",  area: "boneyard", rarity: "rare",     size: 4, value: 700, minDepth: 300, color: "#e0d8c4", shape: "squid" },
+    { id: "marrowshark",name: "Marrow Shark", area: "boneyard", rarity: "epic",     size: 6, value: 2200, minDepth: 400, color: "#d0c8b4", shape: "shark" },
+    { id: "wraithwhale",name: "Wraith Whale", area: "boneyard", rarity: "legendary",size: 9, value: 6500, minDepth: 600, color: "#cfd6dc", shape: "whale" },
+    { id: "bonecrab",   name: "Bone Crab",    area: "boneyard", creature: true, rarity: "uncommon", size: 2, value: 280, color: "#ded6c2", shape: "crab" },
+    { id: "skeletonshark", name: "Skeleton Shark", area: "boneyard", areaBoss: true, rarity: "mythic", size: 13, value: 22000, minDepth: 300, color: "#f2eede", accent: "#cfc6b0", shape: "skeletonshark", hp: 5, reward: "" },
+
+    // ======== The Backrooms (secret) ========
+    { id: "wallpaperfish", name: "Wallpaper Fish", area: "backrooms", rarity: "common", size: 2, value: 200, minDepth: 0, color: "#d8c468", accent: "#b8a038", shape: "wallpaperfish" },
+    { id: "weircorejelly", name: "Weirdcore Jelly", area: "backrooms", rarity: "uncommon", size: 3, value: 360, minDepth: 20, color: "#c8b84a", accent: "#fff6a0", shape: "glowjelly" },
+    { id: "bacteriaurchin", name: "Bacteria Urchin", area: "backrooms", rarity: "uncommon", size: 2, value: 320, minDepth: 40, color: "#9aa83a", accent: "#dfff6a", shape: "urchin" },
+    { id: "hazmatshark", name: "Hazmat Shark", area: "backrooms", rarity: "epic", size: 6, value: 2400, minDepth: 120, color: "#e0c83a", accent: "#1a1a1a", shape: "shark" },
+    { id: "poolnoodle", name: "Pool Noodle Eel", area: "backrooms", rarity: "rare", size: 3, value: 520, minDepth: 80, color: "#4ad0e0", accent: "#ffffff", shape: "eel" },
+    { id: "cctvfish",   name: "CCTV Fish",    area: "backrooms", rarity: "mythic", size: 2, value: 4000, minDepth: 0, color: "#7a8a90", accent: "#ff4040", shape: "cctv", secret: true,
+      hint: "They watch from the corners. Linger at the very edges of the rooms and one will find you.", condition: { corner: true } },
+    { id: "bacteriawhale", name: "Bacteria Whale", area: "backrooms", areaBoss: true, rarity: "mythic", size: 13, value: 24000, minDepth: 200, color: "#b8c83a", accent: "#eaff8a", shape: "bacteriawhale", hp: 5, reward: "" },
+
+    // ======== Hidden Coast (secret, Japanese) ========
+    { id: "koi",        name: "Koi",          area: "japan", rarity: "common",   size: 1, value: 120, minDepth: 0,   color: "#ff7a3a", accent: "#ffffff", shape: "fish" },
+    { id: "nishikigoi", name: "Nishikigoi",   area: "japan", rarity: "uncommon", size: 2, value: 280, minDepth: 0,   color: "#ff9a4a", accent: "#ffffff", shape: "fish" },
+    { id: "tai",        name: "Red Tai",      area: "japan", rarity: "uncommon", size: 2, value: 240, minDepth: 20,  color: "#e0556a", accent: "#ffd6e0", shape: "tang" },
+    { id: "katsuo",     name: "Katsuo",       area: "japan", rarity: "rare",     size: 3, value: 420, minDepth: 60,  color: "#3a6fb0", shape: "longfish" },
+    { id: "ryukin",     name: "Ryukin",       area: "japan", rarity: "rare",     size: 2, value: 460, minDepth: 30,  color: "#ff5b3a", accent: "#ffe14d", shape: "round" },
+    { id: "tairyu",     name: "Tatsu Dragon", area: "japan", rarity: "epic",     size: 6, value: 2200, minDepth: 200, color: "#c0423a", accent: "#ffd24a", shape: "eel" },
+    { id: "japcrab",    name: "Heikegani Crab", area: "japan", creature: true, rarity: "uncommon", size: 2, value: 300, color: "#b0503a", shape: "crab" },
+    { id: "kaiju",      name: "The Kaiju",    area: "japan", areaBoss: true, rarity: "mythic", size: 14, value: 30000, minDepth: 250, color: "#2f4a3a", accent: "#6affc0", shape: "kaiju", hp: 6, reward: "" },
+
+    // ======== Hollow Deep (secret cave) — Olm is its secret fish ========
+    { id: "olm",        name: "Olm",          area: "secretcave", rarity: "epic", size: 1, value: 1200, minDepth: 0, color: "#f0d6cc", accent: "#ffc0cc", shape: "eel", secret: true,
+      hint: "A ghostly blind salamander of the lightless deep — it surfaces only in the Hollow Deep.", condition: {} },
+    { id: "cavelantern",name: "Cave Lantern", area: "secretcave", rarity: "rare", size: 2, value: 420, minDepth: 60, color: "#bcd0c0", accent: "#ffe98a", shape: "lantern" },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },

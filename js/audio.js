@@ -49,6 +49,12 @@
     cloud:     { tonic: 72, bpm: 120, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
     // Gloom Cavern — sparse, low, mysterious but still cosy (cave-pentatonic, not scary)
     cave:      { tonic: 53, bpm: 88, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    forest:    { tonic: 62, bpm: 112, density: 0.55, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
+    swamp:     { tonic: 55, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    boneyard:  { tonic: 50, bpm: 84, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    backrooms: { tonic: 58, bpm: 100, density: 0.5, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "IV"], heavyBass: true },
+    japan:     { tonic: 64, bpm: 104, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
+    secretcave:{ tonic: 55, bpm: 86, density: 0.38, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power
     // chords, pounding bass). Epic, not eerie.
     boss:      { tonic: 45, bpm: 156, density: 0.78, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, power: true, heavyBass: true },
@@ -192,6 +198,12 @@
     sanctuary: { fn: ambShimmer, min: 3000, max: 8000 },
     cloud:  { fn: ambShimmer, min: 3500, max: 8000 },
     cave:   { fn: ambBubble,  min: 2500, max: 6500 },
+    forest: { fn: ambBubble,  min: 2500, max: 6000 },
+    swamp:  { fn: ambBubble,  min: 2000, max: 5500 },
+    boneyard: { fn: ambWhale, min: 6000, max: 13000 },
+    backrooms: { fn: ambShimmer, min: 4000, max: 9000 },
+    japan:  { fn: ambWhale,   min: 6000, max: 13000 },
+    secretcave: { fn: ambBubble, min: 2500, max: 6500 },
   };
   function scheduleAmb() {
     var a = AMB[mode]; if (!a) return;
