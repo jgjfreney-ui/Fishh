@@ -906,13 +906,14 @@
 
   function drawLighting(loc, darkness) {
     var dx = run.diver.x - cam.x, dy = run.diver.y - cam.y;
+    var gog = state.items.goggles ? 130 : 0; // goggles widen your view in the dark
     // warm dive-light glow that grows useful as it gets darker
     if (darkness > 0.2) {
-      drawGlow(dx, dy, 130 + lightRadius(), "#ffe7a8", Math.min(0.5, darkness * 0.5));
+      drawGlow(dx, dy, 130 + lightRadius() + gog, "#ffe7a8", Math.min(0.5, darkness * 0.5));
     }
     // depth darkness vignette with a clear hole around the diver
     if (darkness > 0.22) {
-      var lr = 150 + lightRadius();
+      var lr = 150 + lightRadius() + gog;
       var rg = ctx.createRadialGradient(dx, dy, lr * 0.35, dx, dy, lr * 1.15);
       var a = Math.min(0.86, (darkness - 0.22) * 1.5);
       rg.addColorStop(0, "rgba(0,0,8,0)");
@@ -1050,6 +1051,17 @@
     { id: "bun",   name: "Bun" },
     { id: "buzz",  name: "Buzz" },
   ];
+  // Themed wetsuits: one per location (unlock as you reach the area) ...
+  var LOCATION_SUITS = [
+    { name: "Coral",     area: "coral",     color: "#2bb3c9", always: true },
+    { name: "River",     area: "river",     color: "#4a9e6a", always: true },
+    { name: "Kelp",      area: "kelp",      color: "#2f9e8f" },
+    { name: "Trench",    area: "trench",    color: "#1a5fa0" },
+    { name: "Starlight", area: "sanctuary", color: "#7a5cff" },
+  ];
+  // ... and one per secret fish (unlock by catching that secret)
+  var SECRET_SUITS = D.FISH.filter(function (f) { return f.secret; })
+    .map(function (f) { return { id: f.id, name: f.name, color: f.color }; });
 
   // Draw a clearly-human side-view diver with kicking legs/fins.
   // ctx2: target context · (cx,cy): screen centre · SC: pixel scale ·
@@ -1121,6 +1133,18 @@
     R(9, 1, 1, 1, "#2a2f36");                   // mouthpiece
     R(7, 1, 1, 1, "#222831"); R(5, 1, 1, 1, "#222831");
     R(2, 0, 1, 1, "#222831"); R(0, -1, 1, 1, "#222831"); R(-2, -2, 1, 1, "#222831");
+
+    // --- gear that visibly reflects your upgrades & items ---
+    var up = (state && state.upgrades) || {};
+    var items = (state && state.items) || {};
+    if (up.net > 0) { R(5, 3, 3, 1, "#9aa6b0"); R(8, 2, 1, 1, "#5cd0ff"); }        // magnet gadget on wrist
+    if (up.suit >= D.UPGRADES.suit.levels.length - 1) { R(-4, -2, 9, 1, "#ffd24a"); } // maxed suit gold trim
+    if (items.shinyPocket) { R(-1, 2, 2, 2, "#ffd24a"); R(0, 1, 1, 1, "#fff7c0"); }   // shiny pouch on belt
+    if (up.light > 0) { R(6, -6, 2, 2, "#2a2f36"); R(7, -6, 1, 1, "#fff3b0"); }       // headlamp
+    if (items.goggles) {                                                              // wide-view goggles
+      R(6, -4, 5, 1, "#0e2a36"); R(6, -3, 5, 3, mix(maskGlass, "#fff", 0.15));
+      R(6, 0, 5, 1, "#0e2a36"); R(8, -2, 1, 1, "#0b2a3a"); R(9, -3, 1, 1, "#ffffff");
+    }
   }
 
   function fishTargetH(f) { return f.isKraken ? 160 : 22 + f.size * 6; }
@@ -1180,10 +1204,11 @@
   function drawFishLabels() {
     ctx.textAlign = "center";
     ctx.font = "11px 'Segoe UI', sans-serif";
+    var range = state.items.goggles ? 460 : 220; // Wide-View Goggles see further
     for (var i = 0; i < run.fish.length; i++) {
       var f = run.fish[i];
       var dist = Math.hypot(f.x - run.diver.x, f.y - run.diver.y);
-      if (!((D.RARITY[f.def.rarity].order >= 2 || f.shiny) && dist < 220)) continue;
+      if (!((D.RARITY[f.def.rarity].order >= 2 || f.shiny) && dist < range)) continue;
       var x = f.x - cam.x, y = f.y - cam.y - fishTargetH(f) * 0.6 - 8;
       var label = (f.shiny ? "✦" : "") + f.def.name;
       ctx.fillStyle = "rgba(0,0,0,0.55)";
@@ -1670,6 +1695,28 @@
         + (owned ? '' : '<span class="lock">$' + fmt(s.cost) + '</span>') + '</button>';
     });
     html += '</div>';
+
+    // Location wetsuits
+    html += '<h3>Location suits</h3><div class="swatch-row">';
+    LOCATION_SUITS.forEach(function (s) {
+      var unlocked = s.always || state.areas[s.area];
+      var sel = state.diver.suit === s.color;
+      html += '<button class="swatch big-swatch ' + (sel ? 'sel' : '') + (unlocked ? '' : ' locked') + '" '
+        + (unlocked ? ('data-suitcolor="' + s.color + '"') : '') + ' style="background:' + s.color + '">'
+        + (unlocked ? '' : '<span class="lock">🔒</span>') + '</button>';
+    });
+    html += '</div>';
+
+    // Secret-fish wetsuits
+    html += '<h3>Secret suits</h3><div class="swatch-row">';
+    SECRET_SUITS.forEach(function (s) {
+      var unlocked = !!state.discovered[s.id];
+      var sel = state.diver.suit === s.color;
+      html += '<button class="swatch big-swatch ' + (sel ? 'sel' : '') + (unlocked ? '' : ' locked') + '" '
+        + (unlocked ? ('data-suitcolor="' + s.color + '"') : '') + ' style="background:' + (unlocked ? s.color : '#16242f') + '">'
+        + (unlocked ? '' : '<span class="lock">🔒</span>') + '</button>';
+    });
+    html += '</div><p class="tiny">Location suits unlock as you reach each area. Secret suits unlock when you catch that area\'s secret fish.</p>';
     html += '</div>';
 
     ov.innerHTML = html;
@@ -1700,6 +1747,9 @@
         }
         state.diver.suit = s.color; saveGame(); showDiverShop();
       };
+    });
+    ov.querySelectorAll("[data-suitcolor]").forEach(function (b) {
+      b.onclick = function () { state.diver.suit = b.getAttribute("data-suitcolor"); saveGame(); showDiverShop(); };
     });
   }
 

@@ -325,6 +325,11 @@
 
   // One-time purchasable items
   const ITEMS = {
+    goggles: {
+      name: "Wide-View Goggles",
+      desc: "Crystal-clear goggles — see much further underwater and spot distant fish from a long way off.",
+      cost: 4000,
+    },
     shinyPocket: {
       name: "Shiny Pocket",
       desc: "A magic pouch — you can still grab shiny catches even when your cargo hold is full.",
