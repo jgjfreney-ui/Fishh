@@ -66,7 +66,7 @@
       worldWidth: 2600,
       topColor: "#5a3ea8",
       deepColor: "#0a0226",
-      shinyBonus: 0.18, // huge flat shiny bonus
+      shinyBonus: 0.04, // elevated shiny odds (the true shiny haven comes post-Kraken)
       starfield: true,
       unlocked: false,
       cost: 18000,
@@ -267,15 +267,24 @@
     },
     shiny: {
       name: "Shiny Charm",
-      desc: "Each charm adds to your chance of hooking a shiny variant. Stacks!",
-      cost: 1500,
-      perStack: 0.015,  // +1.5% absolute shiny chance per charm
+      desc: "Each charm slightly raises your chance of a shiny variant. Stacks, but shinies stay rare!",
+      cost: 2500,
+      perStack: 0.004,  // +0.4% absolute shiny chance per charm
       maxStack: 40,
     },
   };
 
-  const BASE_SHINY_CHANCE = 0.008; // 0.8% baseline
+  const BASE_SHINY_CHANCE = 0.0025; // 0.25% baseline (rarer — shinies are special)
   const SHINY_VALUE_MULT = 9;       // shinies sell for ~9x
+
+  // One-time purchasable items
+  const ITEMS = {
+    shinyPocket: {
+      name: "Shiny Pocket",
+      desc: "A magic pouch — you can still grab shiny catches even when your cargo hold is full.",
+      cost: 6000,
+    },
+  };
 
   window.GAMEDATA = {
     RARITY: RARITY,
@@ -286,6 +295,7 @@
     TREASURES: TREASURES,
     UPGRADES: UPGRADES,
     CHARMS: CHARMS,
+    ITEMS: ITEMS,
     BASE_SHINY_CHANCE: BASE_SHINY_CHANCE,
     SHINY_VALUE_MULT: SHINY_VALUE_MULT,
     PXPM: 4, // world pixels per "meter" of depth

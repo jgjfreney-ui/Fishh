@@ -35,12 +35,13 @@
       settings: { muted: false },
       diver: { skin: 2, suit: "#1f7d9c", look: "short" },
       diverUnlocks: {}, // premium suit colour id -> true
+      items: {},        // one-time items, e.g. shinyPocket
     };
   }
 
   function listSaves() {
     var out = [];
-    for (var i = 1; i <= 3; i++) {
+    for (var i = 1; i <= 6; i++) {
       var raw = null;
       try { raw = localStorage.getItem(SAVE_PREFIX + i); } catch (e) {}
       if (raw) {
@@ -536,8 +537,9 @@
       f.phase += dt * 2;
       var dx = diver.x - f.x, dy = diver.y - f.y;
       var dist = Math.hypot(dx, dy) || 0.001;
+      var canGrab = !full || (f.shiny && state.items.shinyPocket);
       var grabbing = false;
-      if (!full && dist < mRange) {
+      if (canGrab && dist < mRange) {
         // pull toward the diver (stronger when closer; big fish resist)
         var t = 1 - dist / mRange;
         var pull = (55 + mStr * 75) * t / (0.55 + f.size * 0.42);
@@ -617,12 +619,11 @@
   // ---------------------------------------------------------------------
   function catchFish(f) {
     var def = f.def;
-    if (run.bagUsed + def.size > inventoryCap()) {
+    // Shiny Pocket lets shinies through even when the hold is full
+    var pocketed = f.shiny && state.items.shinyPocket;
+    if (run.bagUsed + def.size > inventoryCap() && !pocketed) {
       toast("Cargo hold full! Surface to sell.", "bad", 1400);
-      // remove from world anyway? no — leave it, just block
-      run.target = null; run.reel = 0;
-      // push it away so it isn't instantly re-targeted
-      f.fleeing = 1.0;
+      f.fleeing = 1.0; // push it away so the magnet doesn't keep grabbing
       return;
     }
     // remove from world
@@ -1424,8 +1425,20 @@
           : '<button data-buycharm="' + ck + '" ' + (state.money < c.cost ? 'disabled' : '') + '>$' + fmt(c.cost) + '</button>')
         + '</div></div>';
     }
-    html += '<p class="tiny">Base shiny chance is ' + (D.BASE_SHINY_CHANCE * 100).toFixed(1)
-      + '%. The Starlight Sanctuary adds a huge bonus on top. A shiny Kraken unlocks a secret ending...</p>';
+    // one-time items live in the charms tab
+    for (var ik in D.ITEMS) {
+      var it = D.ITEMS[ik];
+      var have = !!state.items[ik];
+      html += '<div class="shop-item">'
+        + '<div class="si-info"><b>' + it.name + '</b>' + (have ? ' <span class="lvl">✓ Owned</span>' : '')
+        + '<p>' + it.desc + '</p></div>'
+        + '<div class="si-buy">'
+        + (have ? '<span class="maxed">✓</span>'
+          : '<button data-buyitem="' + ik + '" ' + (state.money < it.cost ? 'disabled' : '') + '>$' + fmt(it.cost) + '</button>')
+        + '</div></div>';
+    }
+    html += '<p class="tiny">Base shiny chance is just ' + (D.BASE_SHINY_CHANCE * 100).toFixed(2)
+      + '% — shinies are genuinely rare. Charms nudge it up a little. A shiny Kraken unlocks a secret ending...</p>';
     html += '</div>';
 
     // HINTS
@@ -1465,6 +1478,14 @@
     });
     ov.querySelectorAll("[data-buycharm]").forEach(function (b) {
       b.onclick = function () { buyCharm(b.getAttribute("data-buycharm")); };
+    });
+    ov.querySelectorAll("[data-buyitem]").forEach(function (b) {
+      b.onclick = function () {
+        var ik = b.getAttribute("data-buyitem"), it = D.ITEMS[ik];
+        if (state.items[ik] || state.money < it.cost) return;
+        state.money -= it.cost; state.items[ik] = true; saveGame();
+        toast(it.name + " acquired!", "good", 1600); showShop();
+      };
     });
     ov.querySelectorAll("[data-buyhint]").forEach(function (b) {
       b.onclick = function () { buyHint(b.getAttribute("data-buyhint")); };
