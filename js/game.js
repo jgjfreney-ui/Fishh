@@ -23,7 +23,7 @@
       money: 0,
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0 },
       charms: { rarity: 0, shiny: 0 },
-      areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false, sanctuary: false },
+      areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false, cave: false, cloud: false, sanctuary: false },
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -79,12 +79,12 @@
   function up(track) { return D.UPGRADES[track].levels[state.upgrades[track]].value; }
   function maxOxygen() { return up("oxygen"); }
   function speed() { return up("fins") * (state.items.orcawhistle ? 1.25 : 1); } // Orca Whistle = +25% swim speed
-  function catchRadius() { return up("net"); }
+  function catchRadius() { return up("net") * (state.items.rocfeather ? 1.3 : 1); } // Roc Feather = +30% magnet range
   function reelMul() { return up("reel"); }
   function inventoryCap() { return up("inventory"); }
   function oxygenMul() { return up("suit"); }
   function lightRadius() { return up("light"); }
-  function netSize() { return up("scoop"); }
+  function netSize() { var n = up("scoop"); return n > 0 ? n * (state.items.crabclaw ? 1.5 : 1) : 0; } // Crab Claw = +50% net size
 
   function rarityCharmTilt() { return state.charms.rarity * D.CHARMS.rarity.perStack; }
   function shinyChance(area) {
@@ -170,6 +170,8 @@
     arctic:    { plants: ["crystal", "rock", "rock"], plantColors: ["#bfe6ff", "#8fb0c4", "#dff2ff"], rock: "#3a4a58", floor: "#3a5060" },
     ancient:   { plants: ["coral", "rock", "vent"], plantColors: ["#8a7a4a", "#b09a5a", "#6a8a5a"], rock: "#3a2e1a", floor: "#2a2010" },
     opensea:   { plants: ["rock", "coral", "rock"], plantColors: ["#2a6a9a", "#3a8aaa", "#4a6a8a"], rock: "#1a3a5a", floor: "#123048" },
+    cave:      { plants: ["crystal", "vent", "rock"], plantColors: ["#8affc0", "#7a5a9a", "#4a3a5a"], rock: "#1a151f", floor: "#0a0710" },
+    cloud:     { plants: ["coral", "coral", "rock"], plantColors: ["#bfe0c0", "#a0d8e8", "#cfeaff"], rock: "#9fc0d8", floor: "#7fae8a" },
   };
 
   function generateDecor(loc) {
@@ -192,8 +194,8 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire" }[loc.id] || "bigkelp";
-    var bcount = Math.round(loc.worldWidth / 190);
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal" }[loc.id] || "bigkelp";
+    var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
         type: bigType,
@@ -278,6 +280,7 @@
 
   function placeWrecks(loc) {
     run.wrecks = [];
+    if (loc.birdPool || loc.creaturePool) return; // no sunken wrecks in the sky / cave
     var n = loc.maxDepth > 700 ? 3 : 2;
     var planeChance = loc.id === "trench" ? 0.45 : (loc.id === "river" ? 0.1 : 0.28);
     for (var i = 0; i < n; i++) {
@@ -320,9 +323,20 @@
 
   function eligibleFish(areaId, rarity, depthM) {
     var out = [];
-    var allContent = D.LOCATIONS[areaId] && D.LOCATIONS[areaId].allContent; // Sanctuary: everything
+    var loc = D.LOCATIONS[areaId];
+    var allContent = loc && loc.allContent;       // Sanctuary: everything
+    var birdPool = loc && loc.birdPool;            // Cloud Reaches: birds swim like fish
+    var creaturePool = loc && loc.creaturePool;    // Gloom Cavern: creatures swim like fish
     for (var i = 0; i < D.FISH.length; i++) {
       var f = D.FISH[i];
+      if (birdPool) {
+        if (!f.bird || f.rarity !== rarity) continue;
+        out.push(f); continue;                     // no depth/secret gating for the sky
+      }
+      if (creaturePool) {
+        if (!f.creature || f.rarity !== rarity) continue;
+        out.push(f); continue;                     // every creature drifts in the cave
+      }
       if (!allContent && f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
       if (f.isKraken || f.isBlob || f.areaBoss || f.creature || f.bird) continue;
@@ -446,6 +460,18 @@
       var f = D.FISH[j];
       if (f.secret && f.area !== "sanctuary" && !state.discovered[f.id]) return false;
     }
+    return true;
+  }
+  // gating helpers for the Cloud Reaches (all birds) & Gloom Cavern (all
+  // creatures — excluding the cave's own, to avoid a chicken-and-egg lock).
+  // (the post-game Sanctuary's birds/creatures are excluded so these areas
+  //  stay reachable BEFORE the Kraken, not after it)
+  function allBirdsFound() {
+    for (var i = 0; i < D.FISH.length; i++) { var f = D.FISH[i]; if (f.bird && f.area !== "sanctuary" && !state.discovered[f.id]) return false; }
+    return true;
+  }
+  function allCreaturesFound() {
+    for (var i = 0; i < D.FISH.length; i++) { var f = D.FISH[i]; if (f.creature && f.area !== "cave" && f.area !== "sanctuary" && !state.discovered[f.id]) return false; }
     return true;
   }
   // What (if anything) should rise in the Trench right now? Blobfish first —
@@ -638,8 +664,8 @@
       run.oxygen = run.maxO; // refill at surface
     }
 
-    // --- bubbles from diver ---
-    if (Math.random() < 0.4 && diver.y > 20) {
+    // --- bubbles from diver (no bubbles up in the open sky) ---
+    if (!loc.airArea && Math.random() < 0.4 && diver.y > 20) {
       run.bubbles.push({ x: diver.x + (Math.random() - 0.5) * 8, y: diver.y - 6, r: 1 + Math.random() * 3, vy: 40 + Math.random() * 30, life: 2 });
     }
 
@@ -710,8 +736,11 @@
     var cr = mRange;
 
     // --- sea-floor creatures (caught with a Net; magnet ignores them) ---
+    // (skipped in the Cloud Reaches / Gloom Cavern, where creatures & birds
+    //  instead swim freely and are magnet-caught like fish via spawnFish)
+    var special = loc.birdPool || loc.creaturePool;
     run.creatureTimer -= dt;
-    if (run.creatureTimer <= 0) { run.creatureTimer = 1.5 + Math.random() * 2.5; spawnCreature(false); }
+    if (run.creatureTimer <= 0) { run.creatureTimer = 1.5 + Math.random() * 2.5; if (!special) spawnCreature(false); }
     var netR = netSize();              // Fishing Net upgrade size (0 = none)
     var hasNet = netR > 0;
     for (var ci = run.creatures.length - 1; ci >= 0; ci--) {
@@ -734,7 +763,7 @@
     // --- birds: ambient flocks always drift across the sky (so you can see
     //     what lives here); seed-summoned ones descend to you at the surface ---
     run.birdTimer -= dt;
-    if (run.birdTimer <= 0) { run.birdTimer = 2 + Math.random() * 3; spawnAmbientBird(); }
+    if (run.birdTimer <= 0) { run.birdTimer = 2 + Math.random() * 3; if (!special) spawnAmbientBird(); }
     var atSurface = diver.y <= 70;
     for (var bi = run.birds.length - 1; bi >= 0; bi--) {
       var b = run.birds[bi];
@@ -936,6 +965,8 @@
     else if (def.reward === "stinger") state.items.jellystinger = true;
     else if (def.reward === "megtooth") state.items.megtooth = true;
     else if (def.reward === "orcawhistle") state.items.orcawhistle = true;
+    else if (def.reward === "rocfeather") state.items.rocfeather = true;
+    else if (def.reward === "crabclaw") state.items.crabclaw = true;
     run.bossPresent = false;
     saveGame();
     setTimeout(function () { showAreaBossEnding(def); }, 700);
@@ -1024,7 +1055,9 @@
     var loc = D.LOCATIONS[run.area];
     ctx.clearRect(0, 0, W, H);
 
-    var darkness = depthFactor(run.diver.y, loc);
+    // the open sky never goes dark; the cavern is extra gloomy
+    var darkness = loc.airArea ? 0 : depthFactor(run.diver.y, loc);
+    if (loc.caveArea) darkness = Math.min(0.92, darkness + 0.35);
 
     // --- background, lighting & scenery ---
     drawBackground(loc);
@@ -1073,6 +1106,18 @@
     grad.addColorStop(1, mix(loc.topColor, loc.deepColor, depthFactor(cam.y + H, loc)));
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
+
+    // big drifting background clouds for the Cloud Reaches
+    if (loc.airArea) {
+      for (var ci = 0; ci < 14; ci++) {
+        var s = 2 + (ci % 3);
+        var cxp = ((ci * 357 - cam.x * (0.2 + (ci % 3) * 0.12) + run.time * (6 + (ci % 4) * 4)) % (W + 360) + (W + 360)) % (W + 360) - 180;
+        var cyp = ((ci * 211 + 80 - cam.y * 0.5) % (H + 200) + (H + 200)) % (H + 200) - 100;
+        ctx.globalAlpha = 0.5;
+        drawCloud(cxp, cyp, s);
+        ctx.globalAlpha = 1;
+      }
+    }
 
     if (loc.starfield) drawStarfield();
 
@@ -2537,6 +2582,12 @@
       if (!unlocked && loc.requireBosses && !(state.krakenCaught && state.blobfishCaught)) {
         gate = "🔒 Defeat the Kraken (and the blobfish) to unlock";
       }
+      if (!unlocked && loc.requireAllBirds && !allBirdsFound()) {
+        gate = "🔒 Discover every bird first";
+      }
+      if (!unlocked && loc.requireAllCreatures && !allCreaturesFound()) {
+        gate = "🔒 Discover every sea creature first";
+      }
       var tint = loc.tint || "#6fd0ff";
       var cardStyle = ' style="border-left:5px solid ' + tint + ';"';
       var goStyle = ' style="background:' + tint + ';border-color:' + tint + ';color:#04121c;"';
@@ -2670,6 +2721,12 @@
     } else if (def.reward === "orcawhistle") {
       html += '<p>The pod accepts you — you earn a carved <b>Orca Whistle</b>! 🐋</p>';
       html += '<p class="prize">You now swim <b>25% faster</b>, forever.</p>';
+    } else if (def.reward === "rocfeather") {
+      html += '<p>You pluck a colossal <b>Roc Feather</b>! 🪶</p>';
+      html += '<p class="prize">Your magnet reaches <b>30% farther</b>, forever.</p>';
+    } else if (def.reward === "crabclaw") {
+      html += '<p>You claim a giant <b>Crab Claw</b>! 🦀</p>';
+      html += '<p class="prize">Your net is <b>50% bigger</b>, forever.</p>';
     } else {
       html += '<p>A mighty trophy added to your collection.</p>';
       html += '<p class="prize">+$' + fmt(def.value) + '</p>';
@@ -2863,6 +2920,9 @@
     if (state.items.necklace) html += row("📿 Multiplier Necklace", "treasures worth ×2");
     if (state.items.megtooth) html += row("🦷 Meg Tooth", "bosses −1 harpoon");
     if (state.items.jellystinger) html += row("⚡ Jelly Stinger", "fish stop fleeing");
+    if (state.items.orcawhistle) html += row("🐋 Orca Whistle", "swim +25% faster");
+    if (state.items.rocfeather) html += row("🪶 Roc Feather", "magnet +30% range");
+    if (state.items.crabclaw) html += row("🦀 Crab Claw", "net +50% bigger");
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
     if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
     var seedTotal = 0; for (var s in state.seeds) seedTotal += state.seeds[s];
@@ -3025,6 +3085,7 @@
       aquaFrame: function (dt) { if (scene === "aquarium" && aqua) { updateAquarium(dt || 0.05); renderAquarium(); } },
       aquaNav: function (d) { aquaNav(d); },
       forceShinyNext: function () { state.charms.shiny = 999; },
+      fishKinds: function () { var o = { fish: 0, bird: 0, creature: 0, boss: 0 }; if (run) run.fish.forEach(function (f) { if (f.isBoss) o.boss++; else if (f.def.bird) o.bird++; else if (f.def.creature) o.creature++; else o.fish++; }); return o; },
     },
   };
 })();

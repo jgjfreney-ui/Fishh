@@ -74,6 +74,22 @@
       requireAreas: ["river", "kelp", "arctic", "ancient", "opensea"], // always the last to unlock
       sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
+    cave: {
+      id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
+      blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
+      maxDepth: 800, worldWidth: 2600, topColor: "#2a3340", deepColor: "#04050a",
+      shinyBonus: 0.12, unlocked: false, cost: 16000,
+      caveArea: true, creaturePool: true, requireAllCreatures: true,
+      sky: { top: "#1a2230", bottom: "#0a0e16" },
+    },
+    cloud: {
+      id: "cloud", name: "Cloud Reaches", tint: "#bfe0ff",
+      blurb: "Climb above the waves into a dreamlike sky and catch the birds themselves. Shinies bloom thick up here.",
+      maxDepth: 600, worldWidth: 2600, topColor: "#bfe8ff", deepColor: "#6f9fd0",
+      shinyBonus: 0.2, unlocked: false, cost: 18000,
+      airArea: true, birdPool: true, requireAllBirds: true,
+      sky: { top: "#cdeeff", bottom: "#eaf8ff" },
+    },
     sanctuary: {
       id: "sanctuary", name: "Starlight Sanctuary", tint: "#b07bff",
       blurb: "A post-game paradise where EVERY creature in the sea gathers — and shinies bloom like stars.",
@@ -230,6 +246,12 @@
     { id: "abalone",    name: "Abalone",      area: "kelp",  creature: true, rarity: "uncommon",  size: 1, value: 150,  color: "#8a7a9a", shape: "urchin" },
     { id: "seacucumber",name: "Sea Cucumber", area: "trench", creature: true, rarity: "rare",     size: 2, value: 380,  color: "#6a4a5a", shape: "bug" },
     { id: "voidstar",   name: "Void Star",    area: "sanctuary", creature: true, rarity: "legendary", size: 1, value: 1800, color: "#9f7bff", shape: "starfish" },
+    // ---- Gloom Cavern's own creatures (only found drifting in the cave) ----
+    { id: "cavefish",   name: "Blind Cavefish", area: "cave", creature: true, rarity: "common",    size: 1, value: 140,  color: "#e8dcd0", shape: "fish" },
+    { id: "olm",        name: "Olm",            area: "cave", creature: true, rarity: "uncommon",  size: 1, value: 240,  color: "#f0d6cc", shape: "eel" },
+    { id: "ghostshrimp",name: "Ghost Shrimp",   area: "cave", creature: true, rarity: "rare",      size: 1, value: 360,  color: "#cfe0e8", shape: "bug" },
+    { id: "cavecrab",   name: "Cave Crab",      area: "cave", creature: true, rarity: "uncommon",  size: 2, value: 300,  color: "#7a5a4a", shape: "crab" },
+    { id: "glowsnail",  name: "Glow Snail",     area: "cave", creature: true, rarity: "epic",      size: 1, value: 900,  color: "#8affc0", shape: "urchin" },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
@@ -296,7 +318,9 @@
     { id: "manowar",   name: "Man o' War",   area: "coral",   areaBoss: true, rarity: "mythic", size: 7,  value: 3000, minDepth: 120, color: "#b06bd0", accent: "#ffd6f2", shape: "manowar", hp: 3, reward: "stinger" },
     { id: "siphonophore", name: "Siphonophore", area: "opensea", areaBoss: true, rarity: "mythic", size: 10, value: 6000, minDepth: 200, color: "#ff6f91", shape: "siphonophore", hp: 3, reward: "necklace" },
     { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "megalodon", hp: 3, reward: "megtooth" },
-    { id: "orca",      name: "Rogue Orca",    area: "arctic",  areaBoss: true, rarity: "mythic", size: 11, value: 5000, minDepth: 250, color: "#16181d", accent: "#f2f6fa", shape: "orca", hp: 3, reward: "orcawhistle" },
+    { id: "rogueorca", name: "Rogue Orca",    area: "arctic",  areaBoss: true, rarity: "mythic", size: 11, value: 5000, minDepth: 250, color: "#16181d", accent: "#f2f6fa", shape: "orca", hp: 3, reward: "orcawhistle" },
+    { id: "roc",       name: "The Roc",       area: "cloud",   areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 200, color: "#6a4a2a", accent: "#d8c0a0", shape: "roc", hp: 3, reward: "rocfeather" },
+    { id: "spidercrab", name: "Colossal Spider Crab", area: "cave", areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 250, color: "#8a3a2a", accent: "#e0a060", shape: "spidercrab", hp: 3, reward: "crabclaw" },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });

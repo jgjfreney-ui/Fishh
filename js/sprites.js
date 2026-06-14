@@ -381,6 +381,31 @@
       "F.......bbBBBBBBbb.....",
       "...........AAA.AAA.....",
     ],
+    roc: [
+      "...........FFF..........",
+      "..........FFFFFF........",
+      "f........FFFFFFFFb......",
+      "f.....bBBBBBBBBBBBBb....",
+      "f...bBBBBBBBBBBBBBBEPG..",
+      "f..bBBBBBBBBBBBBBBBBBPGG",
+      "f...bBBBBBBBBBBBBBBBb...",
+      "f....FFbBBBBBBBbFF......",
+      ".......AAA...AAA.......",
+      "......A.A.....A.A.......",
+    ],
+    spidercrab: [
+      "A.................A...",
+      ".A...A.......A...A....",
+      "..A...A.....A...A.....",
+      "...A...bBBBBb..A......",
+      "..A..bBEPBBEPBb.A.....",
+      ".A..bBBBBBBBBBBb.A....",
+      "A..bBBBBBBBBBBBBb..A..",
+      "..A.bBBBBBBBBBBb.A....",
+      ".A...A.bBBBBb.A...A...",
+      "A...A...A..A...A...A..",
+      "...A...A....A...A.....",
+    ],
     flatfish: [
       "....E.E.......",
       "..bBBBBBBBBBb.",
@@ -609,6 +634,7 @@
     trilobite: "trilobite", ammonite: "ammonite", tang: "tang", flatfish: "flatfish",
     dolphin: "dolphin", clione: "clione",
     orca: "orca", manowar: "manowar", siphonophore: "siphonophore", megalodon: "megalodon",
+    roc: "roc", spidercrab: "spidercrab",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
