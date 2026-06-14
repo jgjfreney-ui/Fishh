@@ -283,6 +283,49 @@
   });
   window.addEventListener("keyup", function (e) { keys[e.key.toLowerCase()] = false; });
 
+  // ----- Touch joystick (floating: drag anywhere on the dive screen) -----
+  var joy = { active: false, id: null, sx: 0, sy: 0, cx: 0, cy: 0, dx: 0, dy: 0, mag: 0 };
+  var JOY_MAX = 60; // px to full tilt
+
+  function setupTouch() {
+    canvas.addEventListener("touchstart", onTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", onTouchMove, { passive: false });
+    canvas.addEventListener("touchend", onTouchEnd, { passive: false });
+    canvas.addEventListener("touchcancel", onTouchEnd, { passive: false });
+  }
+  function onTouchStart(e) {
+    if (scene !== "dive") return;
+    if (joy.active) return;
+    var t = e.changedTouches[0];
+    joy.active = true; joy.id = t.identifier;
+    joy.sx = t.clientX; joy.sy = t.clientY;
+    joy.cx = t.clientX; joy.cy = t.clientY;
+    joy.dx = 0; joy.dy = 0; joy.mag = 0;
+    e.preventDefault();
+  }
+  function onTouchMove(e) {
+    if (!joy.active) return;
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (t.identifier !== joy.id) continue;
+      var dx = t.clientX - joy.sx, dy = t.clientY - joy.sy;
+      var d = Math.hypot(dx, dy);
+      joy.mag = Math.min(1, d / JOY_MAX);
+      var l = d || 1;
+      joy.dx = dx / l; joy.dy = dy / l;
+      joy.cx = joy.sx + joy.dx * Math.min(d, JOY_MAX);
+      joy.cy = joy.sy + joy.dy * Math.min(d, JOY_MAX);
+    }
+    e.preventDefault();
+  }
+  function onTouchEnd(e) {
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === joy.id) {
+        joy.active = false; joy.id = null; joy.mag = 0; joy.dx = 0; joy.dy = 0;
+      }
+    }
+  }
+
   // ---------------------------------------------------------------------
   //  Canvas / rendering
   // ---------------------------------------------------------------------
@@ -319,19 +362,24 @@
     var loc = D.LOCATIONS[run.area];
     var diver = run.diver;
 
-    // --- movement ---
+    // --- movement (keyboard OR touch joystick) ---
     var sp = speed();
-    var ax = 0, ay = 0;
+    var ax = 0, ay = 0, mag = 1;
     if (keys["a"] || keys["arrowleft"]) ax -= 1;
     if (keys["d"] || keys["arrowright"]) ax += 1;
     if (keys["w"] || keys["arrowup"]) ay -= 1;
     if (keys["s"] || keys["arrowdown"]) ay += 1;
-    var len = Math.hypot(ax, ay) || 1;
-    diver.vx = (ax / len) * sp;
-    diver.vy = (ay / len) * sp;
-    diver.x = clamp(diver.x + diver.vx * dt, 12, loc.worldWidth - 12);
-    diver.y = clamp(diver.y + diver.vy * dt, 0, loc.maxDepth * PXPM);
-    if (ax !== 0) diver.face = ax > 0 ? 1 : -1;
+    if (joy.active && (joy.mag > 0.08)) { ax = joy.dx; ay = joy.dy; mag = joy.mag; }
+    var len = Math.hypot(ax, ay);
+    if (len > 0.001) {
+      diver.vx = (ax / len) * sp * mag;
+      diver.vy = (ay / len) * sp * mag;
+      diver.x = clamp(diver.x + diver.vx * dt, 12, loc.worldWidth - 12);
+      diver.y = clamp(diver.y + diver.vy * dt, 0, loc.maxDepth * PXPM);
+      if (Math.abs(ax) > 0.05) diver.face = ax > 0 ? 1 : -1;
+    } else {
+      diver.vx = diver.vy = 0;
+    }
 
     var depthM = diver.y / PXPM;
     run.diveDepthReached = Math.max(run.diveDepthReached, depthM);
@@ -600,6 +648,20 @@
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, W, H);
     }
+
+    // touch joystick
+    if (joy.active) drawJoystick();
+  }
+
+  function drawJoystick() {
+    ctx.save();
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.beginPath(); ctx.arc(joy.sx, joy.sy, JOY_MAX, 0, 7); ctx.stroke();
+    ctx.fillStyle = "rgba(63,208,255,0.55)";
+    ctx.beginPath(); ctx.arc(joy.cx, joy.cy, 26, 0, 7); ctx.fill();
+    ctx.restore();
   }
 
   function drawStarfield() {
@@ -892,7 +954,7 @@
           + '<div class="slot-btns"><button data-new="' + s.slot + '">New Game</button></div></div>';
       }
     });
-    html += '</div><p class="tiny">Controls: WASD / Arrows to swim · get near fish to auto-reel · return to the boat at the surface (Space) to sell &amp; shop.</p>';
+    html += '</div><p class="tiny">📱 Drag anywhere to steer your diver · swim near fish to auto-reel them in · float back to the top and tap <b>Board the Boat</b> to sell &amp; shop. (On desktop: WASD / Arrows.)</p>';
     html += '</div>';
     var ov = overlay("modal");
     ov.innerHTML = html;
@@ -1315,6 +1377,13 @@
     ctx = canvas.getContext("2d");
     resize();
     window.addEventListener("resize", resize);
+    window.addEventListener("orientationchange", function () { setTimeout(resize, 250); });
+    setupTouch();
+    // surface button (tap to board the boat — mobile friendly)
+    var sh = document.getElementById("surface-hint");
+    if (sh) sh.addEventListener("click", function () {
+      if (scene === "dive" && run && run.diver.y <= 30) surface();
+    });
     requestAnimationFrame(loop);
     showStart();
   }

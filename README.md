@@ -1,29 +1,54 @@
 # 🌊 Deep Sea Diver 🐙
 
-A browser-based deep sea diving & fishing game. Dive into the ocean, catch fish
-to sell, raid shipwrecks for treasure, upgrade your gear at the helpful shop,
-and chase the ultimate prize — **the Kraken**, which only surfaces once you've
-catalogued every other fish in the sea.
+A deep sea diving & fishing game for **Android** (and any modern browser). Dive
+into the ocean, catch fish to sell, raid shipwrecks for treasure, upgrade your
+gear at the helpful shop, and chase the ultimate prize — **the Kraken**, which
+only surfaces once you've catalogued every other fish in the sea.
 
-## Play
+Built as an HTML5/Canvas game and packaged into an installable Android `.apk`
+with [Capacitor](https://capacitorjs.com/).
 
-No build step, no server needed. Just open **`index.html`** in any modern
-browser (or serve the folder and visit it).
+## Controls (touch)
 
-```
-# optional: run a tiny local server
-python3 -m http.server
-# then open http://localhost:8000
-```
-
-## Controls
-
-- **WASD / Arrow keys** — swim
-- Get **near a fish** to automatically reel it in (watch the yellow meter)
+- **Drag anywhere** on the dive screen — a floating joystick steers your diver
+- Swim **near a fish** to automatically reel it in (watch the yellow meter)
 - Watch your **oxygen** — run out and you black out, dropping your catch!
-- Return to the **surface** (top) and press **Space** to climb aboard the boat
+- Float to the **surface** and tap **Board the Boat** to sell & shop
 - From the boat you can **sell**, visit the **shop**, browse your
   **collection**, change **dive site**, and **save**
+
+*(On desktop, WASD / Arrow keys also work.)*
+
+## Get the APK onto your phone
+
+The easiest way — let GitHub build it for you, no Android tools required:
+
+1. Push this branch (done) and open the repo's **Actions** tab on GitHub
+2. Run the **"Build Android APK"** workflow (it also runs automatically on push)
+3. When it finishes, download the **`deep-sea-diver-apk`** artifact — inside is
+   `deep-sea-diver.apk`
+4. Transfer it to your Pixel, then tap it to install. You'll need to allow
+   *"Install unknown apps"* for your file manager / browser the first time
+   (Settings → Apps → Special access → Install unknown apps).
+
+This is a **debug** APK — perfect for installing on your own device.
+
+## Run it in a browser (quick preview)
+
+```
+npm run serve          # builds www/ and serves it at http://localhost:8000
+# or just open index.html directly
+```
+
+## Build the APK locally (optional)
+
+Requires Node 18+, JDK 17, and the Android SDK (e.g. via Android Studio).
+
+```
+npm install
+npm run apk            # copies web assets, syncs Capacitor, builds debug APK
+# output: android/app/build/outputs/apk/debug/app-debug.apk
+```
 
 ## Features
 
@@ -50,10 +75,13 @@ python3 -m http.server
 ## Project layout
 
 ```
-index.html      # page + HUD markup
-css/style.css   # all styling
-js/data.js      # game content: fish, treasures, shop items, locations
-js/game.js      # engine, rendering, gameplay & UI logic
+index.html             # game page + HUD (source of truth)
+css/style.css          # styling (mobile + desktop)
+js/data.js             # content: fish, treasures, shop items, locations
+js/game.js             # engine, rendering, touch controls, gameplay & UI
+scripts/copy-web.js    # copies the web app into www/ for Capacitor
+capacitor.config.json  # Android app id/name/webDir
+.github/workflows/android.yml  # CI that builds the installable APK
 ```
 
 Have fun, and mind your oxygen down there. 🫧

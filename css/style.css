@@ -22,23 +22,28 @@ html, body {
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
   overflow: hidden;
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 #stage {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* avoid mobile browser chrome jump */
   overflow: hidden;
 }
 
-#game { display: block; width: 100%; height: 100%; }
+#game { display: block; width: 100%; height: 100%; touch-action: none; }
 
 /* ---------------- HUD ---------------- */
 #hud {
   position: absolute;
-  top: 12px; left: 12px; right: 12px;
+  top: calc(10px + env(safe-area-inset-top)); left: 10px; right: 10px;
   display: none;
-  gap: 10px;
+  gap: 8px;
   align-items: stretch;
   pointer-events: none;
   flex-wrap: wrap;
@@ -80,14 +85,18 @@ html, body {
 
 #surface-hint {
   position: absolute;
-  bottom: 28px; left: 50%;
+  bottom: calc(34px + env(safe-area-inset-bottom)); left: 50%;
   transform: translateX(-50%);
-  background: rgba(8, 30, 48, 0.86);
-  border: 1px solid var(--line);
+  background: var(--accent);
+  color: #042033;
+  font-weight: 700;
+  border: none;
   border-radius: 30px;
-  padding: 10px 22px;
-  font-size: 15px;
+  padding: 16px 30px;
+  font-size: 17px;
   display: none;
+  z-index: 9;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   animation: bob 1.6s ease-in-out infinite;
 }
 @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
@@ -307,7 +316,33 @@ button.big { padding: 16px; font-size: 16px; font-weight: 600; }
 .toast.shiny { border-color: var(--gold); background: rgba(56, 44, 8, 0.92); color: var(--gold); }
 
 @media (max-width: 560px) {
-  .boat-grid { grid-template-columns: 1fr; }
-  .panel { padding: 18px; }
-  .panel h1 { font-size: 24px; }
+  .boat-grid { grid-template-columns: 1fr 1fr; }
+  .panel { padding: 16px; border-radius: 14px; }
+  .panel h1 { font-size: 22px; }
+  .panel h2 { font-size: 20px; }
+
+  /* compact HUD so it doesn't eat the screen on a phone */
+  #hud { gap: 6px; }
+  .hud-block { padding: 5px 9px; min-width: 0; border-radius: 9px; }
+  .hud-block.area { min-width: 0; flex: 1 1 100%; }
+  .hud-block.ox { flex: 1 1 100%; min-width: 0; order: 5; }
+  .hud-label { font-size: 9px; margin-bottom: 1px; }
+  .hud-block > div:last-child { font-size: 15px; }
+  .ox-bar { height: 13px; }
+
+  .shop-item { flex-wrap: wrap; }
+  .si-buy { width: 100%; }
+  .si-buy button, .si-buy .maxed { display: block; width: 100%; text-align: center; }
+  .coll-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .area-card { flex-wrap: wrap; }
+  .area-act { width: 100%; }
+  .area-act button { width: 100%; }
+  button.big { padding: 18px 12px; }
+}
+
+/* very short / landscape phones */
+@media (max-height: 480px) {
+  #hud { top: calc(6px + env(safe-area-inset-top)); }
+  .hud-block { padding: 4px 8px; }
+  #surface-hint { bottom: calc(12px + env(safe-area-inset-bottom)); padding: 12px 22px; }
 }
