@@ -1001,15 +1001,19 @@
     R(-8, -1 + legTop, 4, 2, suit);     // top leg
     R(-12, 4 + legBot, 4, 2, fin);      // bottom fin
     R(-8, 3 + legBot, 4, 2, suit);      // bottom leg
-    // torso (wetsuit)
+    // torso (wetsuit) with shading
     R(-4, -2, 9, 5, suit);
-    R(-4, 1, 9, 2, suitD);              // belly shading
-    R(-4, -2, 9, 1, mix(suit, "#fff", 0.18)); // top highlight
+    R(-4, 2, 9, 1, suitD);              // belly shadow
+    R(-4, -2, 9, 1, mix(suit, "#fff", 0.28)); // top highlight
+    R(-4, -2, 1, 5, mix(suit, "#fff", 0.12)); // back rim light
     // forward arm
     R(3, 2, 5, 2, suit);
+    R(3, 3, 5, 1, suitD);
     R(7, 2, 2, 2, skin);                // hand
     // head
     R(5, -4, 4, 5, skin);
+    R(5, -4, 4, 1, mix(skin, "#fff", 0.35)); // forehead highlight
+    R(5, 0, 4, 1, mix(skin, "#000", 0.28));  // jaw shadow
     // hair by look
     if (look === "short") { R(4, -5, 5, 2, hair); R(4, -4, 1, 3, hair); }
     else if (look === "long") { R(4, -5, 5, 2, hair); R(3, -4, 2, 6, hair); }
@@ -1035,7 +1039,10 @@
     return null;
   }
 
-  // Fish drawing — pixel sprites with glow & sparkle
+  // how much each body type wiggles when swimming
+  var WIGGLE = { eel: 0.55, whale: 0.4, kraken: 0.3, jelly: 0, squid: 0.5, octopus: 0.4, seahorse: 0.2, turtle: 0.5, ray: 0.7 };
+
+  // Fish drawing — pixel sprites with a swim wiggle, glow & sparkle
   function drawFishEntity(f) {
     var x = f.x - cam.x, y = f.y - cam.y;
     var th = fishTargetH(f);
@@ -1046,9 +1053,21 @@
     var glow = fishGlow(f);
     if (glow) drawGlow(x, y, th * 0.95, glow.color, glow.alpha);
 
-    SPRITES.draw(ctx, arch, x, y, {
+    // swim animation: gentle body tilt + squash/stretch (jellies pulse instead)
+    var wig = WIGGLE[f.def.shape] != null ? WIGGLE[f.def.shape] : 1;
+    var phase = f.phase * 1.7;
+    var tilt = Math.sin(phase) * 0.13 * wig;
+    var sx = 1 + Math.sin(phase) * 0.05 * wig;          // stretch
+    var sy = 1 - Math.sin(phase) * 0.05 * wig;
+    if (f.def.shape === "jelly") { sy = 1 + Math.sin(phase) * 0.16; sx = 1 - Math.sin(phase) * 0.1; tilt = 0; }
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(tilt);
+    ctx.scale(sx, sy);
+    SPRITES.draw(ctx, arch, 0, 0, {
       color: f.def.color, accent: f.def.accent, shiny: f.shiny, flip: flip, targetH: th,
     });
+    ctx.restore();
 
     if (f.shiny) {
       ctx.fillStyle = "rgba(255,255,255,0.95)";
@@ -1127,6 +1146,7 @@
   // ----- Start screen (save slots) -----
   function showStart() {
     scene = "start";
+    if (window.AUDIO) AUDIO.playMenu(); // carries menu ambience once audio is awake
     var saves = listSaves();
     var html = '<div class="panel start-panel">';
     html += '<h1>🌊 Deep Sea Diver 🐙</h1>';

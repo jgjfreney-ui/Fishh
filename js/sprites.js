@@ -262,9 +262,35 @@
   var SPR = {};
   for (var key in GRID) SPR[key] = normalize(GRID[key]);
 
-  // ---- cache of recoloured native-resolution canvases ------------------
-  var cache = {};
-  function buildCanvas(archetype, colors, ckey) {
+  // Automatic shading: brighten top edges (rim light) and darken bottom
+  // edges (occlusion) so flat sprites gain volume. Skips eyes/glow chars.
+  var LIT = { E: 1, P: 1, G: 1, W: 1 }; // roles left unshaded
+  function shadeNative(cnv, spr, colors) {
+    try {
+      var w = cnv.width, h = cnv.height, c = cnv.getContext("2d");
+      var img = c.getImageData(0, 0, w, h), d = img.data, out = c.createImageData(w, h), o = out.data;
+      function alpha(x, y) { return (x < 0 || y < 0 || x >= w || y >= h) ? 0 : d[(y * w + x) * 4 + 3]; }
+      for (var y = 0; y < h; y++) {
+        for (var x = 0; x < w; x++) {
+          var i = (y * w + x) * 4;
+          o[i] = d[i]; o[i + 1] = d[i + 1]; o[i + 2] = d[i + 2]; o[i + 3] = d[i + 3];
+          if (d[i + 3] === 0) continue;
+          if (LIT[spr.rows[y][x]]) continue;
+          if (alpha(x, y - 1) === 0) {            // top edge → highlight
+            o[i] = Math.min(255, d[i] + 64); o[i + 1] = Math.min(255, d[i + 1] + 64); o[i + 2] = Math.min(255, d[i + 2] + 64);
+          } else if (alpha(x, y + 1) === 0) {     // bottom edge → shadow
+            o[i] = d[i] * 0.55; o[i + 1] = d[i + 1] * 0.55; o[i + 2] = d[i + 2] * 0.55;
+          } else if (alpha(x - 1, y) === 0) {     // left edge → soft light
+            o[i] = Math.min(255, d[i] + 26); o[i + 1] = Math.min(255, d[i + 1] + 26); o[i + 2] = Math.min(255, d[i + 2] + 26);
+          }
+        }
+      }
+      c.putImageData(out, 0, 0);
+    } catch (e) { /* no getImageData (headless) — skip shading */ }
+  }
+
+  // paint a sprite at native (1px/cell) resolution, recoloured + shaded
+  function paintNative(archetype, colors) {
     var spr = SPR[archetype] || SPR.fish;
     var cnv = document.createElement("canvas");
     cnv.width = spr.w; cnv.height = spr.h;
@@ -272,22 +298,23 @@
     for (var y = 0; y < spr.h; y++) {
       var row = spr.rows[y];
       for (var x = 0; x < spr.w; x++) {
-        var ch = row[x];
-        var col = colors[ch];
+        var col = colors[row[x]];
         if (!col) continue;
-        c.fillStyle = col;
-        c.fillRect(x, y, 1, 1);
+        c.fillStyle = col; c.fillRect(x, y, 1, 1);
       }
     }
-    cache[ckey] = { canvas: cnv, w: spr.w, h: spr.h };
-    return cache[ckey];
+    shadeNative(cnv, spr, colors);
+    return { canvas: cnv, w: spr.w, h: spr.h };
   }
 
+  // ---- cache of recoloured native-resolution canvases ------------------
+  var cache = {};
   function get(archetype, base, accent, shiny) {
     var ckey = archetype + "|" + base + "|" + (accent || "") + "|" + (shiny ? 1 : 0);
     if (cache[ckey]) return cache[ckey];
     var colors = archetype === "diver" ? DIVER_COLORS : deriveColors(base, accent, shiny);
-    return buildCanvas(archetype, colors, ckey);
+    cache[ckey] = paintNative(archetype, colors);
+    return cache[ckey];
   }
 
   // ---- public draw -----------------------------------------------------
@@ -335,20 +362,31 @@
     } else {
       colors = deriveColors(opts.color || "#8fa6b0", opts.accent, !!opts.shiny);
     }
+    var native = opts.silhouette ? rawNative(archetype, colors) : paintNative(archetype, colors);
     var scale = opts.scale || 4;
     var cnv = document.createElement("canvas");
     cnv.width = spr.w * scale; cnv.height = spr.h * scale;
+    var c = cnv.getContext("2d");
+    c.imageSmoothingEnabled = false;
+    c.drawImage(native.canvas, 0, 0, cnv.width, cnv.height);
+    return cnv.toDataURL();
+  }
+
+  // unshaded native paint (used for flat silhouettes)
+  function rawNative(archetype, colors) {
+    var spr = SPR[archetype] || SPR.fish;
+    var cnv = document.createElement("canvas");
+    cnv.width = spr.w; cnv.height = spr.h;
     var c = cnv.getContext("2d");
     for (var y = 0; y < spr.h; y++) {
       var row = spr.rows[y];
       for (var x = 0; x < spr.w; x++) {
         var col = colors[row[x]];
         if (!col) continue;
-        c.fillStyle = col;
-        c.fillRect(x * scale, y * scale, scale, scale);
+        c.fillStyle = col; c.fillRect(x, y, 1, 1);
       }
     }
-    return cnv.toDataURL();
+    return { canvas: cnv, w: spr.w, h: spr.h };
   }
 
   window.SPRITES = {
