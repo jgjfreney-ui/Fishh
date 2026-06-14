@@ -50,14 +50,19 @@
   // ---- sprite grids (face RIGHT by default) ----------------------------
   var GRID = {
     fish: [
-      ".....bBBb.....",
-      "...bBBBBBBb...",
-      "f.bBBBBBBEPb..",
-      "ffBLLBBBBEPBb.",
-      "ffBLLBBBBBBBb.",
-      "f.bBBBBBBBBb..",
-      "...bBBBBBBb...",
-      ".....bBBb.....",
+      "..........FFF.........",
+      ".........FFAFF........",
+      "f......bbBBBBBBbb.....",
+      "ff...bBBBBBBBBBBBBb...",
+      "ffbbBBBBBBBBBBBBBBBb..",
+      "fbBBLLLBBBBBBBBBBBEPb.",
+      "fbBLLLLBBBBBBBBBBBEPbM",
+      "fbBBLLLBBBBBBBBBBBEPb.",
+      "ffbbBBBBBBBBBBBBBBBb..",
+      "ff...bBBBBBBBBBBBBb...",
+      "f......bbBBBBBBbb.....",
+      ".........FFAFF........",
+      "..........FFF.........",
     ],
     longfish: [
       "f...bBBBBBBBBb...",

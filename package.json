@@ -5,6 +5,7 @@
   "description": "Deep Sea Diver — a mobile deep sea diving & fishing game, packaged for Android with Capacitor.",
   "scripts": {
     "build:web": "node scripts/copy-web.js",
+    "icon": "node scripts/make-icon.js",
     "android:add": "npm run build:web && cap add android",
     "sync": "npm run build:web && cap sync android",
     "apk": "npm run sync && cd android && ./gradlew assembleDebug",
@@ -15,6 +16,7 @@
     "@capacitor/core": "^6.1.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^6.1.2"
   }
 }

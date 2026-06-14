@@ -186,5 +186,12 @@
     playArea: function (a) { this.resume(); startTrack(a); },
     playMenu: function () { this.resume(); startTrack("menu"); },
     stopAll: function () { clearSchedule(); cfgCur = null; mode = null; },
+    ui: function (kind) {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime;
+      var base = kind === "buy" ? 74 : kind === "back" ? 62 : 69;
+      blip(base, t, 0.1, "triangle", 0.06, 2600);
+      if (kind === "buy") blip(base + 7, t + 0.05, 0.12, "triangle", 0.05, 2800);
+    },
   };
 })();

@@ -49,12 +49,30 @@ html, body {
   flex-wrap: wrap;
 }
 .hud-block {
-  background: rgba(6, 22, 36, 0.72);
-  border: 1px solid var(--line);
+  background: rgba(6, 22, 36, 0.4);
+  border: 1px solid rgba(120, 200, 255, 0.22);
   border-radius: 12px;
   padding: 8px 14px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
   min-width: 96px;
+}
+
+#btn-return {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom)); right: 14px;
+  display: none;
+  z-index: 8;
+  background: rgba(10, 40, 60, 0.5);
+  border: 1px solid rgba(160, 230, 255, 0.4);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  border-radius: 22px;
+  padding: 10px 16px;
+  font-weight: 700;
+  font-size: 14px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 .hud-block.area { min-width: 150px; }
 .hud-block.ox { flex: 1; min-width: 180px; }
@@ -117,7 +135,9 @@ html, body {
 #shop { z-index: 11; }
 
 .panel {
-  background: linear-gradient(160deg, var(--panel), var(--panel2));
+  background: linear-gradient(160deg, rgba(13, 36, 54, 0.9), rgba(18, 50, 74, 0.9));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--line);
   border-radius: 18px;
   padding: 24px;

@@ -60,6 +60,9 @@ jobs:
       - name: Sync Capacitor
         run: npx --no-install cap sync android
 
+      - name: Generate app icon & splash (Kraken)
+        run: npx --no-install @capacitor/assets generate --android --iconBackgroundColor '#0a1f38' --iconBackgroundColorDark '#0a1f38' --splashBackgroundColor '#0a1f38' --splashBackgroundColorDark '#04101d'
+
       # Use a single, committed debug keystore for EVERY build so the APK's
       # signature is stable. Without this, each build gets a random debug key
       # and Android refuses to update over a previous install ("App not

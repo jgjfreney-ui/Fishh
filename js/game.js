@@ -150,15 +150,31 @@
       }
       run.hills.push({ pts: pts, parallax: parallaxes[h], color: hazeTargets[h], baseY: floorY });
     }
-    // seabed plants/rocks along the floor
-    var n = Math.round(loc.worldWidth / 70);
+    // BIG background flora — towering kelp / coral mounds / spires, hazed,
+    // parallaxed, rising from the floor. Makes areas feel lush & deep.
+    run.bgFlora = [];
+    var bigType = { coral: "bigcoral", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal" }[loc.id] || "bigkelp";
+    var bcount = Math.round(loc.worldWidth / 190);
+    for (var bi = 0; bi < bcount; bi++) {
+      run.bgFlora.push({
+        type: bigType,
+        x: Math.random() * loc.worldWidth,
+        h: 160 + Math.random() * 320,
+        w: 0.8 + Math.random() * 1.1,
+        sway: Math.random() * 6.28,
+        parallax: 0.62 + Math.random() * 0.12,
+        color: mix(d.plantColors[(Math.random() * d.plantColors.length) | 0], loc.deepColor, 0.45),
+      });
+    }
+    // seabed plants/rocks along the floor (denser now)
+    var n = Math.round(loc.worldWidth / 42);
     for (var i = 0; i < n; i++) {
       var type = d.plants[(Math.random() * d.plants.length) | 0];
       run.decor.push({
         type: type,
         x: Math.random() * loc.worldWidth,
         y: floorY - 2,
-        size: 0.7 + Math.random() * 0.9,
+        size: 0.6 + Math.random() * 1.0,
         sway: Math.random() * 6.28,
         color: d.plantColors[(Math.random() * d.plantColors.length) | 0],
       });
@@ -166,6 +182,59 @@
     run.floorY = floorY;
     run.floorColor = d.floor;
     run.rockColor = d.rock;
+  }
+
+  function drawBgFlora() {
+    var floorScreenY = run.floorY - cam.y;
+    for (var i = 0; i < run.bgFlora.length; i++) {
+      var fl = run.bgFlora[i];
+      var x = fl.x - cam.x * fl.parallax;
+      if (x < -160 || x > W + 160) continue;
+      if (floorScreenY - fl.h > H || floorScreenY < -40) continue;
+      ctx.save();
+      ctx.fillStyle = fl.color;
+      if (fl.type === "bigkelp") {
+        var segs = Math.round(fl.h / 18);
+        for (var s = 0; s < segs; s++) {
+          var t = s / segs;
+          var sway = Math.sin(run.time * 0.7 + fl.sway + t * 2) * 16 * t;
+          ctx.globalAlpha = 0.55;
+          ctx.fillRect(Math.round(x + sway - 6 * fl.w), Math.round(floorScreenY - s * 18 - 18), Math.round(12 * fl.w), 18);
+          if (s % 2 === 0) ctx.fillRect(Math.round(x + sway + 6 * fl.w), Math.round(floorScreenY - s * 18 - 14), 7, 10);
+        }
+      } else if (fl.type === "bigcoral") {
+        ctx.globalAlpha = 0.5;
+        var bw = 60 * fl.w;
+        ctx.beginPath();
+        ctx.moveTo(x - bw / 2, floorScreenY);
+        ctx.quadraticCurveTo(x - bw / 2, floorScreenY - fl.h, x, floorScreenY - fl.h);
+        ctx.quadraticCurveTo(x + bw / 2, floorScreenY - fl.h, x + bw / 2, floorScreenY);
+        ctx.closePath(); ctx.fill();
+        // knobby branches
+        for (var c = 0; c < 4; c++) {
+          var bx = x + (c - 1.5) * bw * 0.28;
+          ctx.fillRect(Math.round(bx - 5 * fl.w), Math.round(floorScreenY - fl.h - 14), Math.round(10 * fl.w), 22);
+        }
+      } else if (fl.type === "bigcrystal") {
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(x, floorScreenY - fl.h);
+        ctx.lineTo(x + 22 * fl.w, floorScreenY);
+        ctx.lineTo(x - 22 * fl.w, floorScreenY);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = mix(fl.color, "#ffffff", 0.4);
+        ctx.fillRect(Math.round(x - 3), Math.round(floorScreenY - fl.h + 10), 4, Math.round(fl.h - 14));
+      } else { // spire
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(x - 26 * fl.w, floorScreenY);
+        ctx.lineTo(x, floorScreenY - fl.h);
+        ctx.lineTo(x + 26 * fl.w, floorScreenY);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
   }
 
   function placeWrecks(loc) {
@@ -458,43 +527,42 @@
       spawnKraken();
     }
 
-    // --- update fish ---
-    var cr = catchRadius();
-    var nearest = null, nearestD = 1e9;
+    // --- update fish (MAGNET catching: fish are drawn toward you) ---
+    var mRange = catchRadius();      // "Catch Gadget" upgrade = magnet range
+    var mStr = reelMul();            // "Reel Motor" upgrade = magnet strength
+    var full = run.bagUsed >= inventoryCap();
     for (var i = run.fish.length - 1; i >= 0; i--) {
       var f = run.fish[i];
       f.phase += dt * 2;
-      var speedScale = f.fleeing > 0 ? 2.4 : 1;
-      f.x += f.vx * dt * speedScale;
+      var dx = diver.x - f.x, dy = diver.y - f.y;
+      var dist = Math.hypot(dx, dy) || 0.001;
+      var grabbing = false;
+      if (!full && dist < mRange) {
+        // pull toward the diver (stronger when closer; big fish resist)
+        var t = 1 - dist / mRange;
+        var pull = (55 + mStr * 75) * t / (0.55 + f.size * 0.42);
+        f.x += (dx / dist) * pull * dt;
+        f.baseY += (dy / dist) * pull * dt;
+        f.vx *= 0.9;
+        f.pulled = 0.15;
+        grabbing = true;
+        if (dist < 15 + f.size * 2) { catchFish(f); continue; }
+      }
+      if (!grabbing) {
+        var speedScale = f.fleeing > 0 ? 2.4 : 1;
+        f.x += f.vx * dt * speedScale;
+      }
       f.y = f.baseY + Math.sin(f.phase) * 10;
       if (f.fleeing > 0) f.fleeing -= dt;
+      if (f.pulled > 0) f.pulled -= dt;
 
       // wrap / despawn off-world
       if (f.x < -120 || f.x > loc.worldWidth + 120) {
         if (!f.isKraken) { run.fish.splice(i, 1); continue; }
         else { f.vx *= -1; }
       }
-
-      var dx = f.x - diver.x, dy = f.y - diver.y;
-      var dist = Math.hypot(dx, dy);
-      if (dist < nearestD && dist < cr + f.size * 4) { nearestD = dist; nearest = f; }
     }
-
-    // --- reeling / catching ---
-    if (nearest) {
-      if (run.target !== nearest.uid) { run.target = nearest.uid; run.reel = 0; }
-      var rspeed = reelMul() / (0.5 + nearest.size * 0.28);
-      run.reel += rspeed * dt;
-      // big fish try to flee a bit
-      if (nearest.size >= 4 && Math.random() < 0.01) nearest.fleeing = 0.6;
-      if (run.reel >= 1) {
-        catchFish(nearest);
-        run.target = null; run.reel = 0;
-      }
-    } else {
-      run.target = null;
-      run.reel = Math.max(0, run.reel - dt * 0.8);
-    }
+    var cr = mRange;
 
     // --- treasures near wrecks ---
     run.treasureTimer -= dt;
@@ -633,6 +701,7 @@
     // --- background, lighting & scenery ---
     drawBackground(loc);
     drawHills(loc);
+    drawBgFlora();
     drawSeabed(loc);
     if (cam.y < 90) drawSurface(loc);
 
@@ -647,7 +716,6 @@
     drawLighting(loc, darkness);
 
     // --- UI overlays (crisp) ---
-    if (run.target && run.reel > 0.02) drawReel();
     for (var fl = 0; fl < run.floaters.length; fl++) {
       var ff = run.floaters[fl];
       ctx.globalAlpha = clamp(ff.life, 0, 1);
@@ -941,9 +1009,20 @@
 
   function drawDiver() {
     var x = run.diver.x - cam.x, y = run.diver.y - cam.y;
-    // catch radius ring (subtle)
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.beginPath(); ctx.arc(x, y, catchRadius(), 0, 7); ctx.stroke();
+    // magnet field — soft pulsing aura
+    var mr = catchRadius();
+    var pulse = 0.5 + 0.5 * Math.sin(run.time * 3);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    var rg = ctx.createRadialGradient(x, y, mr * 0.2, x, y, mr);
+    rg.addColorStop(0, "rgba(120,220,255,0)");
+    rg.addColorStop(0.8, "rgba(120,220,255," + (0.04 + pulse * 0.04) + ")");
+    rg.addColorStop(1, "rgba(120,220,255,0)");
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(x, y, mr, 0, 7); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle = "rgba(160,230,255,0.12)";
+    ctx.beginPath(); ctx.arc(x, y, mr, 0, 7); ctx.stroke();
     var moving = Math.abs(run.diver.vx) + Math.abs(run.diver.vy) > 5;
     var kick = run.time * (moving ? 11 : 3.5);
     drawDiverPixel(ctx, x, y, 3, run.diver.face < 0 ? -1 : 1, state.diver, kick);
@@ -1027,7 +1106,7 @@
     R(9, 0, 1, 1, "#2a2f36");
   }
 
-  function fishTargetH(f) { return f.isKraken ? 150 : 16 + f.size * 6; }
+  function fishTargetH(f) { return f.isKraken ? 160 : 22 + f.size * 6; }
 
   function fishGlow(f) {
     if (f.isKraken) return { color: f.shiny ? "#fff2a0" : "#ff5b7f", alpha: 0.55 };
@@ -1292,6 +1371,7 @@
   function sellHud(show) {
     document.getElementById("hud").style.display = show ? "flex" : "none";
     document.getElementById("surface-hint").style.display = "none";
+    document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
 
   // ----- Shop -----
@@ -1734,6 +1814,19 @@
     var sh = document.getElementById("surface-hint");
     if (sh) sh.addEventListener("click", function () {
       if (scene === "dive" && run && run.diver.y <= 30) surface();
+    });
+    // instant return-to-surface button
+    var rb = document.getElementById("btn-return");
+    if (rb) rb.addEventListener("click", function () {
+      if (scene === "dive" && run) { toast("Surfacing with your haul...", "good", 1200); surface(); }
+    });
+    // cozy UI click sounds
+    document.addEventListener("click", function (e) {
+      var el = e.target;
+      if (el && el.tagName === "BUTTON" && window.AUDIO) {
+        var k = (el.classList.contains("primary") || el.getAttribute("data-buyup") || el.getAttribute("data-buycharm") || el.getAttribute("data-buyhint") || el.getAttribute("data-suit")) ? "buy" : "click";
+        AUDIO.ui(k);
+      }
     });
     requestAnimationFrame(loop);
     showStart();
