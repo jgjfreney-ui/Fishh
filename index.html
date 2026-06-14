@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deep Sea Diver 🐙</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game"></canvas>
+
+    <!-- In-dive HUD -->
+    <div id="hud">
+      <div class="hud-block area">
+        <div class="hud-label">Dive Site</div>
+        <div id="area-name">—</div>
+      </div>
+      <div class="hud-block ox">
+        <div class="hud-label">Oxygen <span id="ox-text">—</span></div>
+        <div class="ox-bar"><div id="ox-fill"></div></div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Depth</div>
+        <div id="depth-text">0m</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Cargo</div>
+        <div id="cargo-text">0 / 0</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Money</div>
+        <div id="money-text">$0</div>
+      </div>
+    </div>
+
+    <div id="surface-hint">⬆ You're at the surface — press <b>SPACE</b> to climb aboard the boat</div>
+
+    <!-- Overlays -->
+    <div id="modal" class="overlay"></div>
+    <div id="shop" class="overlay"></div>
+
+    <div id="toasts"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
