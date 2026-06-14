@@ -32,6 +32,9 @@
       krakenShiny: false,
       stats: { maxDepth: 0, totalCaught: 0, earned: 0, dives: 0 },
       lastArea: "coral",
+      settings: { muted: false },
+      diver: { skin: 2, suit: "#1f7d9c", look: "short" },
+      diverUnlocks: {}, // premium suit colour id -> true
     };
   }
 
@@ -135,14 +138,17 @@
     run.hills = [];
     var d = DECOR[loc.id] || DECOR.coral;
     var floorY = loc.maxDepth * PXPM;
-    // background ridges (parallax)
-    for (var h = 0; h < 2; h++) {
+    // background ridges (3 layers, far ones hazed for atmospheric distance)
+    var hazeTargets = [mix(d.rock, "#000000", 0.45), mix(d.rock, loc.deepColor, 0.5), mix(d.rock, loc.topColor, 0.5)];
+    var parallaxes = [0.6, 0.38, 0.2];
+    for (var h = 2; h >= 0; h--) { // far to near so near draws on top
       var pts = [];
-      var layerY = floorY - 40 - h * 50;
-      for (var px = -100; px < loc.worldWidth + 100; px += 90) {
-        pts.push({ x: px, y: layerY - Math.abs(Math.sin(px * 0.013 + h * 2)) * (60 + h * 30) });
+      var layerY = floorY - 30 - h * 80;
+      var amp = 60 + h * 55;
+      for (var px = -200; px < loc.worldWidth + 200; px += 70) {
+        pts.push({ x: px, y: layerY - Math.abs(Math.sin(px * 0.011 + h * 2.3)) * amp });
       }
-      run.hills.push({ pts: pts, parallax: 0.45 + h * 0.18, color: h === 0 ? d.rock : mix(d.rock, "#000000", 0.4), baseY: floorY });
+      run.hills.push({ pts: pts, parallax: parallaxes[h], color: hazeTargets[h], baseY: floorY });
     }
     // seabed plants/rocks along the floor
     var n = Math.round(loc.worldWidth / 70);
@@ -431,7 +437,7 @@
     if (diver.y > 26) {
       var drain = (1 + depthFactor(diver.y, loc) * 0.6) * oxygenMul();
       run.oxygen -= drain * dt;
-      if (run.oxygen <= 0) { blackout(); return; }
+      if (run.oxygen <= 0) { driftHome(); return; }
     } else {
       run.oxygen = run.maxO; // refill at surface
     }
@@ -595,12 +601,11 @@
   }
 
   // ---------------------------------------------------------------------
-  //  Surface / blackout
+  //  Surface
   // ---------------------------------------------------------------------
-  function blackout() {
-    toast("Out of oxygen! You blacked out and dropped your catch...", "bad", 3200);
-    // lose unsold fish & treasure
-    run.bag = []; run.bagTreasure = []; run.bagUsed = 0;
+  // Cozy: running out of air just floats you gently home WITH your haul.
+  function driftHome() {
+    toast("Out of air — you drift gently back to the boat with your haul. 🫧", "good", 2600);
     goToBoat();
   }
 
@@ -613,6 +618,7 @@
     saveGame();
     scene = "boat";
     showBoat();
+    if (window.AUDIO) AUDIO.playMenu();
   }
 
   // ---------------------------------------------------------------------
@@ -938,7 +944,83 @@
     // catch radius ring (subtle)
     ctx.strokeStyle = "rgba(255,255,255,0.08)";
     ctx.beginPath(); ctx.arc(x, y, catchRadius(), 0, 7); ctx.stroke();
-    SPRITES.draw(ctx, "diver", x, y, { flip: run.diver.face < 0, targetH: 30 });
+    var moving = Math.abs(run.diver.vx) + Math.abs(run.diver.vy) > 5;
+    var kick = run.time * (moving ? 11 : 3.5);
+    drawDiverPixel(ctx, x, y, 3, run.diver.face < 0 ? -1 : 1, state.diver, kick);
+  }
+
+  // ----- diver customization palettes -----
+  var SKIN_TONES = ["#f4c9a3", "#e8b088", "#d39a6e", "#b87a4f", "#8d5524", "#5a3318"];
+  var HAIR_COLORS = ["#2b1d12", "#5a3a1a", "#a85e2e", "#caa33a", "#d8d8da", "#3a3f55", "#8a3b6b", "#2f6f5e"];
+  var SUITS = [
+    { id: "teal",   color: "#1f7d9c", cost: 0 },
+    { id: "navy",   color: "#26407a", cost: 0 },
+    { id: "red",    color: "#b03a3a", cost: 0 },
+    { id: "green",  color: "#2f7d4a", cost: 0 },
+    { id: "purple", color: "#6a3aa0", cost: 0 },
+    { id: "pink",   color: "#c0508f", cost: 250 },
+    { id: "orange", color: "#d8742e", cost: 250 },
+    { id: "gold",   color: "#c79a2e", cost: 1500 },
+    { id: "neon",   color: "#1fd6a0", cost: 1500 },
+    { id: "void",   color: "#2a2350", cost: 3000 },
+  ];
+  var LOOKS = [
+    { id: "short", name: "Short" },
+    { id: "long",  name: "Long" },
+    { id: "bun",   name: "Bun" },
+    { id: "buzz",  name: "Buzz" },
+  ];
+
+  // Draw a clearly-human side-view diver with kicking legs/fins.
+  // ctx2: target context · (cx,cy): screen centre · SC: pixel scale ·
+  // face: 1 right / -1 left · opts: state.diver · kick: animation phase
+  function drawDiverPixel(ctx2, cx, cy, SC, face, opts, kick) {
+    opts = opts || {};
+    var skin = SKIN_TONES[opts.skin != null ? opts.skin : 2] || SKIN_TONES[2];
+    var suit = opts.suit || "#1f7d9c";
+    var suitD = mix(suit, "#000000", 0.4);
+    var hair = opts.hair != null ? HAIR_COLORS[opts.hair] : HAIR_COLORS[0];
+    var fin = mix(suit, "#000000", 0.25);
+    var mask = "#bfe9ff";
+    var look = opts.look || "short";
+
+    function R(ax, ay, aw, ah, col) {
+      ctx2.fillStyle = col;
+      var X = face > 0 ? (cx + ax * SC) : (cx - (ax + aw) * SC);
+      ctx2.fillRect(Math.round(X), Math.round(cy + ay * SC), aw * SC, ah * SC);
+    }
+
+    var legTop = Math.round(Math.sin(kick) * 1.6);
+    var legBot = Math.round(Math.sin(kick + Math.PI) * 1.6);
+
+    // back air tank
+    R(-5, -4, 3, 4, "#39424d");
+    R(-5, -4, 3, 1, "#586573");
+    // fins + legs (trailing left, kicking)
+    R(-12, -2 + legTop, 4, 2, fin);     // top fin
+    R(-8, -1 + legTop, 4, 2, suit);     // top leg
+    R(-12, 4 + legBot, 4, 2, fin);      // bottom fin
+    R(-8, 3 + legBot, 4, 2, suit);      // bottom leg
+    // torso (wetsuit)
+    R(-4, -2, 9, 5, suit);
+    R(-4, 1, 9, 2, suitD);              // belly shading
+    R(-4, -2, 9, 1, mix(suit, "#fff", 0.18)); // top highlight
+    // forward arm
+    R(3, 2, 5, 2, suit);
+    R(7, 2, 2, 2, skin);                // hand
+    // head
+    R(5, -4, 4, 5, skin);
+    // hair by look
+    if (look === "short") { R(4, -5, 5, 2, hair); R(4, -4, 1, 3, hair); }
+    else if (look === "long") { R(4, -5, 5, 2, hair); R(3, -4, 2, 6, hair); }
+    else if (look === "bun") { R(4, -5, 5, 2, hair); R(3, -6, 2, 2, hair); }
+    else { R(5, -5, 4, 1, hair); } // buzz
+    // dive mask + eye
+    R(7, -3, 3, 2, mask);
+    R(8, -3, 1, 1, "#0b2a3a");
+    R(9, -5, 1, 1, mix(mask, "#fff", 0.6)); // glint
+    // regulator + mouthpiece
+    R(9, 0, 1, 1, "#2a2f36");
   }
 
   function fishTargetH(f) { return f.isKraken ? 150 : 16 + f.size * 6; }
@@ -1104,6 +1186,7 @@
   function enterBoat() {
     closeOverlay("modal");
     scene = "boat";
+    if (window.AUDIO) { AUDIO.setMuted(state.settings.muted); AUDIO.playMenu(); }
     showBoat();
   }
 
@@ -1127,8 +1210,10 @@
     html += '<button id="btn-dive" class="big primary">🤿 Dive</button>';
     html += '<button id="btn-shop" class="big">🛒 Shop</button>';
     html += '<button id="btn-collection" class="big">📖 Collection</button>';
+    html += '<button id="btn-diver" class="big">🤿 Customise Diver</button>';
     html += '<button id="btn-area" class="big">🗺️ Change Area</button>';
     html += '<button id="btn-stats" class="big">📊 Stats</button>';
+    html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
     html += '<button id="btn-menu" class="big">💾 Save &amp; Menu</button>';
     html += '</div>';
 
@@ -1144,8 +1229,15 @@
     bind("btn-dive", function () { startDive(state.lastArea); });
     bind("btn-shop", showShop);
     bind("btn-collection", showCollection);
+    bind("btn-diver", showDiverShop);
     bind("btn-area", showAreas);
     bind("btn-stats", showStats);
+    bind("btn-sound", function () {
+      state.settings.muted = !state.settings.muted;
+      if (window.AUDIO) AUDIO.setMuted(state.settings.muted);
+      saveGame();
+      showBoat();
+    });
     bind("btn-menu", function () { saveGame(); toast("Game saved.", "good", 1200); showStart(); });
     bind("btn-sell", sellAll);
   }
@@ -1174,6 +1266,7 @@
     scene = "dive";
     newRun(areaId);
     state.lastArea = areaId;
+    if (window.AUDIO) AUDIO.playArea(areaId);
   }
 
   function sellHud(show) {
@@ -1378,6 +1471,101 @@
     ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
   }
 
+  // ----- Diver customization -----
+  var diverPreviewTimer = null;
+  function stopDiverPreview() { if (diverPreviewTimer) { clearInterval(diverPreviewTimer); diverPreviewTimer = null; } }
+
+  function renderDiverPreview() {
+    var c = document.getElementById("diver-preview");
+    if (!c) { stopDiverPreview(); return; }
+    var p = c.getContext("2d");
+    p.imageSmoothingEnabled = false;
+    var g = p.createLinearGradient(0, 0, 0, c.height);
+    g.addColorStop(0, "#2a6e9a"); g.addColorStop(1, "#0a2c48");
+    p.fillStyle = g; p.fillRect(0, 0, c.width, c.height);
+    // a few bubbles for life
+    var t = Date.now() / 1000;
+    p.fillStyle = "rgba(255,255,255,0.25)";
+    for (var i = 0; i < 6; i++) {
+      var bx = (i * 27 + 12) % c.width;
+      var by = c.height - ((t * 22 + i * 33) % c.height);
+      p.fillRect(bx | 0, by | 0, 2, 2);
+    }
+    drawDiverPixel(p, c.width / 2, c.height / 2, 6, 1, state.diver, t * 7);
+  }
+
+  function showDiverShop() {
+    var ov = overlay("shop");
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🤿 Your Diver</h2>'
+      + '<div class="money-line">💰 $' + fmt(state.money) + '</div>'
+      + '<button class="close" data-close="shop">✕</button></div>';
+
+    html += '<div class="diver-preview-wrap"><canvas id="diver-preview" width="170" height="150"></canvas></div>';
+    html += '<p class="tiny" style="text-align:center">Make your diver yours — pick a look, skin tone and suit. It\'s purely cosmetic; everyone dives the same!</p>';
+
+    // Look
+    html += '<h3>Look</h3><div class="swatch-row">';
+    LOOKS.forEach(function (l) {
+      html += '<button class="look-btn ' + (state.diver.look === l.id ? 'sel' : '') + '" data-look="' + l.id + '">' + l.name + '</button>';
+    });
+    html += '</div>';
+
+    // Skin tone
+    html += '<h3>Skin tone</h3><div class="swatch-row">';
+    SKIN_TONES.forEach(function (col, i) {
+      html += '<button class="swatch ' + (state.diver.skin === i ? 'sel' : '') + '" data-skin="' + i + '" style="background:' + col + '"></button>';
+    });
+    html += '</div>';
+
+    // Hair colour
+    html += '<h3>Hair colour</h3><div class="swatch-row">';
+    HAIR_COLORS.forEach(function (col, i) {
+      html += '<button class="swatch ' + (state.diver.hair === i ? 'sel' : '') + '" data-hair="' + i + '" style="background:' + col + '"></button>';
+    });
+    html += '</div>';
+
+    // Suit colour (some premium)
+    html += '<h3>Wetsuit</h3><div class="swatch-row">';
+    SUITS.forEach(function (s) {
+      var owned = s.cost === 0 || state.diverUnlocks[s.id];
+      var sel = state.diver.suit === s.color;
+      html += '<button class="swatch big-swatch ' + (sel ? 'sel' : '') + (owned ? '' : ' locked') + '" data-suit="' + s.id + '" style="background:' + s.color + '">'
+        + (owned ? '' : '<span class="lock">$' + fmt(s.cost) + '</span>') + '</button>';
+    });
+    html += '</div>';
+    html += '</div>';
+
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    stopDiverPreview();
+    diverPreviewTimer = setInterval(renderDiverPreview, 60);
+    renderDiverPreview();
+
+    ov.querySelector('[data-close="shop"]').onclick = function () { stopDiverPreview(); closeOverlay("shop"); };
+    ov.querySelectorAll("[data-look]").forEach(function (b) {
+      b.onclick = function () { state.diver.look = b.getAttribute("data-look"); saveGame(); showDiverShop(); };
+    });
+    ov.querySelectorAll("[data-skin]").forEach(function (b) {
+      b.onclick = function () { state.diver.skin = +b.getAttribute("data-skin"); saveGame(); showDiverShop(); };
+    });
+    ov.querySelectorAll("[data-hair]").forEach(function (b) {
+      b.onclick = function () { state.diver.hair = +b.getAttribute("data-hair"); saveGame(); showDiverShop(); };
+    });
+    ov.querySelectorAll("[data-suit]").forEach(function (b) {
+      b.onclick = function () {
+        var s = SUITS.filter(function (x) { return x.id === b.getAttribute("data-suit"); })[0];
+        if (!s) return;
+        var owned = s.cost === 0 || state.diverUnlocks[s.id];
+        if (!owned) {
+          if (state.money < s.cost) { toast("Not enough money for that wetsuit.", "bad"); return; }
+          state.money -= s.cost; state.diverUnlocks[s.id] = true;
+          toast("Unlocked the " + s.id + " wetsuit!", "good", 1600);
+        }
+        state.diver.suit = s.color; saveGame(); showDiverShop();
+      };
+    });
+  }
+
   // ----- Area select -----
   function showAreas() {
     var ov = overlay("shop");
@@ -1508,6 +1696,20 @@
     window.addEventListener("resize", resize);
     window.addEventListener("orientationchange", function () { setTimeout(resize, 250); });
     setupTouch();
+    // audio needs a user gesture to start — kick it off on the first tap/key
+    if (window.AUDIO) {
+      AUDIO.init(false);
+      var firstGesture = function () {
+        AUDIO.resume();
+        if (state && state.settings) AUDIO.setMuted(state.settings.muted);
+        if (scene === "dive" && run) AUDIO.playArea(run.area);
+        else AUDIO.playMenu();
+        window.removeEventListener("pointerdown", firstGesture);
+        window.removeEventListener("keydown", firstGesture);
+      };
+      window.addEventListener("pointerdown", firstGesture);
+      window.addEventListener("keydown", firstGesture);
+    }
     // surface button (tap to board the boat — mobile friendly)
     var sh = document.getElementById("surface-hint");
     if (sh) sh.addEventListener("click", function () {

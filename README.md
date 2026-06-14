@@ -53,8 +53,15 @@ npm run apk            # copies web assets, syncs Capacitor, builds debug APK
 ## Features
 
 - 🎨 **Pixel-art graphics** — hand-crafted sprites with distinct silhouettes
-  per creature, layered parallax backgrounds (coral, kelp, vents, starlight),
-  god-rays, caustics, and bioluminescent/shiny glow lighting
+  per creature, multi-layer parallax backgrounds (coral, kelp, vents, starlight)
+  with hazy distance, god-rays, caustics, and bioluminescent/shiny glow lighting
+- 🤿 **Customizable human diver** — an animated, leg-kicking diver you can
+  personalise: look, skin tone, hair colour, and wetsuits (some buyable)
+- 🎵 **Cozy generative audio** — a distinct synthesised music bed per area plus
+  surface ambience (rolling waves + gulls); fully synthesised live, no files.
+  Toggle sound from the boat
+- 🌊 **Relaxed pace** — run out of air and you simply drift back to the boat
+  with your whole haul; no penalty, no scramble
 - 🐟 **40+ fish** across four dive sites, each with rarity tiers
   (Common → Mythic)
 - 📏 **Fish size / inventory system** — a whale eats far more cargo space than
