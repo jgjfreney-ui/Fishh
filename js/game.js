@@ -343,6 +343,7 @@
     for (var i = 0; i < D.FISH.length; i++) {
       var f = D.FISH[i];
       if (f.night && !isNight) continue;           // nocturnal species only at night
+      if (f.day && isNight) continue;              // diurnal species only in daylight
       if (f.area === "sanctuary" && areaId !== "sanctuary") continue; // starlight species stay in the Sanctuary
       if (birdPool) {
         if (!f.bird || f.rarity !== rarity) continue;

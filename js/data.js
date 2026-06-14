@@ -212,7 +212,7 @@
     { id: "deeplev",    name: "Deep Leviathan", area: "trench",    rarity: "mythic", size: 9, value: 9000, minDepth: 900,color: "#3a4e6a", shape: "eel", secret: true,
       hint: "A colossal sea-serpent coils through the very bottom of the Trench (below 900m). Only the brave reach it.",
       condition: { minDepth: 900 } },
-    { id: "celestserp", name: "Celestial Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#c9b3ff", shape: "eel", secret: true,
+    { id: "celestserp", name: "Astral Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#c9b3ff", shape: "eel", secret: true,
       hint: "Coils through the deepest starlight (below 400m), woven from the night sky itself.",
       condition: { minDepth: 400 } },
     { id: "rainbowtrout", name: "Rainbow Trout", area: "river", rarity: "mythic", size: 2, value: 3400, minDepth: 0, color: "#ff4d6d", accent: "#7afcff", rainbow: true, shape: "fish", secret: true,
@@ -270,6 +270,24 @@
     { id: "deeplantern", name: "Deep Lantern",     area: "trench",  night: true, rarity: "rare",  size: 2, value: 480,  minDepth: 400, color: "#1a2430", accent: "#ffd24a", shape: "lanternjaw" },
     { id: "starmoth",    name: "Star Moth",        area: "sanctuary", night: true, rarity: "epic", size: 2, value: 1600, minDepth: 100, color: "#5a3ea8", accent: "#ff8be0", shape: "seamoth" },
     { id: "lunarjelly",  name: "Lunar Jelly",      area: "sanctuary", night: true, rarity: "rare", size: 2, value: 700, minDepth: 60, color: "#7a6ad0", accent: "#fff3b0", shape: "glowjelly" },
+
+    // ======== Diurnal fish (ONLY appear on day dives) — 2 per area ========
+    { id: "sunbasker",   name: "Sun Basker",     area: "coral",   day: true, rarity: "uncommon", size: 2, value: 200, minDepth: 0,  color: "#ffd24a", accent: "#fff3b0", shape: "tang" },
+    { id: "daygoby",     name: "Dawn Goby",      area: "coral",   day: true, rarity: "common",   size: 1, value: 90,  minDepth: 0,  color: "#ff9a4a", accent: "#fff0c0", shape: "fish" },
+    { id: "sunperch",    name: "Sun Perch",      area: "river",   day: true, rarity: "uncommon", size: 1, value: 180, minDepth: 0,  color: "#f0b53a", accent: "#fff0c0", shape: "fish" },
+    { id: "glintminnow", name: "Glint Minnow",   area: "river",   day: true, rarity: "common",   size: 1, value: 80,  minDepth: 0,  color: "#9fe0c0", accent: "#ffffff", shape: "longfish" },
+    { id: "kelpdarter",  name: "Kelp Darter",    area: "kelp",    day: true, rarity: "rare",     size: 2, value: 360, minDepth: 40, color: "#6cae4a", accent: "#dfffb0", shape: "longfish" },
+    { id: "sunwrasse",   name: "Sun Wrasse",     area: "kelp",    day: true, rarity: "uncommon", size: 1, value: 210, minDepth: 20, color: "#ffb24a", accent: "#fff0c0", shape: "tang" },
+    { id: "icebasker",   name: "Ice Basker",     area: "arctic",  day: true, rarity: "rare",     size: 3, value: 420, minDepth: 40, color: "#cdeeff", accent: "#ffffff", shape: "fish" },
+    { id: "snowjack",    name: "Snow Jack",      area: "arctic",  day: true, rarity: "uncommon", size: 2, value: 240, minDepth: 20, color: "#dfeef7", accent: "#bcd0dc", shape: "longfish" },
+    { id: "sundialfish", name: "Sundial Fish",   area: "ancient", day: true, rarity: "rare",     size: 3, value: 460, minDepth: 80, color: "#c79a52", accent: "#ffe14d", shape: "coelacanth" },
+    { id: "amberray",    name: "Amber Ray",      area: "ancient", day: true, rarity: "epic",     size: 4, value: 1100,minDepth: 150,color: "#d8a24a", accent: "#fff0c0", shape: "ray" },
+    { id: "sunfintuna",  name: "Sunfin Tuna",    area: "opensea", day: true, rarity: "rare",     size: 4, value: 520, minDepth: 80, color: "#3a8fd0", accent: "#ffe14d", shape: "longfish" },
+    { id: "goldenmola",  name: "Golden Mola",    area: "opensea", day: true, rarity: "epic",     size: 5, value: 1300,minDepth: 120,color: "#e0b24a", accent: "#fff3b0", shape: "moonfish" },
+    { id: "glarefish",   name: "Glare Fish",     area: "trench",  day: true, rarity: "rare",     size: 2, value: 480, minDepth: 300,color: "#7fa0c0", accent: "#ffffff", shape: "lantern" },
+    { id: "prismcod",    name: "Prism Cod",      area: "trench",  day: true, rarity: "uncommon", size: 2, value: 260, minDepth: 200,color: "#bcd0e0", accent: "#fff0c0", shape: "fish" },
+    { id: "solartang",   name: "Solar Tang",     area: "sanctuary", day: true, rarity: "epic",   size: 2, value: 1500,minDepth: 100,color: "#ffd24a", accent: "#fff3b0", shape: "tang" },
+    { id: "dawnstar",    name: "Dawn Starfish",  area: "sanctuary", day: true, rarity: "rare",    size: 2, value: 640, minDepth: 60, color: "#ffb24a", accent: "#fff0c0", shape: "starfish" },
 
     // ---- one nocturnal bird + one nocturnal sea creature (night only) ----
     { id: "nightowl",   name: "Night Owl",      area: "river", bird: true, night: true, rarity: "rare", size: 2, value: 520, color: "#6a5a4a", accent: "#e0d2b0", shape: "owl", seedCost: 800 },
@@ -343,6 +361,7 @@
     { id: "rogueorca", name: "Rogue Orca",    area: "arctic",  areaBoss: true, trigger: "creatures", rarity: "mythic", size: 11, value: 5000, minDepth: 250, color: "#16181d", accent: "#f2f6fa", shape: "orca", hp: 3, reward: "sonar" },
     { id: "roc",       name: "The Roc",       area: "cloud",   areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 200, color: "#6a4a2a", accent: "#d8c0a0", shape: "roc", hp: 3, reward: "rocfeather" },
     { id: "spidercrab", name: "Colossal Spider Crab", area: "cave", areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 250, color: "#8a3a2a", accent: "#e0a060", shape: "spidercrab", hp: 3, reward: "crabcrown" },
+    { id: "celestboss", name: "Celestial Serpent", area: "sanctuary", areaBoss: true, rarity: "mythic", size: 13, value: 40000, minDepth: 200, color: "#9f7bff", accent: "#fff3b0", shape: "glowworm", hp: 5, reward: "" },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });
