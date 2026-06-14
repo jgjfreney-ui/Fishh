@@ -35,42 +35,42 @@
       id: "river", name: "River Run", tint: "#5fc46a",
       blurb: "A bright freshwater river winding between the coast and the kelp — trout, pike, catfish and more.",
       maxDepth: 220, worldWidth: 2200, topColor: "#4a9ec4", deepColor: "#143a2a",
-      shinyBonus: 0, unlocked: false, cost: 700,
+      shinyBonus: 0, unlocked: false, cost: 1500,
       sky: { top: "#bfe8ff", bottom: "#eafce0" },
     },
     kelp: {
       id: "kelp", name: "Kelp Forest", tint: "#2fb59a",
       blurb: "Towering green columns hide clever, slippery creatures.",
       maxDepth: 520, worldWidth: 2600, topColor: "#2f9e8f", deepColor: "#04332f",
-      shinyBonus: 0, unlocked: false, cost: 2200,
+      shinyBonus: 0, unlocked: false, cost: 4500,
       sky: { top: "#9fb6b0", bottom: "#d6e6dc" },
     },
     arctic: {
       id: "arctic", name: "Arctic Shelf", tint: "#8fd0f0",
       blurb: "Frigid water beneath the ice. Belugas, narwhals and pale giants drift through the cold.",
       maxDepth: 700, worldWidth: 2600, topColor: "#6fb0d0", deepColor: "#08243a",
-      shinyBonus: 0, unlocked: false, cost: 6500,
+      shinyBonus: 0, unlocked: false, cost: 15000,
       sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
     },
     opensea: {
       id: "opensea", name: "Open Sea", tint: "#2f8fe0",
       blurb: "Endless blue with no land in sight — giant pelagic wanderers cruise the open water.",
       maxDepth: 850, worldWidth: 2800, topColor: "#1f7fc4", deepColor: "#04204a",
-      shinyBonus: 0, unlocked: false, cost: 13000,
+      shinyBonus: 0, unlocked: false, cost: 40000,
       sky: { top: "#aee0ff", bottom: "#e8f6ff" },
     },
     ancient: {
       id: "ancient", name: "Fossil Abyss", tint: "#c79a52",
       blurb: "A primordial sea sealed in the deep, where prehistoric monsters never went extinct.",
       maxDepth: 1000, worldWidth: 2600, topColor: "#5e7050", deepColor: "#160f04",
-      shinyBonus: 0, unlocked: false, cost: 22000,
+      shinyBonus: 0, unlocked: false, cost: 110000,
       sky: { top: "#cdbb8a", bottom: "#ece0c0" },
     },
     trench: {
       id: "trench", name: "Sunken Trench", tint: "#5a6cff",
       blurb: "The deepest, final frontier — a crushing abyss where the Kraken itself waits.",
       maxDepth: 1400, worldWidth: 2600, topColor: "#13496e", deepColor: "#01040c",
-      shinyBonus: 0, unlocked: false, cost: 45000,
+      shinyBonus: 0, unlocked: false, cost: 1000000,
       requireAreas: ["river", "kelp", "arctic", "ancient", "opensea"], // always the last to unlock
       sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
@@ -78,7 +78,7 @@
       id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
       blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
       maxDepth: 800, worldWidth: 2600, topColor: "#2a3340", deepColor: "#04050a",
-      shinyBonus: 0.12, unlocked: false, cost: 30000,
+      shinyBonus: 0.12, unlocked: false, cost: 280000,
       caveArea: true, creaturePool: true, requireAllCreatures: true,
       sky: { top: "#1a2230", bottom: "#0a0e16" },
     },
@@ -86,7 +86,7 @@
       id: "cloud", name: "Cloud Reaches", tint: "#bfe0ff",
       blurb: "Climb above the waves into a dreamlike sky and catch the birds themselves. Shinies bloom thick up here.",
       maxDepth: 600, worldWidth: 2600, topColor: "#bfe8ff", deepColor: "#6f9fd0",
-      shinyBonus: 0.2, unlocked: false, cost: 34000,
+      shinyBonus: 0.2, unlocked: false, cost: 320000,
       airArea: true, birdPool: true, requireAllBirds: true,
       sky: { top: "#cdeeff", bottom: "#eaf8ff" },
     },
@@ -94,7 +94,7 @@
       id: "sanctuary", name: "Starlight Sanctuary", tint: "#b07bff",
       blurb: "A post-game paradise where EVERY creature in the sea gathers — and shinies bloom like stars.",
       maxDepth: 900, worldWidth: 2600, topColor: "#5a3ea8", deepColor: "#0a0226",
-      shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 90000,
+      shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 600000,
       requireBosses: true, // only buyable once the Kraken & blobfish are both caught
       sky: { top: "#160b32", bottom: "#3a2a6a", night: true },
     },
@@ -333,7 +333,7 @@
     { id: "seaspider", name: "Sea Spider",   area: "opensea", creature: true, rarity: "rare",     size: 2, value: 340, color: "#8a6a5a", shape: "crab" },
     { id: "booby",     name: "Booby",        area: "opensea", bird: true, rarity: "common",   size: 1, value: 140, color: "#cdb89a", shape: "bird", seedCost: 400 },
     { id: "frigatebird",name: "Frigatebird", area: "opensea", bird: true, rarity: "uncommon", size: 2, value: 260, color: "#2a2e34", shape: "bird", seedCost: 600 },
-    { id: "phantomjelly", name: "Phantom Jelly", area: "opensea", rarity: "mythic", size: 6, value: 7000, minDepth: 120, color: "#c46bff", accent: "#7affd0", shape: "jelly", secret: true,
+    { id: "phantomjelly", name: "Phantom Jelly", area: "opensea", rarity: "mythic", size: 6, value: 7000, minDepth: 120, color: "#15131c", accent: "#7affd0", shape: "jelly", secret: true,
       hint: "A ghostly giant jelly that rises only to the breathless — let your oxygen run very low.", condition: { lowOxygen: true } },
 
     // ======== Area bosses (rise once you've caught every fish in their area) ========
@@ -496,15 +496,15 @@
   const CHARMS = {
     rarity: {
       name: "Rarity Charm",
-      desc: "Each charm boosts the odds of rarer fish. Stacks!",
-      cost: 1500,
+      desc: "Each charm boosts the odds of rarer fish. Stacks — but each one costs more than the last!",
+      cost: 2500,
       perStack: 0.12,   // +12% rare-weight tilt per charm
       maxStack: 25,
     },
     shiny: {
       name: "Shiny Charm",
-      desc: "Each charm slightly raises your chance of a shiny variant. Stacks, but shinies stay rare!",
-      cost: 4800,
+      desc: "Each charm slightly raises your chance of a shiny variant. Stacks — but each one costs more than the last!",
+      cost: 9000,
       perStack: 0.004,  // +0.4% absolute shiny chance per charm
       maxStack: 40,
     },
@@ -523,7 +523,7 @@
     shinyPocket: {
       name: "Shiny Pocket",
       desc: "A magic pouch — you can still grab shiny catches even when your cargo hold is full.",
-      cost: 12000,
+      cost: 45000,
     },
   };
 

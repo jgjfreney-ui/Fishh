@@ -40,6 +40,7 @@
       diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", look: "short" },
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
+      itemsOff: {},     // itemId -> true means owned but toggled OFF (boss gear)
       seeds: {},        // birdId -> seed count
       harpoons: 0,      // ammo for boss fights
       nextNight: false, // is the NEXT dive at night? (alternates each dive)
@@ -81,7 +82,12 @@
   function maxOxygen() { return up("oxygen"); }
   function speed() { return up("fins"); }
   function catchRadius() { return up("net"); }
-  function creatureValueMult() { return state.items.crabcrown ? 2 : 1; } // Spider Crab Crown = creatures worth ×2
+  // a boss-reward item only applies if owned AND not toggled off
+  function itemOn(id) { return state.items[id] && !(state.itemsOff && state.itemsOff[id]); }
+  // the boss-reward gear that can be toggled on/off
+  var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown"];
+  function anyBossItemOn() { for (var i = 0; i < BOSS_ITEMS.length; i++) if (itemOn(BOSS_ITEMS[i])) return true; return false; }
+  function creatureValueMult() { return itemOn("crabcrown") ? 2 : 1; } // Spider Crab Crown = creatures worth ×2
   function reelMul() { return up("reel"); }
   function inventoryCap() { return up("inventory"); }
   function oxygenMul() { return up("suit"); }
@@ -148,8 +154,9 @@
     var loc = D.LOCATIONS[run.area];
     if (run.creatures.length > 7) return;
     var allContent = loc.allContent;
+    // Sanctuary shows ONLY its starlight creatures (not every creature in the sea)
     var pool = D.CREATURES.map(function (id) { return D.FISH_BY_ID[id]; })
-      .filter(function (c) { return (allContent || c.area === run.area) && (!c.night || run.night); });
+      .filter(function (c) { return c.area === run.area && (!c.night || run.night); });
     if (!pool.length) return;
     // rarity-weighted pick (commoner creatures appear more)
     var total = 0, weights = pool.map(function (c) { var w = D.RARITY[c.rarity].weight; total += w; return w; });
@@ -335,6 +342,7 @@
     for (var i = 0; i < D.FISH.length; i++) {
       var f = D.FISH[i];
       if (f.night && !isNight) continue;           // nocturnal species only at night
+      if (f.area === "sanctuary" && areaId !== "sanctuary") continue; // starlight species stay in the Sanctuary
       if (birdPool) {
         if (!f.bird || f.rarity !== rarity) continue;
         out.push(f); continue;                     // no depth/secret gating for the sky
@@ -363,7 +371,7 @@
     if (c.maxDepth != null && depthM > c.maxDepth) return false;
     // special catch methods (read live dive state)
     if (c.circle && Math.abs(run.spin || 0) < 2.0) return false;
-    if (c.lowOxygen && run.oxygen / run.maxO > 0.2) return false;
+    if (c.lowOxygen && run.oxygen / run.maxO > 0.32) return false; // a bit easier to reach
     if (c.fast && Math.hypot(run.diver.vx, run.diver.vy) < speed() * 0.8) return false;
     if (c.still && (run.stillTimer || 0) < 2) return false;
     return true;
@@ -488,8 +496,15 @@
     return null;
   }
 
-  // Meg Tooth reduces every boss's hits-to-kill by 1
-  function bossHP(base) { return Math.max(1, base - (state.items.megtooth ? 1 : 0)); }
+  // Bosses get tougher the more you've beaten (so late bosses aren't trivial).
+  // Meg Tooth still shaves one hit off every boss.
+  function bossHP(base) {
+    var beaten = 0;
+    for (var k in state.areaBossCaught) if (state.areaBossCaught[k]) beaten++;
+    if (state.blobfishCaught) beaten++;
+    var scaled = base + Math.floor(beaten * 0.8);
+    return Math.max(1, scaled - (itemOn("megtooth") ? 1 : 0));
+  }
 
   // area bosses: appear once every regular fish in their area is caught
   var AREA_BOSS_BY_AREA = {};
@@ -623,17 +638,22 @@
     if (keys["s"] || keys["arrowdown"]) ay += 1;
     if (joy.active && (joy.mag > 0.08)) { ax = joy.dx; ay = joy.dy; mag = joy.mag; }
     var len = Math.hypot(ax, ay);
+    var tvx = 0, tvy = 0;
     if (len > 0.001) {
-      diver.vx = (ax / len) * sp * mag;
-      diver.vy = (ay / len) * sp * mag;
-      diver.x = clamp(diver.x + diver.vx * dt, 12, loc.worldWidth - 12);
-      // Roc Feather lets you breach up into the sky to grab birds (not in the cloud area, which is already sky)
-      var minY = (state.items.rocfeather && !loc.airArea) ? -340 : 0;
-      diver.y = clamp(diver.y + diver.vy * dt, minY, loc.maxDepth * PXPM);
+      tvx = (ax / len) * sp * mag;
+      tvy = (ay / len) * sp * mag;
       if (Math.abs(ax) > 0.05) diver.face = ax > 0 ? 1 : -1;
-    } else {
-      diver.vx = diver.vy = 0;
     }
+    // ease velocity toward the target so movement glides naturally instead of
+    // snapping (fixes the "stiff + slippery" feel): quick to start, quick to stop
+    var resp = 1 - Math.exp(-(len > 0.001 ? 11 : 14) * dt);
+    diver.vx += (tvx - diver.vx) * resp;
+    diver.vy += (tvy - diver.vy) * resp;
+    if (Math.abs(diver.vx) < 1.5 && Math.abs(diver.vy) < 1.5 && len <= 0.001) { diver.vx = diver.vy = 0; }
+    diver.x = clamp(diver.x + diver.vx * dt, 12, loc.worldWidth - 12);
+    // Roc Feather lets you breach up into the sky to grab birds (not in the cloud area, which is already sky)
+    var minY = (itemOn("rocfeather") && !loc.airArea) ? -340 : 0;
+    diver.y = clamp(diver.y + diver.vy * dt, minY, loc.maxDepth * PXPM);
 
     // track special secret-catch movement: circling & stillness.
     // Prefer the joystick angle — that way just swirling your thumb in a
@@ -711,7 +731,7 @@
       var canGrab = fits || (f.shiny && state.items.shinyPocket);
       if (f.isBoss) { canGrab = false; if (f.hitFlash > 0) f.hitFlash -= dt; } // bosses need harpoons
       // Jelly Stinger: zap nearby fish so they stop fleeing (easy to magnet)
-      if (state.items.jellystinger && !f.isBoss && dist < mRange + 50) { f.fleeing = 0; f.stunned = 0.3; }
+      if (itemOn("jellystinger") && !f.isBoss && dist < mRange + 50) { f.fleeing = 0; f.stunned = 0.3; }
       // cargo-full notice: a catchable fish came into range but won't fit
       if (full && !canGrab && !f.isBoss && dist < mRange) {
         if (run.time - (run.fullHint || -99) > 5) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1500); }
@@ -726,7 +746,8 @@
         f.vx *= 0.9;
         f.pulled = 0.15;
         grabbing = true;
-        if (dist < 15 + f.size * 2) { catchFish(f); continue; }
+        // catch hitbox scales with the fish's body so big fish (whales!) don't slip away
+        if (dist < 16 + f.size * 4) { catchFish(f); continue; }
       }
       if (!grabbing) {
         var speedScale = f.fleeing > 0 ? 2.4 : 1;
@@ -781,7 +802,7 @@
         b.x += b.vx * dt;
         b.y = b.baseY + Math.sin(b.phase * 0.2) * 6;
         // Roc Feather: breach up into the sky and magnet ambient birds directly
-        if (state.items.rocfeather) {
+        if (itemOn("rocfeather")) {
           var abd = Math.hypot(diver.x - b.x, diver.y - b.y);
           if (abd < catchRadius()) { catchBird(b); run.birds.splice(bi, 1); continue; }
         }
@@ -828,7 +849,7 @@
     }
 
     // --- Sonar Radar (orca drop): ping hot/cold toward the nearest wreck ---
-    if (state.items.sonar && run.wrecks.length) {
+    if (itemOn("sonar") && run.wrecks.length) {
       var nearest = Infinity;
       for (var swi = 0; swi < run.wrecks.length; swi++) {
         var wk = run.wrecks[swi];
@@ -860,16 +881,20 @@
 
     // camera (snapped to the pixel grid so sprites stay crisp).
     // near the surface the camera pans up to reveal lots of sky (for the birds).
-    var skyReveal = (state.items.rocfeather && diver.y < 120) ? -470 : (diver.y < 80 ? -290 : -150);
+    var skyReveal = (itemOn("rocfeather") && diver.y < 120) ? -470 : (diver.y < 80 ? -290 : -150);
     cam.x = Math.round(clamp(diver.x - W / 2, 0, Math.max(0, loc.worldWidth - W)));
     cam.y = Math.round(clamp(diver.y - H / 2, skyReveal, Math.max(0, loc.maxDepth * PXPM + 120 - H)));
 
     updateHud();
   }
 
+  var WRECK_LOOT_CAP = 4; // each wreck only yields this many treasures per dive (no infinite farming)
   function maybeSpawnTreasure() {
     if (run.wrecks.length === 0) return;
-    var wreck = run.wrecks[(Math.random() * run.wrecks.length) | 0];
+    // only wrecks that still have loot left this dive
+    var live = run.wrecks.filter(function (w) { return (w.looted || 0) < WRECK_LOOT_CAP; });
+    if (live.length === 0) return;
+    var wreck = live[(Math.random() * live.length) | 0];
     var df = depthFactor(wreck.y, D.LOCATIONS[run.area]);
     var isPlane = wreck.type === "plane";
     // ship wrecks: regular loot only. plane wrecks: regular + a chance at the
@@ -882,6 +907,7 @@
     });
     if (pool.length === 0) pool = D.TREASURES.filter(function (tt) { return !tt.plane; });
     var def = pool[(Math.random() * pool.length) | 0];
+    wreck.looted = (wreck.looted || 0) + 1; // count it toward this wreck's loot budget
     run.treasures.push({
       def: def, x: wreck.x + (Math.random() - 0.5) * wreck.w, y: wreck.y - 10 - Math.random() * 30, phase: Math.random() * 6,
     });
@@ -916,6 +942,8 @@
 
     run.floaters.push({ x: f.x, y: f.y, text: (f.shiny ? "✦ " : "") + def.name, color: f.shiny ? "#ffe66d" : "#dff", life: 1.4 });
 
+    // catching a low-oxygen secret tops your air back up so you don't drown right after
+    if (def.secret && def.condition && def.condition.lowOxygen) { run.oxygen = run.maxO; toast("A rush of air! Oxygen replenished. 🫧", "good", 1600); }
     if (def.isBlob) { catchBlobfish(f.shiny); return; }
     if (def.isKraken) { catchKraken(f.shiny); return; }
     if (firstEver) toast("NEW! You caught a " + def.name + (def.secret ? " (Secret!)" : "") + "!", def.secret ? "epic" : "good", 2600);
@@ -1053,7 +1081,7 @@
 
   function collectTreasure(tr) {
     var def = tr.def;
-    var mult = state.items.necklace ? 2 : 1; // Multiplier Necklace doubles treasure
+    var mult = itemOn("necklace") ? 2 : 1; // Multiplier Necklace doubles treasure
     run.bagTreasure.push({ id: def.id, value: def.value * mult, name: def.name, color: def.color });
     state.treasures[def.id] = (state.treasures[def.id] || 0) + 1;
     run.floaters.push({ x: tr.x, y: tr.y, text: def.name + (mult > 1 ? " ×2" : ""), color: def.color, life: 1.5 });
@@ -1357,16 +1385,18 @@
 
   function drawLighting(loc, darkness) {
     var dx = run.diver.x - cam.x, dy = run.diver.y - cam.y;
-    var gog = state.items.goggles ? 130 : 0; // goggles widen your view in the dark
+    var gog = state.items.goggles ? 260 : 0;      // goggles substantially widen your view
+    // FOV grows with each Dive Light upgrade level (and again with goggles)
+    var fov = lightRadius() * 1.5 + gog;
     // warm dive-light glow that grows useful as it gets darker
     if (darkness > 0.2) {
-      drawGlow(dx, dy, 130 + lightRadius() + gog, "#ffe7a8", Math.min(0.5, darkness * 0.5));
+      drawGlow(dx, dy, 130 + fov, "#ffe7a8", Math.min(0.5, darkness * 0.5));
     }
     // depth darkness vignette with a clear hole around the diver
     if (darkness > 0.22) {
-      var lr = 150 + lightRadius() + gog;
+      var lr = 150 + fov;
       var rg = ctx.createRadialGradient(dx, dy, lr * 0.35, dx, dy, lr * 1.15);
-      var a = Math.min(0.86, (darkness - 0.22) * 1.5);
+      var a = Math.min(0.86, (darkness - 0.22) * 1.5) * (state.items.goggles ? 0.72 : 1); // goggles also lighten the gloom
       rg.addColorStop(0, "rgba(0,0,8,0)");
       rg.addColorStop(1, "rgba(0,0,10," + a + ")");
       ctx.fillStyle = rg;
@@ -1761,8 +1791,18 @@
     var x = f.x - cam.x, y = f.y - cam.y;
     var th = fishTargetH(f);
     if (x < -200 || x > W + 200 || y < -200 || y > H + 200) return;
-    var arch = SPRITES.archetypeForShape(f.def.shape);
     var flip = f.vx < 0; // sprites face right by default
+
+    // Cloud Reaches birds swim in the magnet pool but should look like the
+    // flapping birds you see in every other area's sky.
+    if (f.def.bird) {
+      var bglow = fishGlow(f);
+      if (bglow) drawGlow(x, y, th * 0.95, bglow.color, bglow.alpha);
+      var bSC = Math.max(2, Math.round((14 + f.def.size * 4) / 7));
+      drawBirdPixel(ctx, x, y, bSC, f.def.color, f.phase * 4, !flip);
+      return; // labels handled by drawFishLabels()
+    }
+    var arch = SPRITES.archetypeForShape(f.def.shape);
 
     var glow = fishGlow(f);
     if (glow) drawGlow(x, y, th * 0.95, glow.color, glow.alpha);
@@ -2138,6 +2178,7 @@
       var c = D.CHARMS[ck];
       var owned = state.charms[ck];
       var atMax = owned >= c.maxStack;
+      var nextCost = charmCost(ck);
       var effect = ck === "rarity"
         ? "+" + Math.round(owned * c.perStack * 100) + "% rarity tilt"
         : "+" + (owned * c.perStack * 100).toFixed(1) + "% shiny chance";
@@ -2147,7 +2188,7 @@
         + '<small>Current effect: ' + effect + '</small></div>'
         + '<div class="si-buy">'
         + (atMax ? '<span class="maxed">MAX</span>'
-          : '<button data-buycharm="' + ck + '" ' + (state.money < c.cost ? 'disabled' : '') + '>$' + fmt(c.cost) + '</button>')
+          : '<button data-buycharm="' + ck + '" ' + (state.money < nextCost ? 'disabled' : '') + '>$' + fmt(nextCost) + '</button>')
         + '</div></div>';
     }
     // one-time items live in the charms tab
@@ -2261,11 +2302,18 @@
     showShop();
   }
 
+  // charms get pricier with every one you own (×1.55 each), so they can't be
+  // mass-bought to trivialise rarity/shiny odds.
+  function charmCost(key) {
+    var c = D.CHARMS[key];
+    return Math.round(c.cost * Math.pow(1.55, state.charms[key] || 0) / 10) * 10;
+  }
   function buyCharm(key) {
     var c = D.CHARMS[key];
     if (state.charms[key] >= c.maxStack) return;
-    if (state.money < c.cost) return;
-    state.money -= c.cost;
+    var cost = charmCost(key);
+    if (state.money < cost) return;
+    state.money -= cost;
     state.charms[key]++;
     saveGame();
     toast(c.name + " acquired (×" + state.charms[key] + ")!", "good", 1400);
@@ -2955,8 +3003,12 @@
       html += '<h3>' + D.LOCATIONS[areaId].name + '</h3>';
       birds.forEach(function (d) {
         var price = seedPackPrice(d), n = state.seeds[d.id] || 0;
-        html += '<div class="shop-item"><div class="si-info"><b>' + d.name + '</b> <span class="lvl">×' + n + ' seeds</span>'
-          + '<p>' + D.RARITY[d.rarity].name + ' bird · sells for $' + fmt(d.value) + '</p></div>'
+        var seen = !!state.discovered[d.id];   // don't spoil birds you haven't caught yet
+        var nm = seen ? d.name : '<span class="unseen">??? </span>';
+        var info = seen ? (D.RARITY[d.rarity].name + ' bird · sells for $' + fmt(d.value))
+                        : ('A mystery bird' + (d.night ? ' 🌙 (night)' : '') + ' — scatter its seed to reveal it');
+        html += '<div class="shop-item"><div class="si-info"><b>' + nm + '</b> <span class="lvl">×' + n + ' seeds</span>'
+          + '<p>' + info + '</p></div>'
           + '<div class="si-buy"><button data-buyseed="' + d.id + '" ' + (state.money < price ? 'disabled' : '') + '>3 seeds — $' + fmt(price) + '</button></div></div>';
       });
     }
@@ -2969,7 +3021,10 @@
         var d = D.FISH_BY_ID[b.getAttribute("data-buyseed")], price = seedPackPrice(d);
         if (state.money < price) return;
         state.money -= price; state.seeds[d.id] = (state.seeds[d.id] || 0) + 3; saveGame();
-        toast("Bought 3 " + d.name + " seeds!", "good", 1400); showSeedShop();
+        var seen = !!state.discovered[d.id];
+        toast("Bought 3 " + (seen ? d.name : "mystery bird") + " seeds!", "good", 1400);
+        showSeedShop();
+        var o = document.getElementById("shop"); if (o) o.scrollTop = 0; // back to the top
       };
     });
   }
@@ -2982,12 +3037,20 @@
       + '<button class="close" data-close="shop">✕</button></div><div class="stats-list">';
     html += row("🔱 Harpoons", state.harpoons);
     html += row("🥅 Fishing Net", state.upgrades.scoop > 0 ? "Lv " + state.upgrades.scoop : "— not owned");
-    if (state.items.necklace) html += row("📿 Multiplier Necklace", "treasures worth ×2");
-    if (state.items.megtooth) html += row("🦷 Meg Tooth", "bosses −1 harpoon");
-    if (state.items.jellystinger) html += row("⚡ Jelly Stinger", "fish stop fleeing");
-    if (state.items.sonar) html += row("📡 Sonar Radar", "beeps near wrecks");
-    if (state.items.rocfeather) html += row("🪶 Roc Feather", "leap up to grab birds");
-    if (state.items.crabcrown) html += row("👑 Spider Crab Crown", "creatures worth ×2");
+    // boss gear: tap to toggle on/off (a couple of secret areas only open with it OFF)
+    function bossRow(id, label) {
+      if (!state.items[id]) return "";
+      var on = itemOn(id);
+      return '<div class="stat-row"><span>' + label + '</span>'
+        + '<button class="mini-btn bosstoggle" data-toggleitem="' + id + '">' + (on ? "✅ ON" : "⬜ OFF") + '</button></div>';
+    }
+    var bossHtml = bossRow("necklace", "📿 Multiplier Necklace · treasures ×2")
+      + bossRow("megtooth", "🦷 Meg Tooth · bosses −1 hit")
+      + bossRow("jellystinger", "⚡ Jelly Stinger · fish stop fleeing")
+      + bossRow("sonar", "📡 Sonar Radar · pings near wrecks")
+      + bossRow("rocfeather", "🪶 Roc Feather · leap up to grab birds")
+      + bossRow("crabcrown", "👑 Spider Crab Crown · creatures ×2");
+    if (bossHtml) html += bossHtml;
     if (state.items.stopwatch) html += row("⏱️ Tide Stopwatch", "pick day or night");
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
     if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
@@ -2998,10 +3061,25 @@
     var ab = 0; for (var b in state.areaBossCaught) if (state.areaBossCaught[b]) ab++;
     html += row("⚔️ Area bosses beaten", ab + " / " + Object.keys(AREA_BOSS_BY_AREA).length);
     html += row("🦑 Kraken", state.krakenCaught ? (state.krakenShiny ? "✦ shiny!" : "defeated") : "at large");
+    html += '</div>';
+    // ----- View Upgrades: current level + value of every upgrade -----
+    html += '<h3 style="margin:14px 0 6px">🔧 Upgrades</h3><div class="stats-list">';
+    for (var uk in D.UPGRADES) {
+      var u = D.UPGRADES[uk], lv = state.upgrades[uk], maxed = lv >= u.levels.length - 1;
+      html += row(u.name, "Lv " + lv + "/" + (u.levels.length - 1) + (maxed ? " · MAX" : "") + " · " + fmtVal(u.levels[lv].value, u.unit));
+    }
     html += '</div></div>';
     ov.innerHTML = html;
     ov.classList.add("open");
     ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
+    ov.querySelectorAll("[data-toggleitem]").forEach(function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute("data-toggleitem");
+        if (!state.itemsOff) state.itemsOff = {};
+        state.itemsOff[id] = !state.itemsOff[id];
+        saveGame(); showInventory();
+      };
+    });
   }
 
   // ----- Treasure gallery -----

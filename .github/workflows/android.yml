@@ -60,6 +60,16 @@ jobs:
       - name: Sync Capacitor
         run: npx --no-install cap sync android
 
+      # Give every build a unique, increasing versionCode so Android installs
+      # it as an UPDATE over the previous version (no uninstall needed). The
+      # run number always increases; versionName stays human-readable.
+      - name: Set incrementing version
+        run: |
+          cd android/app
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" build.gradle
+          grep -E "versionCode|versionName" build.gradle
+
       - name: Generate app icon & splash (Kraken)
         run: npx --no-install @capacitor/assets generate --android --iconBackgroundColor '#0a1f38' --iconBackgroundColorDark '#0a1f38' --splashBackgroundColor '#0a1f38' --splashBackgroundColorDark '#04101d'
 
