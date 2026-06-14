@@ -291,9 +291,9 @@
       hint: "A ghostly giant jelly that rises only to the breathless — let your oxygen run very low.", condition: { lowOxygen: true } },
 
     // ======== Area bosses (rise once you've caught every fish in their area) ========
-    { id: "manowar",   name: "Man o' War",   area: "coral",   areaBoss: true, rarity: "mythic", size: 7,  value: 3000, minDepth: 120, color: "#b06bd0", shape: "jelly", hp: 3 },
+    { id: "manowar",   name: "Man o' War",   area: "coral",   areaBoss: true, rarity: "mythic", size: 7,  value: 3000, minDepth: 120, color: "#b06bd0", shape: "jelly", hp: 3, reward: "stinger" },
     { id: "siphonophore", name: "Siphonophore", area: "opensea", areaBoss: true, rarity: "mythic", size: 10, value: 6000, minDepth: 200, color: "#ff6f91", shape: "eel", hp: 3, reward: "necklace" },
-    { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "shark", hp: 3 },
+    { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "shark", hp: 3, reward: "megtooth" },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });

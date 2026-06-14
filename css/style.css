@@ -149,6 +149,36 @@ html, body {
 }
 @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
 
+/* ---------------- Aquarium ---------------- */
+#aqua-ui {
+  position: absolute;
+  top: calc(10px + env(safe-area-inset-top)); left: 10px; right: 10px;
+  display: none;
+  align-items: center; gap: 8px;
+  z-index: 9;
+}
+#aqua-ui button {
+  background: rgba(8, 30, 48, 0.72);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border-radius: 12px; padding: 10px 14px; font-size: 15px; font-weight: 700;
+}
+#aqua-title {
+  flex: 1; text-align: center; font-weight: 700;
+  background: rgba(8, 30, 48, 0.72);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+}
+#aqua-swim { color: #042033; background: var(--accent) !important; border-color: transparent !important; }
+
+.update-banner {
+  background: linear-gradient(120deg, rgba(63,208,255,0.18), rgba(185,107,255,0.18));
+  border: 1px solid rgba(120, 200, 255, 0.45);
+  border-radius: 12px; padding: 11px 14px; margin-bottom: 14px;
+  font-size: 13.5px; line-height: 1.5; text-align: center;
+}
+
 /* ---------------- Overlays ---------------- */
 .overlay {
   position: absolute;

@@ -414,7 +414,7 @@
       y: loc.maxDepth * PXPM - 60,
       baseY: loc.maxDepth * PXPM - 60,
       vx: 20, phase: 0, shiny: shiny, size: def.size, fleeing: 0,
-      isKraken: !isBlob, isBlob: isBlob, isBoss: true, hp: 3, hitFlash: 0,
+      isKraken: !isBlob, isBlob: isBlob, isBoss: true, hp: bossHP(3), hitFlash: 0,
     });
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); if (isBlob) AUDIO.playBlob(); else AUDIO.playBoss(); }
@@ -456,6 +456,9 @@
     return null;
   }
 
+  // Meg Tooth reduces every boss's hits-to-kill by 1
+  function bossHP(base) { return Math.max(1, base - (state.items.megtooth ? 1 : 0)); }
+
   // area bosses: appear once every regular fish in their area is caught
   var AREA_BOSS_BY_AREA = {};
   D.FISH.forEach(function (f) { if (f.areaBoss) AREA_BOSS_BY_AREA[f.area] = f.id; });
@@ -474,7 +477,7 @@
     var def = D.FISH_BY_ID[id], loc = D.LOCATIONS[run.area];
     run.fish.push({
       uid: id, def: def, x: loc.worldWidth / 2, y: loc.maxDepth * PXPM - 60, baseY: loc.maxDepth * PXPM - 60,
-      vx: 18, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, areaBoss: true, hp: def.hp || 3, hitFlash: 0,
+      vx: 18, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, areaBoss: true, hp: bossHP(def.hp || 3), hitFlash: 0,
     });
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
@@ -506,7 +509,7 @@
     canvas.addEventListener("touchcancel", onTouchEnd, { passive: false });
   }
   function onTouchStart(e) {
-    if (scene !== "dive") return;
+    if (scene !== "dive" && !(scene === "aquarium" && aqua && aqua.diverActive)) return;
     if (joy.active) return;
     var t = e.changedTouches[0];
     joy.active = true; joy.id = t.identifier;
@@ -566,6 +569,9 @@
     if (scene === "dive" && run) {
       update(dt);
       render();
+    } else if (scene === "aquarium" && aqua) {
+      updateAquarium(dt);
+      renderAquarium();
     }
     requestAnimationFrame(loop);
   }
@@ -660,6 +666,8 @@
       var fits = run.bagUsed + f.size <= inventoryCap();
       var canGrab = fits || (f.shiny && state.items.shinyPocket);
       if (f.isBoss) { canGrab = false; if (f.hitFlash > 0) f.hitFlash -= dt; } // bosses need harpoons
+      // Jelly Stinger: zap nearby fish so they stop fleeing (easy to magnet)
+      if (state.items.jellystinger && !f.isBoss && dist < mRange + 50) { f.fleeing = 0; f.stunned = 0.3; }
       var grabbing = false;
       if (canGrab && dist < mRange) {
         // pull toward the diver (stronger when closer; big fish resist)
@@ -911,6 +919,8 @@
     state.areaBossCaught[def.id] = true;
     state.money += def.value;
     if (def.reward === "necklace") state.items.necklace = true;
+    else if (def.reward === "stinger") state.items.jellystinger = true;
+    else if (def.reward === "megtooth") state.items.megtooth = true;
     run.bossPresent = false;
     saveGame();
     setTimeout(function () { showAreaBossEnding(def); }, 700);
@@ -1769,6 +1779,7 @@
     var html = '<div class="panel start-panel">';
     html += '<h1>🌊 Deep Sea Diver 🐙</h1>';
     html += '<p class="sub">Dive deep. Catch everything. Awaken the Kraken.</p>';
+    html += '<div class="update-banner">🐠 NEW: the <b>Aquarium Update</b>! Watch every fish &amp; shiny you\'ve caught swim in living tanks — and dive in to swim with them.</div>';
     html += '<div class="slot-list">';
     saves.forEach(function (s) {
       if (s.data) {
@@ -1855,7 +1866,7 @@
     html += '<div class="boat-grid">';
     html += '<button id="btn-dive" class="big primary">🤿 Dive</button>';
     html += '<button id="btn-shop" class="big">🛒 Shop</button>';
-    html += '<button id="btn-collection" class="big">📖 Collection</button>';
+    html += '<button id="btn-collection" class="big">🐠 Aquarium</button>';
     html += '<button id="btn-diver" class="big">🤿 Customise Diver</button>';
     html += '<button id="btn-area" class="big">🗺️ Change Area</button>';
     html += '<button id="btn-stats" class="big">📊 Stats</button>';
@@ -1886,7 +1897,7 @@
 
     bind("btn-dive", function () { startDive(state.lastArea); });
     bind("btn-shop", showShop);
-    bind("btn-collection", showCollection);
+    bind("btn-collection", showAquarium);
     bind("btn-diver", function () { diverPreviewSuit = null; showDiverShop(); });
     bind("btn-area", showAreas);
     bind("btn-stats", showStats);
@@ -2132,7 +2143,128 @@
     return url;
   }
 
-  // ----- Collection -----
+  // ----- Aquarium (live tanks of everything you've caught) -----
+  var aqua = null;
+  function showAquarium() {
+    closeOverlay("modal"); closeOverlay("shop"); sellHud(false);
+    scene = "aquarium";
+    aqua = { areaList: Object.keys(D.LOCATIONS), idx: 0, time: 0, entities: [], diverActive: false,
+      diver: { x: W / 2, y: H / 2, vx: 0, vy: 0, face: 1 } };
+    setupTank(0);
+    document.getElementById("aqua-ui").style.display = "flex";
+  }
+  function exitAquarium() {
+    aqua = null;
+    document.getElementById("aqua-ui").style.display = "none";
+    scene = "boat";
+    if (window.AUDIO) AUDIO.playMenu();
+    showBoat();
+  }
+  function aquaNav(dir) {
+    if (!aqua) return;
+    var n = aqua.areaList.length;
+    aqua.idx = (aqua.idx + dir + n) % n;
+    setupTank(aqua.idx);
+    if (window.AUDIO) AUDIO.playArea(aqua.area);
+  }
+  function setupTank(idx) {
+    var areaId = aqua.areaList[idx];
+    aqua.area = areaId; aqua.entities = [];
+    D.FISH.forEach(function (f) {
+      if (f.area !== areaId) return;
+      var found, sh;
+      if (f.isKraken) { found = state.krakenCaught; sh = state.krakenShiny; }
+      else if (f.isBlob) { found = state.blobfishCaught; sh = state.blobfishShiny; }
+      else if (f.areaBoss) { found = !!state.areaBossCaught[f.id]; sh = false; }
+      else { found = !!state.discovered[f.id]; sh = !!state.shinyFound[f.id]; }
+      if (found) addAquaEntity(f, false);
+      if (sh) addAquaEntity(f, true);
+    });
+    document.getElementById("aqua-title").textContent = D.LOCATIONS[areaId].name + " · " + aqua.entities.length + " here";
+  }
+  function addAquaEntity(f, shiny) {
+    var kind = f.bird ? "bird" : (f.creature ? "creature" : "fish");
+    var th = f.isKraken ? 100 : (f.isBoss || f.areaBoss) ? 76 : Math.min(58, 14 + f.size * 5);
+    var floorY = H - 56, top = 54;
+    var e = { def: f, shiny: shiny, kind: kind, phase: Math.random() * 6, th: th };
+    if (kind === "bird") { e.x = Math.random() * W; e.baseY = 18 + Math.random() * 22; e.vx = (Math.random() < 0.5 ? -1 : 1) * (20 + Math.random() * 20); }
+    else if (kind === "creature") { e.x = Math.random() * W; e.baseY = floorY - 6; e.vx = (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 8); }
+    else { e.x = 40 + Math.random() * (W - 80); e.baseY = top + 36 + Math.random() * (floorY - top - 72); e.vx = (Math.random() < 0.5 ? -1 : 1) * (18 + Math.random() * 30); }
+    e.y = e.baseY;
+    aqua.entities.push(e);
+  }
+  function updateAquarium(dt) {
+    aqua.time += dt;
+    var floorY = H - 56, top = 54;
+    for (var i = 0; i < aqua.entities.length; i++) {
+      var e = aqua.entities[i];
+      e.phase += dt * 2; e.x += e.vx * dt;
+      if (e.x < 20) { e.x = 20; e.vx = Math.abs(e.vx); }
+      if (e.x > W - 20) { e.x = W - 20; e.vx = -Math.abs(e.vx); }
+      if (e.kind === "bird") e.y = e.baseY + Math.sin(e.phase) * 4;
+      else if (e.kind === "creature") e.y = e.baseY + Math.abs(Math.sin(e.phase * 2)) * 1.5;
+      else e.y = e.baseY + Math.sin(e.phase) * 8;
+    }
+    if (aqua.diverActive) {
+      var ax = 0, ay = 0, mag = 1;
+      if (keys["a"] || keys["arrowleft"]) ax -= 1;
+      if (keys["d"] || keys["arrowright"]) ax += 1;
+      if (keys["w"] || keys["arrowup"]) ay -= 1;
+      if (keys["s"] || keys["arrowdown"]) ay += 1;
+      if (joy.active && joy.mag > 0.08) { ax = joy.dx; ay = joy.dy; mag = joy.mag; }
+      var len = Math.hypot(ax, ay), d = aqua.diver;
+      if (len > 0.001) {
+        d.vx = (ax / len) * 190 * mag; d.vy = (ay / len) * 190 * mag;
+        d.x = clamp(d.x + d.vx * dt, 20, W - 20); d.y = clamp(d.y + d.vy * dt, top, floorY);
+        if (Math.abs(ax) > 0.05) d.face = ax > 0 ? 1 : -1;
+      } else { d.vx = d.vy = 0; }
+    }
+  }
+  function renderAquarium() {
+    var loc = D.LOCATIONS[aqua.area], floorY = H - 56, top = 54;
+    ctx.clearRect(0, 0, W, H);
+    var sky = loc.sky || { top: "#aee0ff", bottom: "#e8f6ff" };
+    var sg = ctx.createLinearGradient(0, 0, 0, top); sg.addColorStop(0, sky.top); sg.addColorStop(1, sky.bottom);
+    ctx.fillStyle = sg; ctx.fillRect(0, 0, W, top);
+    var wg = ctx.createLinearGradient(0, top, 0, floorY); wg.addColorStop(0, loc.topColor); wg.addColorStop(1, mix(loc.topColor, loc.deepColor, 0.6));
+    ctx.fillStyle = wg; ctx.fillRect(0, top, W, floorY - top);
+    ctx.fillStyle = "rgba(255,255,255,0.25)"; ctx.fillRect(0, top - 2, W, 3);
+    var d = DECOR[aqua.area] || DECOR.coral;
+    ctx.fillStyle = d.floor; ctx.fillRect(0, floorY, W, H - floorY);
+    // simple gravel plants
+    ctx.fillStyle = d.plantColors ? d.plantColors[0] : "#3fa34d";
+    for (var px = 30; px < W; px += 90) {
+      var hh = 14 + ((px * 7) % 26) + Math.sin(aqua.time + px) * 3;
+      ctx.fillRect(px, floorY - hh, 6, hh);
+    }
+    for (var i = 0; i < aqua.entities.length; i++) drawAquaEntity(aqua.entities[i]);
+    if (aqua.diverActive) {
+      var moving = Math.abs(aqua.diver.vx) + Math.abs(aqua.diver.vy) > 5;
+      drawDiverPixel(ctx, aqua.diver.x, aqua.diver.y, 3, aqua.diver.face < 0 ? -1 : 1, state.diver, aqua.time * (moving ? 11 : 3.5));
+    }
+    // glass tank frame
+    ctx.strokeStyle = "rgba(200,230,255,0.5)"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, W - 8, H - 8);
+    ctx.strokeStyle = "rgba(255,255,255,0.14)"; ctx.lineWidth = 2; ctx.strokeRect(11, 11, W - 22, H - 22);
+    if (!aqua.entities.length) {
+      ctx.fillStyle = "rgba(255,255,255,0.8)"; ctx.font = "15px 'Segoe UI', sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("Nothing from " + loc.name + " yet — go catch some!", W / 2, H / 2);
+    }
+  }
+  function drawAquaEntity(e) {
+    var x = e.x, y = e.y, th = e.th;
+    if (e.shiny) drawGlow(x, y, th * 0.9, "#fff0a0", 0.4);
+    if (e.kind === "bird") {
+      drawBirdPixel(ctx, x, y, Math.max(2, Math.round(th / 7)), e.def.color, e.phase, e.vx < 0);
+    } else {
+      ctx.save(); ctx.translate(x, y);
+      if (e.kind === "fish") ctx.rotate(Math.sin(e.phase * 1.6) * 0.1);
+      SPRITES.draw(ctx, SPRITES.archetypeForShape(e.def.shape), 0, 0, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, flip: e.vx < 0, targetH: th });
+      ctx.restore();
+    }
+    if (e.shiny && Math.sin(aqua.time * 3 + e.phase) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2); }
+  }
+
+  // ----- Collection (now opened as the "List" view from the Aquarium) -----
   var collShinyView = false;
   function showCollection() {
     var ov = overlay("shop");
@@ -2474,6 +2606,12 @@
     if (def.reward === "necklace") {
       html += '<p>Tangled in its tendrils you find the legendary <b>Multiplier Necklace</b>! ✨</p>';
       html += '<p class="prize">Every treasure you recover is now worth <b>DOUBLE</b>.</p>';
+    } else if (def.reward === "stinger") {
+      html += '<p>You harvest a crackling <b>Jelly Stinger</b>! ⚡</p>';
+      html += '<p class="prize">Nearby fish are now <b>shocked still</b> — no more fleeing from your magnet.</p>';
+    } else if (def.reward === "megtooth") {
+      html += '<p>You pry loose a giant <b>Meg Tooth</b>! 🦷</p>';
+      html += '<p class="prize">Every boss now takes <b>one fewer harpoon</b> to defeat.</p>';
     } else {
       html += '<p>A mighty trophy added to your collection.</p>';
       html += '<p class="prize">+$' + fmt(def.value) + '</p>';
@@ -2663,6 +2801,8 @@
     html += row("🔱 Harpoons", state.harpoons);
     html += row("🥅 Fishing Net", state.upgrades.scoop > 0 ? "Lv " + state.upgrades.scoop : "— not owned");
     if (state.items.necklace) html += row("📿 Multiplier Necklace", "treasures worth ×2");
+    if (state.items.megtooth) html += row("🦷 Meg Tooth", "bosses −1 harpoon");
+    if (state.items.jellystinger) html += row("⚡ Jelly Stinger", "fish stop fleeing");
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
     if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
     var seedTotal = 0; for (var s in state.seeds) seedTotal += state.seeds[s];
@@ -2765,6 +2905,17 @@
     // harpoon throw button (boss fights)
     var hb = document.getElementById("btn-harpoon");
     if (hb) hb.addEventListener("click", function () { if (scene === "dive" && run) throwHarpoon(); });
+    // aquarium controls
+    bind("aqua-prev", function () { aquaNav(-1); });
+    bind("aqua-next", function () { aquaNav(1); });
+    bind("aqua-close", exitAquarium);
+    bind("aqua-list", showCollection);
+    bind("aqua-swim", function () {
+      if (!aqua) return;
+      aqua.diverActive = !aqua.diverActive;
+      aqua.diver.x = W / 2; aqua.diver.y = H / 2;
+      document.getElementById("aqua-swim").textContent = aqua.diverActive ? "🚪 Exit" : "🤿 Swim";
+    });
     // cozy UI click sounds
     document.addEventListener("click", function (e) {
       var el = e.target;
@@ -2798,6 +2949,9 @@
       },
       throwHarpoon: function () { state.harpoons = 10; throwHarpoon(); },
       spawnAreaBoss: function () { if (!run) return; var f = D.FISH.filter(function (x) { return x.areaBoss && x.area === run.area; })[0]; if (f) spawnAreaBoss(f.id); },
+      aquarium: function () { showAquarium(); },
+      aquaFrame: function (dt) { if (scene === "aquarium" && aqua) { updateAquarium(dt || 0.05); renderAquarium(); } },
+      aquaNav: function (d) { aquaNav(d); },
       forceShinyNext: function () { state.charms.shiny = 999; },
     },
   };
