@@ -74,6 +74,20 @@ html, body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
+.daynight {
+  display: inline-block;
+  margin: 4px auto 8px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: rgba(20, 30, 55, 0.55);
+  border: 1px solid rgba(150, 190, 255, 0.4);
+  font-size: 14px;
+}
+.daynight.night { background: rgba(14, 18, 48, 0.7); border-color: rgba(150, 170, 255, 0.55); }
+.daynight.day { background: rgba(60, 80, 40, 0.45); border-color: rgba(255, 230, 150, 0.5); }
+.daynight.tappable { cursor: pointer; }
+.daynight.tappable:active { transform: scale(0.97); }
+
 #btn-vent {
   position: absolute;
   bottom: calc(24px + env(safe-area-inset-bottom)); left: 14px;

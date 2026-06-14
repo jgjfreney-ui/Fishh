@@ -35,42 +35,42 @@
       id: "river", name: "River Run", tint: "#5fc46a",
       blurb: "A bright freshwater river winding between the coast and the kelp — trout, pike, catfish and more.",
       maxDepth: 220, worldWidth: 2200, topColor: "#4a9ec4", deepColor: "#143a2a",
-      shinyBonus: 0, unlocked: false, cost: 500,
+      shinyBonus: 0, unlocked: false, cost: 700,
       sky: { top: "#bfe8ff", bottom: "#eafce0" },
     },
     kelp: {
       id: "kelp", name: "Kelp Forest", tint: "#2fb59a",
       blurb: "Towering green columns hide clever, slippery creatures.",
       maxDepth: 520, worldWidth: 2600, topColor: "#2f9e8f", deepColor: "#04332f",
-      shinyBonus: 0, unlocked: false, cost: 1200,
+      shinyBonus: 0, unlocked: false, cost: 2200,
       sky: { top: "#9fb6b0", bottom: "#d6e6dc" },
     },
     arctic: {
       id: "arctic", name: "Arctic Shelf", tint: "#8fd0f0",
       blurb: "Frigid water beneath the ice. Belugas, narwhals and pale giants drift through the cold.",
       maxDepth: 700, worldWidth: 2600, topColor: "#6fb0d0", deepColor: "#08243a",
-      shinyBonus: 0, unlocked: false, cost: 3500,
+      shinyBonus: 0, unlocked: false, cost: 6500,
       sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
     },
     opensea: {
       id: "opensea", name: "Open Sea", tint: "#2f8fe0",
       blurb: "Endless blue with no land in sight — giant pelagic wanderers cruise the open water.",
       maxDepth: 850, worldWidth: 2800, topColor: "#1f7fc4", deepColor: "#04204a",
-      shinyBonus: 0, unlocked: false, cost: 7000,
+      shinyBonus: 0, unlocked: false, cost: 13000,
       sky: { top: "#aee0ff", bottom: "#e8f6ff" },
     },
     ancient: {
       id: "ancient", name: "Fossil Abyss", tint: "#c79a52",
       blurb: "A primordial sea sealed in the deep, where prehistoric monsters never went extinct.",
       maxDepth: 1000, worldWidth: 2600, topColor: "#5e7050", deepColor: "#160f04",
-      shinyBonus: 0, unlocked: false, cost: 11000,
+      shinyBonus: 0, unlocked: false, cost: 22000,
       sky: { top: "#cdbb8a", bottom: "#ece0c0" },
     },
     trench: {
       id: "trench", name: "Sunken Trench", tint: "#5a6cff",
       blurb: "The deepest, final frontier — a crushing abyss where the Kraken itself waits.",
       maxDepth: 1400, worldWidth: 2600, topColor: "#13496e", deepColor: "#01040c",
-      shinyBonus: 0, unlocked: false, cost: 20000,
+      shinyBonus: 0, unlocked: false, cost: 45000,
       requireAreas: ["river", "kelp", "arctic", "ancient", "opensea"], // always the last to unlock
       sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
@@ -78,7 +78,7 @@
       id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
       blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
       maxDepth: 800, worldWidth: 2600, topColor: "#2a3340", deepColor: "#04050a",
-      shinyBonus: 0.12, unlocked: false, cost: 16000,
+      shinyBonus: 0.12, unlocked: false, cost: 30000,
       caveArea: true, creaturePool: true, requireAllCreatures: true,
       sky: { top: "#1a2230", bottom: "#0a0e16" },
     },
@@ -86,7 +86,7 @@
       id: "cloud", name: "Cloud Reaches", tint: "#bfe0ff",
       blurb: "Climb above the waves into a dreamlike sky and catch the birds themselves. Shinies bloom thick up here.",
       maxDepth: 600, worldWidth: 2600, topColor: "#bfe8ff", deepColor: "#6f9fd0",
-      shinyBonus: 0.2, unlocked: false, cost: 18000,
+      shinyBonus: 0.2, unlocked: false, cost: 34000,
       airArea: true, birdPool: true, requireAllBirds: true,
       sky: { top: "#cdeeff", bottom: "#eaf8ff" },
     },
@@ -94,7 +94,7 @@
       id: "sanctuary", name: "Starlight Sanctuary", tint: "#b07bff",
       blurb: "A post-game paradise where EVERY creature in the sea gathers — and shinies bloom like stars.",
       maxDepth: 900, worldWidth: 2600, topColor: "#5a3ea8", deepColor: "#0a0226",
-      shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 50000,
+      shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 90000,
       requireBosses: true, // only buyable once the Kraken & blobfish are both caught
       sky: { top: "#160b32", bottom: "#3a2a6a", night: true },
     },
@@ -253,6 +253,28 @@
     { id: "cavecrab",   name: "Cave Crab",      area: "cave", creature: true, rarity: "uncommon",  size: 2, value: 300,  color: "#7a5a4a", shape: "crab" },
     { id: "glowsnail",  name: "Glow Snail",     area: "cave", creature: true, rarity: "epic",      size: 1, value: 900,  color: "#8affc0", shape: "urchin" },
 
+    // ======== Nocturnal fish (ONLY appear on night dives) — 2 per area ========
+    { id: "lanterneye",  name: "Lantern-eye",      area: "coral",   night: true, rarity: "rare",  size: 2, value: 360,  minDepth: 60,  color: "#2a6a7a", accent: "#7afcff", shape: "lanternjaw" },
+    { id: "moonwrasse",  name: "Moon Wrasse",      area: "coral",   night: true, rarity: "uncommon", size: 2, value: 220, minDepth: 0,  color: "#3a5aa0", accent: "#dfe8ff", shape: "moonfish" },
+    { id: "nightcat",    name: "Night Catfish",    area: "river",   night: true, rarity: "uncommon", size: 2, value: 240, minDepth: 0,  color: "#5a4a3a", accent: "#cabba0", shape: "catfish" },
+    { id: "eelpout",     name: "Glimmer Eelpout",  area: "river",   night: true, rarity: "rare",  size: 2, value: 380,  minDepth: 40,  color: "#3a5a4a", accent: "#9fffd0", shape: "glowworm" },
+    { id: "vampsquid",   name: "Vampire Squid",    area: "kelp",    night: true, rarity: "epic",  size: 3, value: 1100, minDepth: 150, color: "#5a1f2a", accent: "#ff6f91", shape: "vampsquid" },
+    { id: "seamoth",     name: "Sea Moth",         area: "kelp",    night: true, rarity: "rare",  size: 2, value: 420,  minDepth: 60,  color: "#3a6a4a", accent: "#9fe0a0", shape: "seamoth" },
+    { id: "frostjelly",  name: "Frost Jelly",      area: "arctic",  night: true, rarity: "rare",  size: 2, value: 460,  minDepth: 40,  color: "#5a8aa8", accent: "#cdeeff", shape: "glowjelly" },
+    { id: "icelantern",  name: "Ice Lanternfish",  area: "arctic",  night: true, rarity: "uncommon", size: 1, value: 280, minDepth: 80, color: "#7a90a8", accent: "#dff2ff", shape: "lanternjaw" },
+    { id: "fangdragon",  name: "Fang Dragon",      area: "ancient", night: true, rarity: "epic",  size: 3, value: 1300, minDepth: 200, color: "#2a2030", accent: "#ff9a4a", shape: "dragonfish" },
+    { id: "ghostray",    name: "Ghost Ray",        area: "ancient", night: true, rarity: "rare",  size: 4, value: 560,  minDepth: 150, color: "#4a3a5a", accent: "#b48bff", shape: "ghostray" },
+    { id: "moongazer",   name: "Midnight Stargazer", area: "opensea", night: true, rarity: "rare", size: 3, value: 520, minDepth: 120, color: "#1f3a5a", accent: "#6fd0ff", shape: "stargazer" },
+    { id: "moonsquid",   name: "Moon Squid",       area: "opensea", night: true, rarity: "epic",  size: 4, value: 1200, minDepth: 200, color: "#3a2a6a", accent: "#b48bff", shape: "vampsquid" },
+    { id: "blackdragon", name: "Black Dragonfish", area: "trench",  night: true, rarity: "epic",  size: 3, value: 1500, minDepth: 500, color: "#16121a", accent: "#3ad0ff", shape: "dragonfish" },
+    { id: "deeplantern", name: "Deep Lantern",     area: "trench",  night: true, rarity: "rare",  size: 2, value: 480,  minDepth: 400, color: "#1a2430", accent: "#ffd24a", shape: "lanternjaw" },
+    { id: "starmoth",    name: "Star Moth",        area: "sanctuary", night: true, rarity: "epic", size: 2, value: 1600, minDepth: 100, color: "#5a3ea8", accent: "#ff8be0", shape: "seamoth" },
+    { id: "lunarjelly",  name: "Lunar Jelly",      area: "sanctuary", night: true, rarity: "rare", size: 2, value: 700, minDepth: 60, color: "#7a6ad0", accent: "#fff3b0", shape: "glowjelly" },
+
+    // ---- one nocturnal bird + one nocturnal sea creature (night only) ----
+    { id: "nightowl",   name: "Night Owl",      area: "river", bird: true, night: true, rarity: "rare", size: 2, value: 520, color: "#6a5a4a", accent: "#e0d2b0", shape: "owl", seedCost: 800 },
+    { id: "fireflysquid", name: "Firefly Squid", area: "kelp", creature: true, night: true, rarity: "rare", size: 1, value: 420, color: "#3a4a8a", accent: "#7afcff", shape: "slug" },
+
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
     { id: "pelican",   name: "Pelican",      area: "coral", bird: true, rarity: "uncommon", size: 2, value: 130, color: "#d8c2a0", shape: "bird", seedCost: 400 },
@@ -318,9 +340,9 @@
     { id: "manowar",   name: "Man o' War",   area: "coral",   areaBoss: true, rarity: "mythic", size: 7,  value: 3000, minDepth: 120, color: "#b06bd0", accent: "#ffd6f2", shape: "manowar", hp: 3, reward: "stinger" },
     { id: "siphonophore", name: "Siphonophore", area: "opensea", areaBoss: true, rarity: "mythic", size: 10, value: 6000, minDepth: 200, color: "#ff6f91", shape: "siphonophore", hp: 3, reward: "necklace" },
     { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "megalodon", hp: 3, reward: "megtooth" },
-    { id: "rogueorca", name: "Rogue Orca",    area: "arctic",  areaBoss: true, rarity: "mythic", size: 11, value: 5000, minDepth: 250, color: "#16181d", accent: "#f2f6fa", shape: "orca", hp: 3, reward: "orcawhistle" },
+    { id: "rogueorca", name: "Rogue Orca",    area: "arctic",  areaBoss: true, trigger: "creatures", rarity: "mythic", size: 11, value: 5000, minDepth: 250, color: "#16181d", accent: "#f2f6fa", shape: "orca", hp: 3, reward: "sonar" },
     { id: "roc",       name: "The Roc",       area: "cloud",   areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 200, color: "#6a4a2a", accent: "#d8c0a0", shape: "roc", hp: 3, reward: "rocfeather" },
-    { id: "spidercrab", name: "Colossal Spider Crab", area: "cave", areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 250, color: "#8a3a2a", accent: "#e0a060", shape: "spidercrab", hp: 3, reward: "crabclaw" },
+    { id: "spidercrab", name: "Colossal Spider Crab", area: "cave", areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 250, color: "#8a3a2a", accent: "#e0a060", shape: "spidercrab", hp: 3, reward: "crabcrown" },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });
@@ -375,12 +397,12 @@
       unit: "s",
       levels: [
         { cost: 0,    value: 28 },
-        { cost: 150,  value: 40 },
-        { cost: 450,  value: 55 },
-        { cost: 1100, value: 75 },
-        { cost: 2600, value: 100 },
-        { cost: 6000, value: 135 },
-        { cost: 14000,value: 180 },
+        { cost: 220,  value: 40 },
+        { cost: 700,  value: 55 },
+        { cost: 1900, value: 75 },
+        { cost: 4800, value: 100 },
+        { cost: 11500,value: 135 },
+        { cost: 27000,value: 180 },
       ],
     },
     fins: {
@@ -389,11 +411,11 @@
       unit: "spd",
       levels: [
         { cost: 0,    value: 170 },
-        { cost: 120,  value: 205 },
-        { cost: 380,  value: 240 },
-        { cost: 900,  value: 280 },
-        { cost: 2200, value: 325 },
-        { cost: 5200, value: 380 },
+        { cost: 180,  value: 205 },
+        { cost: 580,  value: 240 },
+        { cost: 1500, value: 280 },
+        { cost: 3900, value: 325 },
+        { cost: 9500, value: 380 },
       ],
     },
     net: {
@@ -402,10 +424,10 @@
       unit: "px",
       levels: [
         { cost: 0,    value: 70 },
-        { cost: 200,  value: 95 },
-        { cost: 600,  value: 120 },
-        { cost: 1500, value: 150 },
-        { cost: 3600, value: 190 },
+        { cost: 300,  value: 95 },
+        { cost: 950,  value: 120 },
+        { cost: 2500, value: 150 },
+        { cost: 6400, value: 190 },
       ],
     },
     reel: {
@@ -414,10 +436,10 @@
       unit: "x",
       levels: [
         { cost: 0,    value: 1.0 },
-        { cost: 180,  value: 1.35 },
-        { cost: 520,  value: 1.75 },
-        { cost: 1300, value: 2.25 },
-        { cost: 3200, value: 3.0 },
+        { cost: 270,  value: 1.35 },
+        { cost: 820,  value: 1.75 },
+        { cost: 2200, value: 2.25 },
+        { cost: 5600, value: 3.0 },
       ],
     },
     inventory: {
@@ -426,11 +448,11 @@
       unit: "slots",
       levels: [
         { cost: 0,    value: 8 },
-        { cost: 250,  value: 14 },
-        { cost: 700,  value: 22 },
-        { cost: 1700, value: 34 },
-        { cost: 4000, value: 50 },
-        { cost: 9000, value: 72 },
+        { cost: 380,  value: 14 },
+        { cost: 1150, value: 22 },
+        { cost: 3000, value: 34 },
+        { cost: 7400, value: 50 },
+        { cost: 17000,value: 72 },
       ],
     },
     suit: {
@@ -439,10 +461,10 @@
       unit: "%O₂",
       levels: [
         { cost: 0,    value: 1.0 },
-        { cost: 400,  value: 0.85 },
-        { cost: 1200, value: 0.72 },
-        { cost: 3000, value: 0.60 },
-        { cost: 7000, value: 0.48 },
+        { cost: 600,  value: 0.85 },
+        { cost: 2000, value: 0.72 },
+        { cost: 5200, value: 0.60 },
+        { cost: 13000,value: 0.48 },
       ],
     },
     light: {
@@ -451,9 +473,9 @@
       unit: "px",
       levels: [
         { cost: 0,    value: 0 },
-        { cost: 300,  value: 120 },
-        { cost: 900,  value: 220 },
-        { cost: 2200, value: 340 },
+        { cost: 450,  value: 120 },
+        { cost: 1500, value: 220 },
+        { cost: 3800, value: 340 },
       ],
     },
     scoop: {
@@ -462,10 +484,10 @@
       unit: "px",
       levels: [
         { cost: 0,    value: 0 },
-        { cost: 800,  value: 55 },
-        { cost: 2000, value: 80 },
-        { cost: 4500, value: 110 },
-        { cost: 9000, value: 145 },
+        { cost: 1400, value: 55 },
+        { cost: 3400, value: 80 },
+        { cost: 7800, value: 110 },
+        { cost: 16000,value: 145 },
       ],
     },
   };
@@ -475,14 +497,14 @@
     rarity: {
       name: "Rarity Charm",
       desc: "Each charm boosts the odds of rarer fish. Stacks!",
-      cost: 800,
+      cost: 1500,
       perStack: 0.12,   // +12% rare-weight tilt per charm
       maxStack: 25,
     },
     shiny: {
       name: "Shiny Charm",
       desc: "Each charm slightly raises your chance of a shiny variant. Stacks, but shinies stay rare!",
-      cost: 2500,
+      cost: 4800,
       perStack: 0.004,  // +0.4% absolute shiny chance per charm
       maxStack: 40,
     },
@@ -496,12 +518,12 @@
     goggles: {
       name: "Wide-View Goggles",
       desc: "Crystal-clear goggles — see much further underwater and spot distant fish from a long way off.",
-      cost: 4000,
+      cost: 7500,
     },
     shinyPocket: {
       name: "Shiny Pocket",
       desc: "A magic pouch — you can still grab shiny catches even when your cargo hold is full.",
-      cost: 6000,
+      cost: 12000,
     },
   };
 

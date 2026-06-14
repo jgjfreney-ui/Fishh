@@ -294,5 +294,12 @@
       blip(base, t, 0.1, "triangle", 0.06, 2600);
       if (kind === "buy") blip(base + 7, t + 0.05, 0.12, "triangle", 0.05, 2800);
     },
+    // Sonar Radar ping — pitch rises as you get "hotter" (closer to a wreck)
+    sonar: function (closeness) {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime;
+      var midi = 64 + Math.round(Math.max(0, Math.min(1, closeness)) * 22); // cold→warm pitch
+      blip(midi, t, 0.09, "sine", 0.05, 2600);
+    },
   };
 })();
