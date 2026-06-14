@@ -39,6 +39,7 @@
       diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", look: "short" },
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
+      seeds: {},        // birdId -> seed count
     };
   }
 
@@ -112,6 +113,7 @@
       bagUsed: carryUsed,
       fish: [],
       creatures: [],
+      birds: [],
       netFx: [],
       treasures: [],
       wrecks: [],
@@ -312,7 +314,7 @@
       var f = D.FISH[i];
       if (f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
-      if (f.isKraken || f.isBlob || f.creature) continue;
+      if (f.isKraken || f.isBlob || f.creature || f.bird) continue;
       if (depthM < f.minDepth) continue;
       if (f.secret) {
         // secrets need a purchased hint + meeting their depth condition
@@ -636,6 +638,24 @@
     // advance net-swipe effects
     for (var ni = run.netFx.length - 1; ni >= 0; ni--) { run.netFx[ni].life -= dt; if (run.netFx[ni].life <= 0) run.netFx.splice(ni, 1); }
 
+    // --- birds (in the sky; lured down with seeds while at the surface) ---
+    var atSurface = diver.y <= 70;
+    for (var bi = run.birds.length - 1; bi >= 0; bi--) {
+      var b = run.birds[bi];
+      b.phase += dt * 9; // wing flap
+      if (!atSurface) b.mode = "flee";
+      if (b.mode === "flee") {
+        b.y -= 110 * dt; b.x += b.vx * dt;
+        if (b.y < cam.y - 360) { run.birds.splice(bi, 1); }
+      } else {
+        var tx = diver.x, ty = diver.y - 34;
+        var bdx = tx - b.x, bdy = ty - b.y, bd = Math.hypot(bdx, bdy) || 1;
+        b.x += (bdx / bd) * 72 * dt + Math.sin(b.phase * 0.25) * 10 * dt;
+        b.y += (bdy / bd) * 72 * dt;
+        if (bd < 26) { catchBird(b); run.birds.splice(bi, 1); }
+      }
+    }
+
     // --- treasures near wrecks ---
     run.treasureTimer -= dt;
     if (run.treasureTimer <= 0 && run.treasures.length < 4) {
@@ -662,9 +682,10 @@
     }
 
     // camera (snapped to the pixel grid so sprites stay crisp).
-    // y can go negative so a strip of sky shows above the waterline.
+    // near the surface the camera pans up to reveal lots of sky (for the birds).
+    var skyReveal = diver.y < 80 ? -290 : -150;
     cam.x = Math.round(clamp(diver.x - W / 2, 0, Math.max(0, loc.worldWidth - W)));
-    cam.y = Math.round(clamp(diver.y - H / 2, -150, Math.max(0, loc.maxDepth * PXPM + 120 - H)));
+    cam.y = Math.round(clamp(diver.y - H / 2, skyReveal, Math.max(0, loc.maxDepth * PXPM + 120 - H)));
 
     updateHud();
   }
@@ -745,6 +766,36 @@
     return true;
   }
 
+  function useSeed(birdId) {
+    if (!run || run.diver.y > 26) { toast("Scatter seed at the surface!", "bad"); return; }
+    var def = D.FISH_BY_ID[birdId];
+    if (def.area !== run.area) { toast(def.name + " doesn't visit here.", "bad"); return; }
+    if (!(state.seeds[birdId] > 0)) { toast("No " + def.name + " seed — buy some at the Seed Shop.", "bad"); return; }
+    state.seeds[birdId]--; saveGame();
+    run.birds.push({
+      def: def,
+      x: run.diver.x + (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 80),
+      y: -230 - Math.random() * 40,
+      vx: (Math.random() < 0.5 ? -1 : 1) * 30, phase: Math.random() * 6,
+      shiny: Math.random() < shinyChance(run.area), mode: "descend",
+    });
+    toast("🌾 You scatter " + def.name + " seed...", "good", 1400);
+  }
+
+  function catchBird(b) {
+    var def = b.def;
+    var val = def.value * (b.shiny ? D.SHINY_VALUE_MULT : 1);
+    run.bag.push({ fishId: def.id, shiny: b.shiny, size: def.size, value: val, name: def.name, color: def.color });
+    run.bagUsed += def.size;
+    var firstEver = !state.discovered[def.id], firstShiny = b.shiny && !state.shinyFound[def.id];
+    state.discovered[def.id] = true; if (b.shiny) state.shinyFound[def.id] = true;
+    state.counts[def.id] = (state.counts[def.id] || 0) + 1; state.stats.totalCaught++;
+    run.floaters.push({ x: b.x, y: b.y, text: (b.shiny ? "✦ " : "") + def.name, color: b.shiny ? "#ffe66d" : "#dff", life: 1.4 });
+    if (firstEver) toast("NEW! A " + def.name + " landed on your boat!", "good", 2400);
+    else if (firstShiny) toast("✦ SHINY " + def.name + "! ✦", "shiny", 2400);
+    saveGame();
+  }
+
   function catchBlobfish(shiny) {
     state.blobfishCaught = true;
     if (shiny) state.blobfishShiny = true;
@@ -802,6 +853,7 @@
     // --- background, lighting & scenery ---
     drawBackground(loc);
     drawSky(loc);
+    drawBirds();
     drawHills(loc);
     drawBgFlora();
     drawSeabed(loc);
@@ -1311,9 +1363,15 @@
       var arch = SPRITES.archetypeForShape(c.def.shape);
       var biolum = c.shiny || c.def.area === "sanctuary";
       if (biolum) drawGlow(x, y, th * 0.9, c.shiny ? "#fff0a0" : c.def.color, c.shiny ? 0.4 : 0.22);
+      // movement animation: crabs/lobsters/bugs scuttle (little hops); starfish
+      // & urchins barely move (slow drift/rotate)
+      var sh = c.def.shape, hop = 0, rot = 0;
+      if (sh === "crab" || sh === "lobster" || sh === "bug") { hop = Math.abs(Math.sin(c.phase)) * 2.5; rot = Math.sin(c.phase) * 0.06; }
+      else if (sh === "starfish") { rot = Math.sin(c.phase * 0.18) * 0.18; }
+      else { rot = Math.sin(c.phase * 0.4) * 0.04; }
       ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(Math.sin(c.phase) * 0.05);
+      ctx.translate(x, y - hop);
+      ctx.rotate(rot);
       if (noNet) ctx.globalAlpha = 0.85;
       SPRITES.draw(ctx, arch, 0, 0, { color: c.def.color, shiny: c.shiny, flip: c.vx < 0, targetH: th });
       ctx.restore();
@@ -1360,6 +1418,38 @@
       ctx.strokeStyle = "#d9b24a"; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(sx, sy, sz, 0, 7); ctx.stroke();
       ctx.restore();
+    }
+  }
+
+  // procedural flapping bird (pixel)
+  function drawBirdPixel(ctx2, cx, cy, SC, color, phase, flip) {
+    var d = mix(color, "#000000", 0.42), l = mix(color, "#ffffff", 0.4);
+    function R(ax, ay, aw, ah, col) { ctx2.fillStyle = col; var X = flip ? (cx - (ax + aw) * SC) : (cx + ax * SC); ctx2.fillRect(Math.round(X), Math.round(cy + ay * SC), aw * SC, ah * SC); }
+    var flap = Math.round(Math.sin(phase) * 3);
+    R(-5, -1, 1, 2, d);                 // tail
+    R(-4, -1, 7, 3, color);             // body
+    R(-4, -1, 7, 1, l);                 // back highlight
+    R(2, -3, 3, 3, color); R(2, -3, 3, 1, l); // head
+    R(5, -2, 2, 1, "#e8a83a");          // beak
+    R(3, -2, 1, 1, "#10121a");          // eye
+    R(-2, 2 + Math.round(flap * 0.4), 4, 1, d); // far wing
+    R(-2, -1 - flap, 5, 2, d);          // near wing (flaps)
+    R(-2, -1 - flap, 5, 1, color);
+  }
+  function drawBirds() {
+    for (var i = 0; i < run.birds.length; i++) {
+      var b = run.birds[i];
+      var x = b.x - cam.x, y = b.y - cam.y;
+      if (x < -90 || x > W + 90 || y < -90 || y > H + 90) continue;
+      var th = 14 + b.def.size * 4;
+      var SC = Math.max(2, Math.round(th / 7));
+      var flip = run.diver.x < b.x;
+      if (b.shiny) drawGlow(x, y, th * 1.1, "#fff0a0", 0.4);
+      drawBirdPixel(ctx, x, y, SC, b.def.color, b.phase, flip);
+      if (b.shiny && Math.sin(run.time * 3 + b.phase) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2); }
+      ctx.fillStyle = b.shiny ? "#ffe66d" : D.RARITY[b.def.rarity].color;
+      ctx.font = "11px 'Segoe UI', sans-serif"; ctx.textAlign = "center";
+      ctx.fillText((b.shiny ? "✦" : "") + b.def.name, x, y - th - 4);
     }
   }
 
@@ -1437,8 +1527,9 @@
     document.getElementById("money-text").textContent = "$" + fmt(state.money);
     document.getElementById("cargo-text").textContent = run.bagUsed + " / " + inventoryCap();
     document.getElementById("area-name").textContent = D.LOCATIONS[run.area].name;
-    var hint = document.getElementById("surface-hint");
-    hint.style.display = run.diver.y <= 30 ? "block" : "none";
+    var atTop = run.diver.y <= 30;
+    document.getElementById("surface-hint").style.display = atTop ? "block" : "none";
+    document.getElementById("btn-seed").style.display = atTop ? "block" : "none";
   }
 
   // ---------------------------------------------------------------------
@@ -1571,6 +1662,7 @@
     html += '<button id="btn-diver" class="big">🤿 Customise Diver</button>';
     html += '<button id="btn-area" class="big">🗺️ Change Area</button>';
     html += '<button id="btn-stats" class="big">📊 Stats</button>';
+    html += '<button id="btn-seedshop" class="big">🌾 Seed Shop</button>';
     html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
     html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
     html += '<button id="btn-menu" class="big">💾 Save &amp; Menu</button>';
@@ -1597,6 +1689,7 @@
     bind("btn-diver", function () { diverPreviewSuit = null; showDiverShop(); });
     bind("btn-area", showAreas);
     bind("btn-stats", showStats);
+    bind("btn-seedshop", showSeedShop);
     bind("btn-trade", function () { lastGiftCode = null; showTrade(); });
     bind("btn-rename", function () {
       askText("Name your captain", state.username || "Diver", function (name) {
@@ -1644,6 +1737,7 @@
   function sellHud(show) {
     document.getElementById("hud").style.display = show ? "flex" : "none";
     document.getElementById("surface-hint").style.display = "none";
+    document.getElementById("btn-seed").style.display = "none";
     document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
 
@@ -2241,6 +2335,65 @@
       };
     });
   }
+
+  // ----- Seeds & birds -----
+  function seedPackPrice(def) { return Math.max(15, Math.round(def.value * 0.85)); }
+
+  // in-water quick picker: scatter a seed for one of this area's birds
+  function showSeedPicker() {
+    var birds = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return d.area === run.area; });
+    var ov = document.createElement("div");
+    ov.className = "overlay open"; ov.style.zIndex = 40;
+    var h = '<div class="panel" style="max-width:380px"><h2>🌾 Scatter Seed</h2>'
+      + '<p class="tiny">Birds of the matching seed will flutter down to you while you stay at the surface.</p><div class="trade-list">';
+    birds.forEach(function (d) {
+      var n = state.seeds[d.id] || 0;
+      h += '<div class="shop-item"><div class="si-info"><b>' + d.name + '</b><small>' + n + ' seed' + (n === 1 ? '' : 's') + '</small></div>'
+        + '<div class="si-buy"><button data-seed="' + d.id + '" ' + (n > 0 ? '' : 'disabled') + '>Scatter</button></div></div>';
+    });
+    h += '</div><button id="seed-close" class="big" style="width:100%;margin-top:8px">Close</button>'
+      + '<p class="tiny">Buy seeds at the boat\'s Seed Shop.</p></div>';
+    ov.innerHTML = h;
+    document.body.appendChild(ov);
+    function close() { if (ov.parentNode) ov.parentNode.removeChild(ov); }
+    ov.querySelector("#seed-close").onclick = close;
+    ov.querySelectorAll("[data-seed]").forEach(function (b) {
+      b.onclick = function () { useSeed(b.getAttribute("data-seed")); close(); };
+    });
+  }
+
+  // boat Seed Shop — buy seeds for any bird
+  function showSeedShop() {
+    var ov = overlay("shop");
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🌾 Seed Shop</h2>'
+      + '<div class="money-line">💰 $' + fmt(state.money) + '</div>'
+      + '<button class="close" data-close="shop">✕</button></div>'
+      + '<p class="tiny">Each bird is drawn down by its own seed. Take seeds on a dive, surface, and scatter them. Birds count toward 100%!</p>';
+    for (var areaId in D.LOCATIONS) {
+      var birds = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return d.area === areaId; });
+      if (!birds.length) continue;
+      html += '<h3>' + D.LOCATIONS[areaId].name + '</h3>';
+      birds.forEach(function (d) {
+        var price = seedPackPrice(d), n = state.seeds[d.id] || 0;
+        html += '<div class="shop-item"><div class="si-info"><b>' + d.name + '</b> <span class="lvl">×' + n + ' seeds</span>'
+          + '<p>' + D.RARITY[d.rarity].name + ' bird · sells for $' + fmt(d.value) + '</p></div>'
+          + '<div class="si-buy"><button data-buyseed="' + d.id + '" ' + (state.money < price ? 'disabled' : '') + '>3 seeds — $' + fmt(price) + '</button></div></div>';
+      });
+    }
+    html += '</div>';
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
+    ov.querySelectorAll("[data-buyseed]").forEach(function (b) {
+      b.onclick = function () {
+        var d = D.FISH_BY_ID[b.getAttribute("data-buyseed")], price = seedPackPrice(d);
+        if (state.money < price) return;
+        state.money -= price; state.seeds[d.id] = (state.seeds[d.id] || 0) + 3; saveGame();
+        toast("Bought 3 " + d.name + " seeds!", "good", 1400); showSeedShop();
+      };
+    });
+  }
+
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function fmt(n) { return (n | 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   function fmtVal(v, unit) {
@@ -2297,6 +2450,9 @@
     if (rb) rb.addEventListener("click", function () {
       if (scene === "dive" && run) { toast("Surfacing with your haul...", "good", 1200); surface(); }
     });
+    // scatter-seed button (surface) → bird picker
+    var sb = document.getElementById("btn-seed");
+    if (sb) sb.addEventListener("click", function () { if (scene === "dive" && run) showSeedPicker(); });
     // cozy UI click sounds
     document.addEventListener("click", function (e) {
       var el = e.target;
@@ -2323,6 +2479,11 @@
       frame: function (dt) { if (scene === "dive" && run) { update(dt || 0.016); render(); } },
       spawnKraken: function () { spawnBoss("kraken", false); },
       spawnBlobfish: function () { spawnBoss("blobfish", true); },
+      summonBird: function () {
+        if (!run) return;
+        var d = D.FISH.filter(function (f) { return f.bird && f.area === run.area; })[0];
+        if (d) run.birds.push({ def: d, x: run.diver.x + 100, y: -180, vx: 10, phase: 0, shiny: true, mode: "descend" });
+      },
       forceShinyNext: function () { state.charms.shiny = 999; },
     },
   };
