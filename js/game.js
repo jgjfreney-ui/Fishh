@@ -23,7 +23,7 @@
       money: 0,
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0 },
       charms: { rarity: 0, shiny: 0 },
-      areas: { coral: true, river: false, kelp: false, trench: false, sanctuary: false },
+      areas: { coral: true, river: false, kelp: false, trench: false, sanctuary: false, arctic: false, ancient: false },
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
       shinyFound: {},     // fishId -> true
@@ -165,6 +165,8 @@
     kelp:      { plants: ["kelp", "kelp", "coral"], plantColors: ["#3fa34d", "#5cc46a", "#2f8f6f"], rock: "#244a3a", floor: "#1c3f33" },
     trench:    { plants: ["vent", "rock", "rock"], plantColors: ["#6b4a8f", "#8a5a32", "#3a4a55"], rock: "#1a232c", floor: "#0a1119" },
     sanctuary: { plants: ["crystal", "crystal", "coral"], plantColors: ["#a07bff", "#7affd0", "#ff8be0", "#9fd8ff"], rock: "#2a1e55", floor: "#1a0f3a" },
+    arctic:    { plants: ["crystal", "rock", "rock"], plantColors: ["#bfe6ff", "#8fb0c4", "#dff2ff"], rock: "#3a4a58", floor: "#3a5060" },
+    ancient:   { plants: ["coral", "rock", "vent"], plantColors: ["#8a7a4a", "#b09a5a", "#6a8a5a"], rock: "#3a2e1a", floor: "#2a2010" },
   };
 
   function generateDecor(loc) {
@@ -187,7 +189,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire" }[loc.id] || "bigkelp";
     var bcount = Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -1338,6 +1340,8 @@
     { name: "Kelp",      area: "kelp",      color: "#2f9e8f" },
     { name: "Trench",    area: "trench",    color: "#1a5fa0" },
     { name: "Starlight", area: "sanctuary", color: "#7a5cff" },
+    { name: "Arctic",    area: "arctic",    color: "#bfe6ff" },
+    { name: "Fossil",    area: "ancient",   color: "#a8843e" },
   ];
   // ... and one per secret fish (unlock by catching that secret)
   var SECRET_SUITS = D.FISH.filter(function (f) { return f.secret; })

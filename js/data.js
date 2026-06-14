@@ -88,6 +88,32 @@
       cost: 18000,
       sky: { top: "#160b32", bottom: "#3a2a6a", night: true },
     },
+    arctic: {
+      id: "arctic",
+      name: "Arctic Shelf",
+      blurb: "Frigid water beneath the ice. Belugas, narwhals and pale giants drift through the cold.",
+      maxDepth: 700,
+      worldWidth: 2600,
+      topColor: "#6fb0d0",
+      deepColor: "#08243a",
+      shinyBonus: 0,
+      unlocked: false,
+      cost: 9000,
+      sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
+    },
+    ancient: {
+      id: "ancient",
+      name: "Fossil Abyss",
+      blurb: "A primordial sea sealed in the deep, where prehistoric monsters never went extinct.",
+      maxDepth: 1000,
+      worldWidth: 2600,
+      topColor: "#5e7050",
+      deepColor: "#160f04",
+      shinyBonus: 0,
+      unlocked: false,
+      cost: 25000,
+      sky: { top: "#cdbb8a", bottom: "#ece0c0" },
+    },
   };
 
   // --- Fish --------------------------------------------------------------
@@ -234,6 +260,39 @@
     { id: "albatross", name: "Albatross",    area: "trench", bird: true, rarity: "rare",     size: 3, value: 440, color: "#e2e8ee", shape: "bird", seedCost: 900 },
     { id: "aurorafinch",name: "Aurora Finch",area: "sanctuary", bird: true, rarity: "rare", size: 1, value: 520, color: "#7affd0", shape: "bird", seedCost: 1200 },
     { id: "starswift", name: "Star Swift",   area: "sanctuary", bird: true, rarity: "epic", size: 1, value: 950, color: "#b58bff", shape: "bird", seedCost: 2000 },
+
+    // ======== Arctic Shelf ========
+    { id: "arcticcod",  name: "Arctic Cod",   area: "arctic", rarity: "common",   size: 1, value: 50,   minDepth: 0,   color: "#9fb6c4", shape: "fish" },
+    { id: "capelin",    name: "Capelin",      area: "arctic", rarity: "common",   size: 1, value: 60,   minDepth: 20,  color: "#bcc9d2", shape: "fish" },
+    { id: "arcticchar", name: "Arctic Char",  area: "arctic", rarity: "uncommon", size: 1, value: 150,  minDepth: 40,  color: "#e07a8a", shape: "fish" },
+    { id: "halibut",    name: "Halibut",      area: "arctic", rarity: "uncommon", size: 3, value: 260,  minDepth: 120, color: "#5a6a78", shape: "ray" },
+    { id: "wolffish",   name: "Wolffish",     area: "arctic", rarity: "rare",     size: 2, value: 380,  minDepth: 180, color: "#6a7080", shape: "eel" },
+    { id: "beluga",     name: "Beluga",       area: "arctic", rarity: "rare",     size: 6, value: 900,  minDepth: 150, color: "#eef4f8", shape: "whale" },
+    { id: "narwhal",    name: "Narwhal",      area: "arctic", rarity: "epic",     size: 6, value: 1700, minDepth: 250, color: "#bcd0dc", shape: "narwhal" },
+    { id: "orca",       name: "Orca",         area: "arctic", rarity: "epic",     size: 8, value: 2200, minDepth: 300, color: "#22262c", shape: "whale" },
+    { id: "greenlandshark", name: "Greenland Shark", area: "arctic", rarity: "legendary", size: 8, value: 5200, minDepth: 450, color: "#5a6470", shape: "shark" },
+    { id: "icecrab",    name: "Ice Crab",     area: "arctic", creature: true, rarity: "common",   size: 1, value: 70,  color: "#a9c6d6", shape: "crab" },
+    { id: "brittlestar",name: "Brittle Star", area: "arctic", creature: true, rarity: "uncommon", size: 1, value: 160, color: "#c98a9a", shape: "starfish" },
+    { id: "puffin",     name: "Puffin",       area: "arctic", bird: true, rarity: "common",   size: 1, value: 120, color: "#2a2e34", shape: "bird", seedCost: 300 },
+    { id: "arctictern", name: "Arctic Tern",  area: "arctic", bird: true, rarity: "uncommon", size: 1, value: 220, color: "#e8eef2", shape: "bird", seedCost: 500 },
+    { id: "frostwyrm",  name: "Frost Wyrm",   area: "arctic", rarity: "mythic", size: 9, value: 13000, minDepth: 550, color: "#9fe6ff", shape: "eel", secret: true,
+      hint: "An ancient ice-serpent said to coil through the coldest deep (below 550m).", condition: { minDepth: 550 } },
+
+    // ======== Fossil Abyss (prehistoric) ========
+    { id: "placoderm",  name: "Placoderm",    area: "ancient", rarity: "common",   size: 2, value: 80,   minDepth: 0,   color: "#7a6a4a", shape: "armored" },
+    { id: "paleoherring",name: "Paleo Herring",area: "ancient", rarity: "common",  size: 1, value: 70,   minDepth: 20,  color: "#9a8a6a", shape: "fish" },
+    { id: "coelacanth", name: "Coelacanth",   area: "ancient", rarity: "uncommon", size: 3, value: 320,  minDepth: 80,  color: "#3a5a6a", shape: "coelacanth" },
+    { id: "helicoprion",name: "Helicoprion",  area: "ancient", rarity: "rare",     size: 4, value: 560,  minDepth: 200, color: "#6a6052", shape: "shark" },
+    { id: "ichthyosaur",name: "Ichthyosaur",  area: "ancient", rarity: "rare",     size: 5, value: 700,  minDepth: 280, color: "#5a6a5a", shape: "shark" },
+    { id: "leedsichthys",name: "Leedsichthys",area: "ancient", rarity: "epic",     size: 9, value: 2600, minDepth: 400, color: "#8a7a5a", shape: "whale" },
+    { id: "mosasaur",   name: "Mosasaur",     area: "ancient", rarity: "epic",     size: 8, value: 3000, minDepth: 500, color: "#3a4a3a", shape: "mosasaur" },
+    { id: "megalodon",  name: "Megalodon",    area: "ancient", rarity: "legendary", size: 10, value: 7800, minDepth: 700, color: "#4a5560", shape: "shark" },
+    { id: "trilobite",  name: "Trilobite",    area: "ancient", creature: true, rarity: "common",   size: 1, value: 90,   color: "#7a5a3a", shape: "trilobite" },
+    { id: "ammonite",   name: "Ammonite",     area: "ancient", creature: true, rarity: "uncommon", size: 2, value: 240,  color: "#a08a5a", shape: "ammonite" },
+    { id: "archaeopteryx", name: "Archaeopteryx", area: "ancient", bird: true, rarity: "uncommon", size: 1, value: 260, color: "#6a5a3a", shape: "bird", seedCost: 600 },
+    { id: "pteranodon", name: "Pteranodon",   area: "ancient", bird: true, rarity: "rare", size: 3, value: 700, color: "#8a6a4a", shape: "bird", seedCost: 1500 },
+    { id: "ancientlev", name: "Ancient Leviathan", area: "ancient", rarity: "mythic", size: 10, value: 16000, minDepth: 800, color: "#5a4a2a", shape: "eel", secret: true,
+      hint: "The first and largest serpent, fossilised legends say it still hunts the abyss floor (below 800m).", condition: { minDepth: 800 } },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });
@@ -248,6 +307,8 @@
     "giantsquid", "sunfish",             // Kelp Forest
     "anglerfish", "frilledshark", "greatwhite", // Sunken Trench
     "prismtang", "galaxywhale",          // Starlight Sanctuary
+    "greenlandshark", "narwhal",         // Arctic Shelf
+    "megalodon", "mosasaur",             // Fossil Abyss
   ];
 
   // Build a quick lookup
