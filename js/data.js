@@ -198,10 +198,23 @@
       hint: "An enormous serpent said to lurk in the deepest river pools (below 90m).",
       condition: { minDepth: 90 } },
 
-    // ---- The Kraken (final boss fish) ----
+    // ---- The "Kraken" fake-out + the true Kraken ----
+    { id: "blobfish",   name: "Blobfish",     area: "trench", rarity: "mythic", size: 6, value: 50, minDepth: 600, color: "#e0909e", shape: "blob",
+      isBlob: true },
     { id: "kraken",     name: "The Kraken",   area: "trench", rarity: "mythic", size: 10, value: 25000, minDepth: 600, color: "#7a1f3d", shape: "kraken",
       isKraken: true,
-      hint: "The legend itself. It only surfaces once every other fish has been catalogued." },
+      hint: "The true legend. It only rises once you have caught 100% of everything in the sea." },
+  ];
+
+  // The fish the game *claims* you need to summon the Kraken (a curated spread
+  // of notable catches per area). Catching them all triggers the blobfish
+  // fake-out — the real Kraken needs 100% of everything.
+  const REQUIRED_FISH = [
+    "reefshark", "sandtiger",            // Coral Coast
+    "pike", "sturgeon",                  // River Run
+    "giantsquid", "sunfish",             // Kelp Forest
+    "anglerfish", "frilledshark", "greatwhite", // Sunken Trench
+    "prismtang", "galaxywhale",          // Starlight Sanctuary
   ];
 
   // Build a quick lookup
@@ -213,7 +226,7 @@
   // areas that actually exist yet — so not-yet-built zones like the River
   // don't make completion impossible.)
   const COMPLETION_FISH = FISH.filter(function (f) {
-    return !f.isKraken && !f.secret && LOCATIONS[f.area];
+    return !f.isKraken && !f.isBlob && !f.secret && LOCATIONS[f.area];
   }).map(function (f) { return f.id; });
 
   // --- Treasures (from shipwrecks) --------------------------------------
@@ -360,6 +373,7 @@
     FISH: FISH,
     FISH_BY_ID: FISH_BY_ID,
     COMPLETION_FISH: COMPLETION_FISH,
+    REQUIRED_FISH: REQUIRED_FISH,
     TREASURES: TREASURES,
     UPGRADES: UPGRADES,
     CHARMS: CHARMS,

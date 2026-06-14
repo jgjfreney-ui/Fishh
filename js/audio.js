@@ -15,8 +15,9 @@
   var mode = null, nextTime = 0, step = 0, melIdx = 4, cfgCur = null;
 
   function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-  var PENTA = [0, 2, 4, 7, 9]; // major pentatonic — always pleasant
-  function penta(base, idx) { return base + PENTA[((idx % 5) + 5) % 5] + 12 * Math.floor(idx / 5); }
+  var PENTA = [0, 2, 4, 7, 9];       // major pentatonic — always pleasant
+  var PENTA_MIN = [0, 3, 5, 7, 10];  // minor pentatonic — dramatic (boss)
+  function penta(base, idx, sc) { sc = sc || PENTA; return base + sc[((idx % 5) + 5) % 5] + 12 * Math.floor(idx / 5); }
 
   // bright major triads relative to a tonic
   function triad(tonic, deg) {
@@ -36,6 +37,9 @@
     kelp:      { tonic: 57, bpm: 110, density: 0.5, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"] },
     trench:    { tonic: 48, bpm: 96,  density: 0.42, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "V", "I"] },
     sanctuary: { tonic: 64, bpm: 132, density: 0.6, lead: "square",   bells: true,  waves: false, prog: ["I", "V", "IV", "I"] },
+    // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power
+    // chords, pounding bass). Epic, not eerie.
+    boss:      { tonic: 45, bpm: 156, density: 0.78, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, power: true, heavyBass: true },
   };
 
   // ---- audio graph ------------------------------------------------------
@@ -135,20 +139,23 @@
     if (muted) return;
     var cfg = cfgCur, per = 8, pos = s % per;
     var deg = cfg.prog[Math.floor(s / per) % cfg.prog.length];
-    var tonic = cfg.tonic, ch = triad(tonic, deg);
-    // bouncy bass: root on the beat, fifth on the "and"
-    if (pos % 2 === 0) bass(bassRoot(tonic, deg), t, spb * 0.42, 0.14);
-    else if (pos % 2 === 1) bass(bassRoot(tonic, deg) + 7, t, spb * 0.3, 0.09);
+    var tonic = cfg.tonic;
+    var ch = cfg.power ? [tonic, tonic + 7, tonic + 12] : triad(tonic, deg); // power chords for boss
+    var pent = cfg.pent || PENTA;
+    // bass: pounding every eighth for the boss, else bouncy root/fifth
+    if (cfg.heavyBass) bass(bassRoot(tonic, deg), t, eighth * 0.95, 0.18);
+    else if (pos % 2 === 0) bass(bassRoot(tonic, deg), t, spb * 0.42, 0.14);
+    else bass(bassRoot(tonic, deg) + 7, t, spb * 0.3, 0.09);
     // chord stabs on the offbeats (oom-PAH)
-    if (pos === 2 || pos === 6) ch.forEach(function (m) { blip(m + 12, t, eighth * 0.8, "triangle", 0.04, 1800); });
+    if (pos === 2 || pos === 6) ch.forEach(function (m) { blip(m + 12, t, eighth * 0.8, "triangle", cfg.power ? 0.05 : 0.04, cfg.power ? 2400 : 1800); });
     // sparkle bells
-    if (cfg.bells) { blip(penta(tonic + 12, s) + 12, t, eighth * 1.3, "triangle", 0.045, 3000); }
-    // lead melody — steady eighths over major pentatonic (can't sound scary)
+    if (cfg.bells) { blip(penta(tonic + 12, s, pent) + 12, t, eighth * 1.3, "triangle", 0.045, 3000); }
+    // lead melody — steady eighths over the chosen pentatonic
     if (!cfg.bells && Math.random() < cfg.density) {
       melIdx += [-2, -1, 0, 0, 1, 1, 2][(Math.random() * 7) | 0];
       melIdx = Math.max(0, Math.min(9, melIdx));
-      var m2 = penta(tonic + 12, melIdx);
-      blip(m2, t, eighth * (Math.random() < 0.25 ? 1.8 : 0.9), cfg.lead, 0.05, 2400);
+      var m2 = penta(tonic + 12, melIdx, pent);
+      blip(m2, t, eighth * (Math.random() < 0.25 ? 1.8 : 0.9), cfg.lead, 0.055, 2600);
     }
   }
 
@@ -185,7 +192,22 @@
     isMuted: function () { return muted; },
     playArea: function (a) { this.resume(); startTrack(a); },
     playMenu: function () { this.resume(); startTrack("menu"); },
+    playBoss: function () { this.resume(); startTrack("boss"); },
     stopAll: function () { clearSchedule(); cfgCur = null; mode = null; },
+    // deep rumbling tremor for the Kraken's arrival
+    rumble: function () {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(85, t); o.frequency.exponentialRampToValueAtTime(26, t + 2);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55, t + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 2.5);
+      var src = ctx.createBufferSource(); src.buffer = noiseBuffer();
+      var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 110;
+      var ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.4, t + 0.2); ng.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+      src.connect(lp); lp.connect(ng); ng.connect(master); src.start(t); src.stop(t + 2.5);
+    },
     ui: function (kind) {
       if (!ensure() || muted) return;
       var t = ctx.currentTime;

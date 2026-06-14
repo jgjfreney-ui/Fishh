@@ -29,6 +29,7 @@
       shinyFound: {},     // fishId -> true
       counts: {},         // fishId -> total caught
       treasures: {},      // treasureId -> count
+      blobfishCaught: false,
       krakenCaught: false,
       krakenShiny: false,
       stats: { maxDepth: 0, totalCaught: 0, earned: 0, dives: 0 },
@@ -286,7 +287,7 @@
       var f = D.FISH[i];
       if (f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
-      if (f.isKraken) continue;
+      if (f.isKraken || f.isBlob) continue;
       if (depthM < f.minDepth) continue;
       if (f.secret) {
         // secrets need a purchased hint + meeting their depth condition
@@ -359,33 +360,47 @@
     });
   }
 
-  function spawnKraken() {
+  function spawnBoss(defId, isBlob) {
     var loc = D.LOCATIONS[run.area];
-    var def = D.FISH_BY_ID.kraken;
-    var shiny = Math.random() < shinyChance(run.area);
+    var def = D.FISH_BY_ID[defId];
+    var shiny = !isBlob && Math.random() < shinyChance(run.area);
     run.fish.push({
-      uid: "kraken",
+      uid: defId,
       def: def,
       x: loc.worldWidth / 2,
       y: loc.maxDepth * PXPM - 60,
       baseY: loc.maxDepth * PXPM - 60,
-      vx: 20,
-      phase: 0,
-      shiny: shiny,
-      size: def.size,
-      fleeing: 0,
-      isKraken: true,
+      vx: 20, phase: 0, shiny: shiny, size: def.size, fleeing: 0,
+      isKraken: !isBlob, isBlob: isBlob,
     });
-    run.krakenPresent = true;
-    toast("The water trembles... THE KRAKEN has surfaced from the depths!", "epic", 5000);
+    run.bossPresent = true;
+    if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
+    toast("The water TREMBLES... something colossal rises from the abyss!", "epic", 5000);
   }
 
-  function krakenReady() {
-    if (state.krakenCaught) return false;
-    for (var i = 0; i < D.COMPLETION_FISH.length; i++) {
-      if (!state.discovered[D.COMPLETION_FISH[i]]) return false;
+  // The fish the game *claims* summon the Kraken (the lie).
+  function requiredMet() {
+    for (var i = 0; i < D.REQUIRED_FISH.length; i++) {
+      if (!state.discovered[D.REQUIRED_FISH[i]]) return false;
     }
     return true;
+  }
+  function requiredProgress() {
+    var n = 0;
+    for (var i = 0; i < D.REQUIRED_FISH.length; i++) if (state.discovered[D.REQUIRED_FISH[i]]) n++;
+    return n;
+  }
+  // TRUE 100% — every catalogued fish AND every secret (later: birds + creatures).
+  function trueComplete() {
+    for (var i = 0; i < D.COMPLETION_FISH.length; i++) if (!state.discovered[D.COMPLETION_FISH[i]]) return false;
+    for (var j = 0; j < D.FISH.length; j++) { var f = D.FISH[j]; if (f.secret && !state.discovered[f.id]) return false; }
+    return true;
+  }
+  // What (if anything) should rise in the Trench right now?
+  function bossToSummon() {
+    if (!state.krakenCaught && trueComplete()) return "kraken";
+    if (!state.blobfishCaught && requiredMet()) return "blobfish";
+    return null;
   }
 
   // ---------------------------------------------------------------------
@@ -525,9 +540,11 @@
       run.spawnTimer = 0.5 + Math.random() * 0.8;
       spawnFish(false);
     }
-    // kraken summon
-    if (!run.krakenPresent && run.area === "trench" && krakenReady() && depthM > 400) {
-      spawnKraken();
+    // boss summon (blobfish fake-out, or the true Kraken at 100%)
+    if (!run.bossPresent && run.area === "trench" && depthM > 400) {
+      var boss = bossToSummon();
+      if (boss === "kraken") spawnBoss("kraken", false);
+      else if (boss === "blobfish") spawnBoss("blobfish", true);
     }
 
     // --- update fish (MAGNET catching: fish are drawn toward you) ---
@@ -646,14 +663,19 @@
 
     run.floaters.push({ x: f.x, y: f.y, text: (f.shiny ? "✦ " : "") + def.name, color: f.shiny ? "#ffe66d" : "#dff", life: 1.4 });
 
-    if (def.isKraken) {
-      catchKraken(f.shiny);
-      return;
-    }
+    if (def.isBlob) { catchBlobfish(); return; }
+    if (def.isKraken) { catchKraken(f.shiny); return; }
     if (firstEver) toast("NEW! You caught a " + def.name + (def.secret ? " (Secret!)" : "") + "!", def.secret ? "epic" : "good", 2600);
     else if (firstShiny) toast("✦ SHINY " + def.name + "! ✦", "shiny", 2600);
 
     saveGame();
+  }
+
+  function catchBlobfish() {
+    state.blobfishCaught = true;
+    run.bossPresent = false;
+    saveGame();
+    setTimeout(function () { showBlobEnding(); }, 700);
   }
 
   function catchKraken(shiny) {
@@ -1405,8 +1427,14 @@
 
     html += '<div class="area-current">Current dive site: <b>' + D.LOCATIONS[state.lastArea].name + '</b></div>';
 
-    if (krakenReady() && !state.krakenCaught) {
-      html += '<div class="kraken-alert">🦑 The catalogue is complete... something <b>colossal</b> now lurks in the deepest reach of the <b>Sunken Trench</b>. Dive there.</div>';
+    if (!state.krakenCaught) {
+      if (trueComplete()) {
+        html += '<div class="kraken-alert">🦑 100% complete!! The <b>TRUE Kraken</b> now stirs in the deepest <b>Sunken Trench</b>. Go and face it.</div>';
+      } else if (requiredMet() && !state.blobfishCaught) {
+        html += '<div class="kraken-alert">🦑 You\'ve caught every <b>required</b> fish... surely the Kraken awaits in the deep <b>Sunken Trench</b>? Dive and find out.</div>';
+      } else if (state.blobfishCaught) {
+        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything</b> caught. You\'re at ' + Object.keys(state.discovered).length + '... keep going!</div>';
+      }
     }
     html += '</div>';
     ov.innerHTML = html;
@@ -1639,13 +1667,17 @@
     var ov = overlay("shop");
     var byArea = {};
     D.FISH.forEach(function (f) {
-      if (f.isKraken) return;
+      if (f.isKraken || f.isBlob) return;
       (byArea[f.area] = byArea[f.area] || []).push(f);
     });
+    var REQ = {}; D.REQUIRED_FISH.forEach(function (id) { REQ[id] = true; });
     var totalFound = 0, totalAll = 0, shinyFound = 0;
     var html = '<div class="panel shop-panel"><div class="panel-head"><h2>📖 Collection</h2>'
       + '<button class="close" data-close="shop">✕</button></div>';
     html += '<div class="collection-scroll">';
+    var reqDone = 0; D.REQUIRED_FISH.forEach(function (id) { if (state.discovered[id]) reqDone++; });
+    html += '<div class="req-banner">🗝️ <b>Kraken requirements:</b> ' + reqDone + '/' + D.REQUIRED_FISH.length
+      + ' required fish caught (marked 🗝️). <span class="tiny">...or so the legend says.</span></div>';
 
     for (var areaId in D.LOCATIONS) {
       var fishes = byArea[areaId] || [];
@@ -1657,7 +1689,8 @@
         var sh = !!state.shinyFound[f.id];
         if (sh) shinyFound++;
         var hidden = f.secret && !found && !state.hints[f.id];
-        html += '<div class="coll-card ' + (found ? 'found' : 'missing') + ' r-' + f.rarity + '">';
+        html += '<div class="coll-card ' + (found ? 'found' : 'missing') + ' r-' + f.rarity + (REQ[f.id] ? ' required' : '') + '">';
+        if (REQ[f.id]) html += '<div class="req-badge" title="Required to summon the Kraken">🗝️</div>';
         html += '<div class="coll-sprite" style="background-image:url(' + collSprite(f, found, sh, hidden) + ')"></div>';
         html += '<div class="coll-name">' + (hidden ? "???" : f.name) + (sh ? ' <span class="shiny-tag">✦</span>' : '') + '</div>';
         html += '<div class="coll-meta">' + D.RARITY[f.rarity].name
@@ -1669,12 +1702,18 @@
       html += '</div>';
     }
     // kraken card
-    var k = D.FISH_BY_ID.kraken;
+    var k = D.FISH_BY_ID.kraken, blob = D.FISH_BY_ID.blobfish;
     html += '<h3>The Legend</h3><div class="coll-grid">';
+    if (state.blobfishCaught) {
+      html += '<div class="coll-card found r-mythic">'
+        + '<div class="coll-sprite" style="background-image:url(' + collSprite(blob, true, false, false) + ')"></div>'
+        + '<div class="coll-name">Blobfish 🫠</div>'
+        + '<div class="coll-meta">The "Kraken" (lol)</div></div>';
+    }
     html += '<div class="coll-card ' + (state.krakenCaught ? 'found' : 'missing') + ' r-mythic">'
       + '<div class="coll-sprite" style="background-image:url(' + collSprite(k, state.krakenCaught, state.krakenShiny, false) + ')"></div>'
       + '<div class="coll-name">' + (state.krakenCaught ? "The Kraken" : "???") + (state.krakenShiny ? ' <span class="shiny-tag">✦</span>' : '') + '</div>'
-      + '<div class="coll-meta">' + (state.krakenCaught ? "Vanquished" : "Catch every other fish to summon it") + '</div></div>';
+      + '<div class="coll-meta">' + (state.krakenCaught ? "Vanquished" : "Catch 100% of everything") + '</div></div>';
     html += '</div>';
 
     html += '</div>';
@@ -1923,7 +1962,28 @@
     html += '</div>';
     ov.innerHTML = html;
     ov.classList.add("open");
-    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; showBoat(); });
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
+    saveGame();
+  }
+
+  // the blobfish fake-out "ending"
+  function showBlobEnding() {
+    scene = "ending";
+    sellHud(false);
+    var ov = overlay("modal");
+    var img = SPRITES.dataURL("blob", { color: "#e0909e", scale: 6 });
+    var html = '<div class="panel ending-panel">';
+    html += '<h1>🦑 ... the legend rises ... 🦑</h1>';
+    html += '<div class="blob-reveal" style="background-image:url(' + img + ')"></div>';
+    html += '<p>The whole ocean shook. You braced for the Kraken itself... and up floated —</p>';
+    html += '<p class="prize">— a <b>Blobfish</b>. 🫠</p>';
+    html += '<p>It looks at you. You look at it. Somewhere, a crab laughs.</p>';
+    html += '<p>Turns out that list of "required" fish was a load of barnacles. To truly summon the Kraken you must catch <b>100% of everything</b> — every fish, and one day every bird and sea creature too.</p>';
+    html += '<button id="btn-continue" class="big primary">Hmph. Back to it.</button>';
+    html += '</div>';
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
     saveGame();
   }
 
@@ -2116,7 +2176,8 @@
       unlockAll: function () { for (var a in state.areas) state.areas[a] = true; },
       dive: function (area) { startDive(area); },
       frame: function (dt) { if (scene === "dive" && run) { update(dt || 0.016); render(); } },
-      spawnKraken: spawnKraken,
+      spawnKraken: function () { spawnBoss("kraken", false); },
+      spawnBlobfish: function () { spawnBoss("blobfish", true); },
       forceShinyNext: function () { state.charms.shiny = 999; },
     },
   };

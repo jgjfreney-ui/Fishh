@@ -244,6 +244,20 @@
       "....A...A......A...A......",
       "...A...A........A...A.....",
     ],
+    blob: [
+      ".....bBBBBb.....",
+      "...bBBBBBBBBb...",
+      "..bBBBBBBBBBBb..",
+      "..bBEPBBBBEPBb..",
+      "..bBBBBLLBBBBb..",
+      ".bBBBBLLLLBBBBb.",
+      ".bBBBBBLLBBBBBb.",
+      "..bBBMMMMMMBBb..",
+      "..bBBBBBBBBBBb..",
+      "...bBBBBBBBBb...",
+      "....bBBBBBBb....",
+      ".....bbBBbb.....",
+    ],
     diver: [
       "....bb....",
       "...bMMb...",
@@ -362,7 +376,7 @@
     fish: "fish", round: "round", shark: "shark", sword: "sword", hammer: "hammer",
     whale: "whale", turtle: "turtle", ray: "ray", eel: "eel", squid: "squid",
     octopus: "octopus", jelly: "jelly", seahorse: "seahorse", otter: "otter",
-    angler: "angler", lantern: "lantern", kraken: "kraken",
+    angler: "angler", lantern: "lantern", kraken: "kraken", blob: "blob",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
