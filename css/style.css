@@ -187,6 +187,17 @@ button.big { padding: 16px; font-size: 16px; font-weight: 600; }
 .slot.empty { opacity: 0.85; }
 
 /* ---------------- Boat ---------------- */
+.captain-line { text-align: center; font-size: 14px; opacity: 0.9; margin-bottom: 4px; }
+.captain-line b { color: var(--accent); }
+.mini-btn { padding: 2px 8px; font-size: 12px; border-radius: 8px; }
+.slot-num { font-weight: 400; opacity: 0.6; font-size: 12px; }
+.trade-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.trade-list { display: flex; flex-direction: column; gap: 8px; }
+.gift-code-box {
+  background: rgba(0,0,0,0.25); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px; margin: 10px 0; font-size: 13px;
+}
+
 .money-line { font-size: 18px; color: var(--gold); font-weight: 700; }
 .boat-panel .money-line { text-align: center; margin-bottom: 14px; }
 .boat-grid {

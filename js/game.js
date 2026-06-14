@@ -19,6 +19,7 @@
     return {
       version: 2,
       created: Date.now(),
+      username: "Diver",
       money: 0,
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0 },
       charms: { rarity: 0, shiny: 0 },
@@ -1314,7 +1315,7 @@
         var caught = Object.keys(d.discovered || {}).length;
         var total = D.COMPLETION_FISH.length;
         html += '<div class="slot filled">'
-          + '<div class="slot-main"><b>Slot ' + s.slot + '</b>'
+          + '<div class="slot-main"><b>' + (d.username || "Diver") + ' <span class="slot-num">· Slot ' + s.slot + '</span></b>'
           + '<span>$' + fmt(d.money) + ' · ' + caught + '/' + total + ' fish · ' + (d.stats ? d.stats.maxDepth : 0) + 'm deep</span></div>'
           + '<div class="slot-btns">'
           + '<button data-load="' + s.slot + '">Continue</button>'
@@ -1332,7 +1333,14 @@
     ov.innerHTML = html;
     ov.classList.add("open");
     ov.querySelectorAll("[data-new]").forEach(function (b) {
-      b.onclick = function () { activeSlot = +b.getAttribute("data-new"); state = defaultState(); saveGame(); enterBoat(); };
+      b.onclick = function () {
+        var slot = +b.getAttribute("data-new");
+        askText("Name your captain", "Diver", function (name) {
+          if (name == null) return;
+          activeSlot = slot; state = defaultState(); state.username = name || "Diver";
+          saveGame(); enterBoat();
+        });
+      };
     });
     ov.querySelectorAll("[data-load]").forEach(function (b) {
       b.onclick = function () {
@@ -1374,6 +1382,7 @@
     var saleVal = run ? totalBagValue() : 0;
     var html = '<div class="panel boat-panel">';
     html += '<h2>⛵ The Boat</h2>';
+    html += '<div class="captain-line">Captain <b>' + (state.username || "Diver") + '</b> <button id="btn-rename" class="mini-btn">✏️</button></div>';
     html += '<div class="money-line">💰 $' + fmt(state.money) + '</div>';
 
     if (run && (run.bag.length || run.bagTreasure.length)) {
@@ -1389,6 +1398,7 @@
     html += '<button id="btn-diver" class="big">🤿 Customise Diver</button>';
     html += '<button id="btn-area" class="big">🗺️ Change Area</button>';
     html += '<button id="btn-stats" class="big">📊 Stats</button>';
+    html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
     html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
     html += '<button id="btn-menu" class="big">💾 Save &amp; Menu</button>';
     html += '</div>';
@@ -1408,6 +1418,13 @@
     bind("btn-diver", function () { diverPreviewSuit = null; showDiverShop(); });
     bind("btn-area", showAreas);
     bind("btn-stats", showStats);
+    bind("btn-trade", function () { lastGiftCode = null; showTrade(); });
+    bind("btn-rename", function () {
+      askText("Name your captain", state.username || "Diver", function (name) {
+        if (name == null) return;
+        state.username = name; saveGame(); showBoat();
+      });
+    });
     bind("btn-sound", function () {
       state.settings.muted = !state.settings.muted;
       if (window.AUDIO) AUDIO.setMuted(state.settings.muted);
@@ -1914,6 +1931,111 @@
   //  Helpers
   // ---------------------------------------------------------------------
   function bind(id, fn) { var el = document.getElementById(id); if (el) el.onclick = fn; }
+
+  // simple text-input modal (used for usernames)
+  function askText(title, def, cb) {
+    var ov = document.createElement("div");
+    ov.className = "overlay open"; ov.style.zIndex = 60;
+    ov.innerHTML = '<div class="panel" style="max-width:360px"><h2>' + title + '</h2>'
+      + '<input id="ask-input" maxlength="16" value="' + String(def || "").replace(/"/g, "&quot;") + '" '
+      + 'style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,0.3);color:#fff;font:inherit;margin-bottom:12px"/>'
+      + '<div style="display:flex;gap:8px"><button id="ask-ok" class="primary big" style="flex:1">OK</button>'
+      + '<button id="ask-cancel" class="big" style="flex:1">Cancel</button></div></div>';
+    document.body.appendChild(ov);
+    var input = ov.querySelector("#ask-input");
+    setTimeout(function () { try { input.focus(); input.select(); } catch (e) {} }, 50);
+    function done(v) { if (ov.parentNode) ov.parentNode.removeChild(ov); cb(v); }
+    ov.querySelector("#ask-ok").onclick = function () { done((input.value || "").trim().slice(0, 16) || (def || "Diver")); };
+    ov.querySelector("#ask-cancel").onclick = function () { done(null); };
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") ov.querySelector("#ask-ok").click(); });
+  }
+
+  // ----- Gift codes (offline fish trading) -----
+  function giftEncode(item) {
+    try { return "DSD1:" + btoa(JSON.stringify({ f: item.fishId, s: item.shiny ? 1 : 0, v: Math.round(item.value) })); }
+    catch (e) { return null; }
+  }
+  function giftDecode(code) {
+    code = (code || "").trim();
+    if (code.indexOf("DSD1:") !== 0) return null;
+    try {
+      var o = JSON.parse(atob(code.slice(5)));
+      var def = D.FISH_BY_ID[o.f];
+      if (!def) return null;
+      return { fishId: def.id, shiny: !!o.s, size: def.size, name: def.name, color: def.color,
+        value: o.v || def.value * (o.s ? D.SHINY_VALUE_MULT : 1) };
+    } catch (e) { return null; }
+  }
+
+  var lastGiftCode = null, lastGiftName = null;
+  function showTrade() {
+    var ov = overlay("shop");
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🎁 Gift Fish</h2>'
+      + '<button class="close" data-close="shop">✕</button></div>';
+    html += '<p class="tiny">Trade fish with friends via codes — no internet needed. Turn a fish from your haul into a code, send it to a friend, and they paste it in to receive it. (Codes are trust-based — keep them between friends!)</p>';
+
+    html += '<h3>Receive a fish</h3>';
+    html += '<div class="trade-row"><input id="trade-in" placeholder="Paste a gift code (DSD1:...)" '
+      + 'style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,0.3);color:#fff;font:inherit"/>'
+      + '<button id="trade-receive" class="primary">Receive</button></div>';
+
+    if (lastGiftCode) {
+      html += '<div class="gift-code-box"><b>Gift code for ' + lastGiftName + ' — send it to a friend:</b>'
+        + '<textarea readonly id="gift-code" rows="2" style="width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,0.35);color:#9fe;font:inherit">' + lastGiftCode + '</textarea>'
+        + '<button id="gift-copy" class="primary" style="margin-top:6px">Copy code</button></div>';
+    }
+
+    html += '<h3>Send a fish from your haul</h3>';
+    if (run && run.bag && run.bag.length) {
+      html += '<div class="trade-list">';
+      run.bag.forEach(function (b, i) {
+        html += '<div class="shop-item"><div class="si-info"><b>' + (b.shiny ? "✦ " : "") + b.name + '</b>'
+          + '<small>$' + fmt(b.value) + ' · size ' + b.size + '</small></div>'
+          + '<div class="si-buy"><button data-gift="' + i + '">Gift</button></div></div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<p class="tiny">Catch some fish and come back here <b>before selling</b> to gift them.</p>';
+    }
+    html += '</div>';
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { lastGiftCode = null; closeOverlay("shop"); };
+
+    var rb = ov.querySelector("#trade-receive");
+    if (rb) rb.onclick = function () {
+      var item = giftDecode(ov.querySelector("#trade-in").value);
+      if (!item) { toast("That code isn't valid.", "bad"); return; }
+      var firstEver = !state.discovered[item.fishId];
+      var firstShiny = item.shiny && !state.shinyFound[item.fishId];
+      state.discovered[item.fishId] = true;
+      if (item.shiny) state.shinyFound[item.fishId] = true;
+      state.counts[item.fishId] = (state.counts[item.fishId] || 0) + 1;
+      state.money += item.value; state.stats.earned += item.value; state.stats.totalCaught++;
+      saveGame();
+      toast("Received " + (item.shiny ? "✦ " : "") + item.name + "! +$" + fmt(item.value)
+        + (firstEver ? " · NEW!" : "") + (firstShiny ? " · ✦ first shiny!" : ""), "good", 2600);
+      showTrade();
+    };
+    var cp = ov.querySelector("#gift-copy");
+    if (cp) cp.onclick = function () {
+      var ta = ov.querySelector("#gift-code");
+      try { if (navigator.clipboard) navigator.clipboard.writeText(lastGiftCode); else { ta.select(); document.execCommand("copy"); } toast("Code copied!", "good", 1200); }
+      catch (e) { ta.select(); toast("Select & copy the code above.", "good", 1600); }
+    };
+    ov.querySelectorAll("[data-gift]").forEach(function (b) {
+      b.onclick = function () {
+        var i = +b.getAttribute("data-gift"), item = run.bag[i];
+        if (!item) return;
+        var code = giftEncode(item);
+        if (!code) { toast("Couldn't make a code.", "bad"); return; }
+        run.bagUsed -= item.size; run.bag.splice(i, 1);
+        lastGiftCode = code; lastGiftName = item.name;
+        saveGame();
+        showTrade();
+      };
+    });
+  }
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
   function fmt(n) { return (n | 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
   function fmtVal(v, unit) {
