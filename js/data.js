@@ -33,6 +33,20 @@
       shinyBonus: 0,
       unlocked: true,
       cost: 0,
+      sky: { top: "#9fd8ff", bottom: "#e6f7ff" },
+    },
+    river: {
+      id: "river",
+      name: "River Run",
+      blurb: "A bright freshwater river winding between the coast and the kelp — trout, pike, catfish and more.",
+      maxDepth: 220,
+      worldWidth: 2200,
+      topColor: "#4a9ec4",
+      deepColor: "#143a2a",
+      shinyBonus: 0,
+      unlocked: false,
+      cost: 500,
+      sky: { top: "#bfe8ff", bottom: "#eafce0" },
     },
     kelp: {
       id: "kelp",
@@ -45,6 +59,7 @@
       shinyBonus: 0,
       unlocked: false,
       cost: 1200,
+      sky: { top: "#9fb6b0", bottom: "#d6e6dc" },
     },
     trench: {
       id: "trench",
@@ -57,6 +72,7 @@
       shinyBonus: 0,
       unlocked: false,
       cost: 6000,
+      sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
     sanctuary: {
       id: "sanctuary",
@@ -70,6 +86,7 @@
       starfield: true,
       unlocked: false,
       cost: 18000,
+      sky: { top: "#160b32", bottom: "#3a2a6a", night: true },
     },
   };
 

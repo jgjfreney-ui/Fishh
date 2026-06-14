@@ -22,7 +22,7 @@
       money: 0,
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0 },
       charms: { rarity: 0, shiny: 0 },
-      areas: { coral: true, kelp: false, trench: false, sanctuary: false },
+      areas: { coral: true, river: false, kelp: false, trench: false, sanctuary: false },
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
       shinyFound: {},     // fishId -> true
@@ -129,6 +129,7 @@
   // per-area decoration recipe: seabed flora/rock + a couple of background ridges
   var DECOR = {
     coral:     { plants: ["coral", "coral", "anemone"], plantColors: ["#ff6f91", "#ff9f43", "#5ad1c8", "#c77dff"], rock: "#3a5a6b", floor: "#2a6e7a" },
+    river:     { plants: ["kelp", "kelp", "rock"], plantColors: ["#3f8f4d", "#6cae4a", "#2f7f5f"], rock: "#5a6a4a", floor: "#6a7a52" },
     kelp:      { plants: ["kelp", "kelp", "coral"], plantColors: ["#3fa34d", "#5cc46a", "#2f8f6f"], rock: "#244a3a", floor: "#1c3f33" },
     trench:    { plants: ["vent", "rock", "rock"], plantColors: ["#6b4a8f", "#8a5a32", "#3a4a55"], rock: "#1a232c", floor: "#0a1119" },
     sanctuary: { plants: ["crystal", "crystal", "coral"], plantColors: ["#a07bff", "#7affd0", "#ff8be0", "#9fd8ff"], rock: "#2a1e55", floor: "#1a0f3a" },
@@ -154,7 +155,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal" }[loc.id] || "bigkelp";
     var bcount = Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -591,9 +592,10 @@
       if (ff.life <= 0) run.floaters.splice(fl, 1);
     }
 
-    // camera (snapped to the pixel grid so sprites stay crisp)
+    // camera (snapped to the pixel grid so sprites stay crisp).
+    // y can go negative so a strip of sky shows above the waterline.
     cam.x = Math.round(clamp(diver.x - W / 2, 0, Math.max(0, loc.worldWidth - W)));
-    cam.y = Math.round(clamp(diver.y - H / 2, 0, Math.max(0, loc.maxDepth * PXPM + 120 - H)));
+    cam.y = Math.round(clamp(diver.y - H / 2, -150, Math.max(0, loc.maxDepth * PXPM + 120 - H)));
 
     updateHud();
   }
@@ -701,10 +703,10 @@
 
     // --- background, lighting & scenery ---
     drawBackground(loc);
+    drawSky(loc);
     drawHills(loc);
     drawBgFlora();
     drawSeabed(loc);
-    if (cam.y < 90) drawSurface(loc);
 
     // --- scene objects ---
     for (var i = 0; i < run.wrecks.length; i++) drawWreck(run.wrecks[i]);
@@ -865,23 +867,56 @@
     ctx.restore();
   }
 
-  function drawSurface(loc) {
-    var sy = 14 - cam.y;
-    // bright surface band with caustic shimmer
-    var g = ctx.createLinearGradient(0, 0, 0, Math.max(8, sy + 30));
-    g.addColorStop(0, "rgba(255,255,255,0.30)");
-    g.addColorStop(1, "rgba(255,255,255,0)");
+  function drawCloud(x, y, s) {
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(x, y, 30 * s, 8 * s);
+    ctx.fillRect(x + 6 * s, y - 6 * s, 18 * s, 10 * s);
+    ctx.fillRect(x + 2 * s, y - 3 * s, 10 * s, 8 * s);
+  }
+
+  // Sky above the waterline (different per area) + the rippling water surface.
+  // Birds will eventually fly in this sky strip.
+  function drawSky(loc) {
+    var surfaceY = -cam.y;            // screen y of the waterline (world y = 0)
+    if (surfaceY <= 0) return;        // fully underwater — no sky in view
+    var sky = loc.sky || { top: "#9fd8ff", bottom: "#e6f7ff" };
+    var g = ctx.createLinearGradient(0, 0, 0, surfaceY);
+    g.addColorStop(0, sky.top); g.addColorStop(1, sky.bottom);
     ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, Math.max(0, sy + 30));
+    ctx.fillRect(0, 0, W, surfaceY);
+
+    if (sky.night) {
+      ctx.fillStyle = "#fff";
+      for (var i = 0; i < 40; i++) {
+        var sxp = (i * 137.5) % W, syp = (i * 53.7) % Math.max(1, surfaceY);
+        if (Math.sin(run.time + i) > 0.2) ctx.fillRect(sxp | 0, syp | 0, 2, 2);
+      }
+      ctx.fillStyle = "rgba(230,235,255,0.9)";
+      ctx.beginPath(); ctx.arc(W * 0.8, surfaceY * 0.35, 16, 0, 7); ctx.fill(); // moon
+    } else {
+      ctx.fillStyle = "rgba(255,250,205,0.85)";
+      ctx.beginPath(); ctx.arc(W * 0.8, surfaceY * 0.34, 20, 0, 7); ctx.fill(); // sun
+      var drift = (run.time * 8) % (W + 120);
+      drawCloud(((W * 0.2 - cam.x * 0.05 + drift) % (W + 120)) - 60, surfaceY * 0.3, 1);
+      drawCloud(((W * 0.6 - cam.x * 0.05 + drift * 0.7) % (W + 120)) - 60, surfaceY * 0.5, 0.7);
+    }
+
+    // the boat floats on the surface
+    drawBoat(loc.worldWidth / 2 - cam.x, surfaceY - 2);
+
+    // bright band just below the surface
+    var wb = ctx.createLinearGradient(0, surfaceY, 0, surfaceY + 30);
+    wb.addColorStop(0, "rgba(255,255,255,0.32)"); wb.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = wb; ctx.fillRect(0, surfaceY, W, 30);
+    // rippling waterline
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
-    ctx.fillStyle = "rgba(255,255,255,0.10)";
-    for (var cxp = 0; cxp < W; cxp += 6) {
-      var hh = 2 + Math.sin((cxp + cam.x) * 0.08 + run.time * 2) * 2;
-      ctx.fillRect(cxp, Math.max(0, sy) , 6, Math.max(1, hh));
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    for (var x = 0; x < W; x += 6) {
+      var wy = surfaceY + Math.sin((x + cam.x) * 0.05 + run.time * 1.6) * 2;
+      ctx.fillRect(x, wy - 1, 6, 2);
     }
     ctx.restore();
-    drawBoat(loc.worldWidth / 2 - cam.x, 14 - cam.y);
   }
 
   function drawBubbles() {
@@ -1370,7 +1405,7 @@
     bind("btn-dive", function () { startDive(state.lastArea); });
     bind("btn-shop", showShop);
     bind("btn-collection", showCollection);
-    bind("btn-diver", showDiverShop);
+    bind("btn-diver", function () { diverPreviewSuit = null; showDiverShop(); });
     bind("btn-area", showAreas);
     bind("btn-stats", showStats);
     bind("btn-sound", function () {
@@ -1635,7 +1670,10 @@
 
   // ----- Diver customization -----
   var diverPreviewTimer = null;
+  var diverPreviewSuit = null; // {name,color,owned,buy,lockReason} being previewed
+  var diverSuitList = [];
   function stopDiverPreview() { if (diverPreviewTimer) { clearInterval(diverPreviewTimer); diverPreviewTimer = null; } }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   function renderDiverPreview() {
     var c = document.getElementById("diver-preview");
@@ -1645,7 +1683,6 @@
     var g = p.createLinearGradient(0, 0, 0, c.height);
     g.addColorStop(0, "#2a6e9a"); g.addColorStop(1, "#0a2c48");
     p.fillStyle = g; p.fillRect(0, 0, c.width, c.height);
-    // a few bubbles for life
     var t = Date.now() / 1000;
     p.fillStyle = "rgba(255,255,255,0.25)";
     for (var i = 0; i < 6; i++) {
@@ -1653,7 +1690,33 @@
       var by = c.height - ((t * 22 + i * 33) % c.height);
       p.fillRect(bx | 0, by | 0, 2, 2);
     }
-    drawDiverPixel(p, c.width / 2, c.height / 2, 6, 1, state.diver, t * 7);
+    // preview the focused suit colour (if any) without committing
+    var suitCol = (diverPreviewSuit && diverPreviewSuit.owned !== false && diverPreviewSuit.color) ? diverPreviewSuit.color
+      : (diverPreviewSuit && diverPreviewSuit.previewColor) ? diverPreviewSuit.previewColor
+      : state.diver.suit;
+    var opts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look, suit: suitCol };
+    drawDiverPixel(p, c.width / 2, c.height / 2, 6, 1, opts, t * 7);
+  }
+
+  // unified list of all wetsuits with names + ownership/buy/lock metadata
+  function buildSuitList() {
+    var list = [];
+    SUITS.forEach(function (s) {
+      var owned = s.cost === 0 || state.diverUnlocks[s.id];
+      list.push({ key: "s_" + s.id, name: cap(s.id), color: s.color, owned: owned,
+        buy: (!owned && s.cost > 0) ? { id: s.id, cost: s.cost } : null, group: "Wetsuits" });
+    });
+    LOCATION_SUITS.forEach(function (s) {
+      var unlocked = s.always || state.areas[s.area];
+      list.push({ key: "l_" + s.area, name: s.name, color: s.color, owned: unlocked,
+        previewColor: s.color, lockReason: unlocked ? null : ("Reach " + (D.LOCATIONS[s.area] ? D.LOCATIONS[s.area].name : s.name)), group: "Location suits" });
+    });
+    SECRET_SUITS.forEach(function (s) {
+      var unlocked = !!state.discovered[s.id];
+      list.push({ key: "x_" + s.id, name: unlocked ? s.name : "???", color: unlocked ? s.color : "#16242f", owned: unlocked,
+        lockReason: unlocked ? null : "Catch its secret fish", group: "Secret suits" });
+    });
+    return list;
   }
 
   function showDiverShop() {
@@ -1663,7 +1726,19 @@
       + '<button class="close" data-close="shop">✕</button></div>';
 
     html += '<div class="diver-preview-wrap"><canvas id="diver-preview" width="170" height="150"></canvas></div>';
-    html += '<p class="tiny" style="text-align:center">Make your diver yours — pick a look, skin tone and suit. It\'s purely cosmetic; everyone dives the same!</p>';
+
+    // preview action bar — shows the focused suit's name + Equip/Buy/Locked
+    diverSuitList = buildSuitList();
+    var pv = diverPreviewSuit;
+    if (!pv) { pv = null; for (var pi = 0; pi < diverSuitList.length; pi++) { if (diverSuitList[pi].color === state.diver.suit && diverSuitList[pi].owned) { pv = diverSuitList[pi]; break; } } }
+    if (!pv) pv = { name: "Current suit", color: state.diver.suit, owned: true };
+    html += '<div class="preview-bar"><div class="pv-name">' + pv.name + ' Suit</div>';
+    if (pv.lockReason) html += '<span class="pv-locked">🔒 ' + pv.lockReason + '</span>';
+    else if (pv.buy) html += '<button class="primary" data-suitbuy="' + pv.buy.id + '" ' + (state.money < pv.buy.cost ? 'disabled' : '') + '>Buy &amp; Wear — $' + fmt(pv.buy.cost) + '</button>';
+    else if (state.diver.suit === pv.color) html += '<button disabled>Wearing ✓</button>';
+    else html += '<button class="primary" data-suitequip="' + pv.color + '">Equip</button>';
+    html += '</div>';
+    html += '<p class="tiny" style="text-align:center">Tap any item to preview it on your diver. Purely cosmetic!</p>';
 
     // Look
     html += '<h3>Look</h3><div class="swatch-row">';
@@ -1686,37 +1761,18 @@
     });
     html += '</div>';
 
-    // Suit colour (some premium)
-    html += '<h3>Wetsuit</h3><div class="swatch-row">';
-    SUITS.forEach(function (s) {
-      var owned = s.cost === 0 || state.diverUnlocks[s.id];
-      var sel = state.diver.suit === s.color;
-      html += '<button class="swatch big-swatch ' + (sel ? 'sel' : '') + (owned ? '' : ' locked') + '" data-suit="' + s.id + '" style="background:' + s.color + '">'
-        + (owned ? '' : '<span class="lock">$' + fmt(s.cost) + '</span>') + '</button>';
+    // Wetsuits, grouped, each labelled with its name
+    ["Wetsuits", "Location suits", "Secret suits"].forEach(function (grp) {
+      html += '<h3>' + grp + '</h3><div class="suit-grid">';
+      diverSuitList.filter(function (s) { return s.group === grp; }).forEach(function (s) {
+        var sel = state.diver.suit === s.color && s.owned;
+        html += '<button class="suit-cell ' + (sel ? 'sel' : '') + (s.owned ? '' : ' locked') + '" data-suitpick="' + s.key + '">'
+          + '<span class="suit-chip" style="background:' + s.color + '">' + (s.owned ? '' : '<span class="lock">🔒</span>') + '</span>'
+          + '<span class="suit-label">' + s.name + '</span></button>';
+      });
+      html += '</div>';
     });
-    html += '</div>';
-
-    // Location wetsuits
-    html += '<h3>Location suits</h3><div class="swatch-row">';
-    LOCATION_SUITS.forEach(function (s) {
-      var unlocked = s.always || state.areas[s.area];
-      var sel = state.diver.suit === s.color;
-      html += '<button class="swatch big-swatch ' + (sel ? 'sel' : '') + (unlocked ? '' : ' locked') + '" '
-        + (unlocked ? ('data-suitcolor="' + s.color + '"') : '') + ' style="background:' + s.color + '">'
-        + (unlocked ? '' : '<span class="lock">🔒</span>') + '</button>';
-    });
-    html += '</div>';
-
-    // Secret-fish wetsuits
-    html += '<h3>Secret suits</h3><div class="swatch-row">';
-    SECRET_SUITS.forEach(function (s) {
-      var unlocked = !!state.discovered[s.id];
-      var sel = state.diver.suit === s.color;
-      html += '<button class="swatch big-swatch ' + (sel ? 'sel' : '') + (unlocked ? '' : ' locked') + '" '
-        + (unlocked ? ('data-suitcolor="' + s.color + '"') : '') + ' style="background:' + (unlocked ? s.color : '#16242f') + '">'
-        + (unlocked ? '' : '<span class="lock">🔒</span>') + '</button>';
-    });
-    html += '</div><p class="tiny">Location suits unlock as you reach each area. Secret suits unlock when you catch that area\'s secret fish.</p>';
+    html += '<p class="tiny">Location suits unlock as you reach each area. Secret suits unlock when you catch that area\'s secret fish.</p>';
     html += '</div>';
 
     ov.innerHTML = html;
@@ -1735,21 +1791,28 @@
     ov.querySelectorAll("[data-hair]").forEach(function (b) {
       b.onclick = function () { state.diver.hair = +b.getAttribute("data-hair"); saveGame(); showDiverShop(); };
     });
-    ov.querySelectorAll("[data-suit]").forEach(function (b) {
+    // tap a suit to PREVIEW it (no commit) — action bar handles equip/buy
+    ov.querySelectorAll("[data-suitpick]").forEach(function (b) {
       b.onclick = function () {
-        var s = SUITS.filter(function (x) { return x.id === b.getAttribute("data-suit"); })[0];
-        if (!s) return;
-        var owned = s.cost === 0 || state.diverUnlocks[s.id];
-        if (!owned) {
-          if (state.money < s.cost) { toast("Not enough money for that wetsuit.", "bad"); return; }
-          state.money -= s.cost; state.diverUnlocks[s.id] = true;
-          toast("Unlocked the " + s.id + " wetsuit!", "good", 1600);
-        }
-        state.diver.suit = s.color; saveGame(); showDiverShop();
+        var key = b.getAttribute("data-suitpick");
+        diverPreviewSuit = diverSuitList.filter(function (s) { return s.key === key; })[0] || null;
+        showDiverShop();
       };
     });
-    ov.querySelectorAll("[data-suitcolor]").forEach(function (b) {
-      b.onclick = function () { state.diver.suit = b.getAttribute("data-suitcolor"); saveGame(); showDiverShop(); };
+    ov.querySelectorAll("[data-suitequip]").forEach(function (b) {
+      b.onclick = function () {
+        state.diver.suit = b.getAttribute("data-suitequip"); saveGame();
+        toast("Wetsuit equipped!", "good", 1200); showDiverShop();
+      };
+    });
+    ov.querySelectorAll("[data-suitbuy]").forEach(function (b) {
+      b.onclick = function () {
+        var s = SUITS.filter(function (x) { return x.id === b.getAttribute("data-suitbuy"); })[0];
+        if (!s || state.money < s.cost || state.diverUnlocks[s.id]) return;
+        state.money -= s.cost; state.diverUnlocks[s.id] = true; state.diver.suit = s.color;
+        saveGame(); toast("Unlocked & equipped the " + cap(s.id) + " wetsuit!", "good", 1800);
+        diverPreviewSuit = null; showDiverShop();
+      };
     });
   }
 
