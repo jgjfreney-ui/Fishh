@@ -1072,39 +1072,55 @@
 
     var legTop = Math.round(Math.sin(kick) * 1.6);
     var legBot = Math.round(Math.sin(kick + Math.PI) * 1.6);
+    var maskGlass = mix(suit, "#cfeeff", 0.7);
+    // gear reflects upgrades: bigger tank with oxygen, longer fins with fins
+    var ox = (state && state.upgrades) ? state.upgrades.oxygen : 0;
+    var finLv = (state && state.upgrades) ? state.upgrades.fins : 0;
+    var tankX = Math.min(3, Math.floor(ox / 2));     // extra tank size
+    var finLen = 4 + Math.min(4, Math.floor((finLv + 1) / 2)); // fin length
 
-    // back air tank
-    R(-5, -4, 3, 4, "#39424d");
-    R(-5, -4, 3, 1, "#586573");
-    // fins + legs (trailing left, kicking)
-    R(-12, -2 + legTop, 4, 2, fin);     // top fin
-    R(-8, -1 + legTop, 4, 2, suit);     // top leg
-    R(-12, 4 + legBot, 4, 2, fin);      // bottom fin
-    R(-8, 3 + legBot, 4, 2, suit);      // bottom leg
-    // torso (wetsuit) with shading
+    // back air tank (grows with oxygen upgrade)
+    R(-6 - tankX, -4 - tankX, 3 + tankX, 5 + tankX * 2, "#39424d");
+    R(-6 - tankX, -4 - tankX, 3 + tankX, 1, "#6b7a88");   // tank top highlight
+    R(-5, -5 - tankX, 1, 1, "#9aa6b0");                   // valve
+    // shoulder strap
+    R(-3, -2, 1, 5, suitD);
+    // fins + legs (trailing left, kicking; fins grow with fins upgrade)
+    R(-8 - finLen, -2 + legTop, finLen, 2, fin); R(-8 - finLen, -2 + legTop, finLen, 1, mix(fin, "#fff", 0.25));
+    R(-8, -1 + legTop, 4, 2, suit);
+    R(-8 - finLen, 4 + legBot, finLen, 2, fin); R(-8 - finLen, 5 + legBot, finLen, 1, suitD);
+    R(-8, 3 + legBot, 4, 2, suit);
+    // torso (wetsuit) with shading + accent stripe
     R(-4, -2, 9, 5, suit);
-    R(-4, 2, 9, 1, suitD);              // belly shadow
-    R(-4, -2, 9, 1, mix(suit, "#fff", 0.28)); // top highlight
-    R(-4, -2, 1, 5, mix(suit, "#fff", 0.12)); // back rim light
-    // forward arm
-    R(3, 2, 5, 2, suit);
-    R(3, 3, 5, 1, suitD);
-    R(7, 2, 2, 2, skin);                // hand
+    R(-4, -2, 9, 1, mix(suit, "#fff", 0.3));    // top highlight
+    R(-4, 0, 9, 1, mix(suit, "#fff", 0.16));    // accent stripe
+    R(-4, 2, 9, 1, "#2c2620");                  // weight belt
+    R(-4, -2, 1, 5, mix(suit, "#fff", 0.14));   // back rim light
+    // forward arm + glove
+    R(3, 2, 5, 2, suit); R(3, 3, 5, 1, suitD);
+    R(6, 2, 1, 2, suitD);                       // cuff
+    R(7, 2, 2, 2, skin);                        // hand
     // head
     R(5, -4, 4, 5, skin);
-    R(5, -4, 4, 1, mix(skin, "#fff", 0.35)); // forehead highlight
-    R(5, 0, 4, 1, mix(skin, "#000", 0.28));  // jaw shadow
+    R(5, -4, 4, 1, mix(skin, "#fff", 0.35));    // forehead highlight
+    R(5, 0, 4, 1, mix(skin, "#000", 0.28));     // jaw shadow
     // hair by look
     if (look === "short") { R(4, -5, 5, 2, hair); R(4, -4, 1, 3, hair); }
     else if (look === "long") { R(4, -5, 5, 2, hair); R(3, -4, 2, 6, hair); }
     else if (look === "bun") { R(4, -5, 5, 2, hair); R(3, -6, 2, 2, hair); }
     else { R(5, -5, 4, 1, hair); } // buzz
-    // dive mask + eye
-    R(7, -3, 3, 2, mask);
-    R(8, -3, 1, 1, "#0b2a3a");
-    R(9, -5, 1, 1, mix(mask, "#fff", 0.6)); // glint
-    // regulator + mouthpiece
-    R(9, 0, 1, 1, "#2a2f36");
+    // mask strap across the head
+    R(4, -3, 4, 1, "#16323f");
+    // dive mask (framed) + eye
+    R(7, -4, 4, 1, "#16323f");                  // mask frame top
+    R(7, -3, 3, 3, maskGlass);                  // glass
+    R(8, -2, 1, 1, "#0b2a3a");                  // eye
+    R(9, -3, 1, 1, mix(maskGlass, "#fff", 0.7)); // glint
+    R(7, 0, 3, 1, "#16323f");                   // mask frame bottom
+    // regulator + hose curving up to the tank
+    R(9, 1, 1, 1, "#2a2f36");                   // mouthpiece
+    R(7, 1, 1, 1, "#222831"); R(5, 1, 1, 1, "#222831");
+    R(2, 0, 1, 1, "#222831"); R(0, -1, 1, 1, "#222831"); R(-2, -2, 1, 1, "#222831");
   }
 
   function fishTargetH(f) { return f.isKraken ? 160 : 22 + f.size * 6; }
