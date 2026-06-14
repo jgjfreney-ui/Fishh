@@ -40,6 +40,7 @@
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
       seeds: {},        // birdId -> seed count
+      harpoons: 0,      // ammo for boss fights
     };
   }
 
@@ -114,6 +115,8 @@
       fish: [],
       creatures: [],
       birds: [],
+      harpoonFx: [],
+      birdTimer: 0,
       netFx: [],
       treasures: [],
       wrecks: [],
@@ -400,11 +403,11 @@
       y: loc.maxDepth * PXPM - 60,
       baseY: loc.maxDepth * PXPM - 60,
       vx: 20, phase: 0, shiny: shiny, size: def.size, fleeing: 0,
-      isKraken: !isBlob, isBlob: isBlob,
+      isKraken: !isBlob, isBlob: isBlob, isBoss: true, hp: 3, hitFlash: 0,
     });
     run.bossPresent = true;
-    if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
-    toast("The water TREMBLES... something colossal rises from the abyss!", "epic", 5000);
+    if (window.AUDIO) { AUDIO.rumble(); if (isBlob) AUDIO.playBlob(); else AUDIO.playBoss(); }
+    toast("The water TREMBLES... something colossal rises from the abyss! Hit it with HARPOONS! 🔱", "epic", 5000);
   }
 
   // The fish the game *claims* summon the Kraken (the lie).
@@ -590,6 +593,7 @@
       // this also stops the "hold full" toast from spamming on big fish
       var fits = run.bagUsed + f.size <= inventoryCap();
       var canGrab = fits || (f.shiny && state.items.shinyPocket);
+      if (f.isBoss) { canGrab = false; if (f.hitFlash > 0) f.hitFlash -= dt; } // bosses need harpoons
       var grabbing = false;
       if (canGrab && dist < mRange) {
         // pull toward the diver (stronger when closer; big fish resist)
@@ -610,9 +614,9 @@
       if (f.fleeing > 0) f.fleeing -= dt;
       if (f.pulled > 0) f.pulled -= dt;
 
-      // wrap / despawn off-world
+      // wrap / despawn off-world (bosses bounce, never despawn)
       if (f.x < -120 || f.x > loc.worldWidth + 120) {
-        if (!f.isKraken) { run.fish.splice(i, 1); continue; }
+        if (!f.isBoss) { run.fish.splice(i, 1); continue; }
         else { f.vx *= -1; }
       }
     }
@@ -640,11 +644,20 @@
     // advance net-swipe effects
     for (var ni = run.netFx.length - 1; ni >= 0; ni--) { run.netFx[ni].life -= dt; if (run.netFx[ni].life <= 0) run.netFx.splice(ni, 1); }
 
-    // --- birds (in the sky; lured down with seeds while at the surface) ---
+    // --- birds: ambient flocks always drift across the sky (so you can see
+    //     what lives here); seed-summoned ones descend to you at the surface ---
+    run.birdTimer -= dt;
+    if (run.birdTimer <= 0) { run.birdTimer = 2 + Math.random() * 3; spawnAmbientBird(); }
     var atSurface = diver.y <= 70;
     for (var bi = run.birds.length - 1; bi >= 0; bi--) {
       var b = run.birds[bi];
       b.phase += dt * 9; // wing flap
+      if (b.mode === "ambient") {
+        b.x += b.vx * dt;
+        b.y = b.baseY + Math.sin(b.phase * 0.2) * 6;
+        if (b.x < -130 || b.x > loc.worldWidth + 130) run.birds.splice(bi, 1);
+        continue;
+      }
       if (!atSurface) b.mode = "flee";
       if (b.mode === "flee") {
         b.y -= 110 * dt; b.x += b.vx * dt;
@@ -656,6 +669,19 @@
         b.y += (bdy / bd) * 72 * dt;
         if (bd < 26) { catchBird(b); run.birds.splice(bi, 1); }
       }
+    }
+
+    // --- harpoon projectiles (boss combat) ---
+    for (var hi = run.harpoonFx.length - 1; hi >= 0; hi--) {
+      var hp = run.harpoonFx[hi];
+      hp.x += hp.vx * dt; hp.y += hp.vy * dt; hp.life -= dt;
+      var hit = false;
+      for (var fi = 0; fi < run.fish.length; fi++) {
+        var bo = run.fish[fi];
+        if (!bo.isBoss || bo.hp <= 0) continue;
+        if (Math.hypot(bo.x - hp.x, bo.y - hp.y) < 30 + bo.size * 3) { harpoonHit(bo); hit = true; break; }
+      }
+      if (hit || hp.life <= 0 || hp.x < -50 || hp.x > loc.worldWidth + 50) run.harpoonFx.splice(hi, 1);
     }
 
     // --- treasures near wrecks ---
@@ -772,6 +798,46 @@
     return true;
   }
 
+  function spawnAmbientBird() {
+    if (!run) return;
+    var pool = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return d.area === run.area; });
+    if (!pool.length) return;
+    var ambient = 0;
+    for (var i = 0; i < run.birds.length; i++) if (run.birds[i].mode === "ambient") ambient++;
+    if (ambient >= 4) return;
+    var loc = D.LOCATIONS[run.area], def = pool[(Math.random() * pool.length) | 0];
+    var dir = Math.random() < 0.5 ? 1 : -1, by = -180 - Math.random() * 90;
+    run.birds.push({ def: def, x: dir > 0 ? -60 : loc.worldWidth + 60, baseY: by, y: by,
+      vx: dir * (20 + Math.random() * 22), phase: Math.random() * 6, shiny: false, mode: "ambient" });
+  }
+
+  // throw a harpoon at the boss — aim with the joystick, else auto-aim
+  function throwHarpoon() {
+    if (!run || !run.bossPresent) return;
+    if (!(state.harpoons > 0)) { toast("No harpoons! Buy some at the Tool Shop.", "bad"); return; }
+    // find the boss
+    var boss = null;
+    for (var i = 0; i < run.fish.length; i++) if (run.fish[i].isBoss && run.fish[i].hp > 0) { boss = run.fish[i]; break; }
+    if (!boss) return;
+    var ax, ay;
+    if (joy.active && joy.mag > 0.2) { ax = joy.dx; ay = joy.dy; }   // aimed throw
+    else { ax = boss.x - run.diver.x; ay = boss.y - run.diver.y; var l = Math.hypot(ax, ay) || 1; ax /= l; ay /= l; } // auto-aim
+    state.harpoons--; saveGame();
+    var spd = 460;
+    run.harpoonFx.push({ x: run.diver.x, y: run.diver.y, vx: ax * spd, vy: ay * spd, life: 1.4, ang: Math.atan2(ay, ax) });
+  }
+
+  function harpoonHit(boss) {
+    boss.hp--; boss.hitFlash = 0.4; boss.fleeing = 0.5;
+    if (boss.hp <= 0) {
+      if (boss.isBlob) catchBlobfish(boss.shiny);
+      else catchKraken(boss.shiny);
+      run.bossPresent = false;
+    } else {
+      toast("HIT! " + boss.hp + " more to go! 🔱", "epic", 1400);
+    }
+  }
+
   function useSeed(birdId) {
     if (!run || run.diver.y > 26) { toast("Scatter seed at the surface!", "bad"); return; }
     var def = D.FISH_BY_ID[birdId];
@@ -871,6 +937,7 @@
     for (var f = 0; f < run.fish.length; f++) drawFishEntity(run.fish[f]);
     drawBubbles();
     drawDiver();
+    drawHarpoons();
     drawNetFx();
 
     // --- volumetric lighting / depth darkness ---
@@ -1478,6 +1545,20 @@
     }
   }
 
+  function drawHarpoons() {
+    for (var i = 0; i < run.harpoonFx.length; i++) {
+      var hp = run.harpoonFx[i];
+      var x = hp.x - cam.x, y = hp.y - cam.y;
+      ctx.save();
+      ctx.translate(x, y); ctx.rotate(hp.ang);
+      ctx.fillStyle = "#b98a4a"; ctx.fillRect(-14, -1, 22, 2);          // shaft
+      ctx.fillStyle = "#e6edf2";
+      ctx.beginPath(); ctx.moveTo(8, -4); ctx.lineTo(17, 0); ctx.lineTo(8, 4); ctx.closePath(); ctx.fill(); // tip
+      ctx.fillStyle = "#8a6a3a"; ctx.fillRect(-14, -3, 2, 6);           // fletch
+      ctx.restore();
+    }
+  }
+
   // how much each body type wiggles when swimming
   var WIGGLE = { eel: 0.55, whale: 0.4, kraken: 0.3, jelly: 0, squid: 0.5, octopus: 0.4, seahorse: 0.2, turtle: 0.5, ray: 0.7 };
 
@@ -1491,6 +1572,12 @@
 
     var glow = fishGlow(f);
     if (glow) drawGlow(x, y, th * 0.95, glow.color, glow.alpha);
+
+    // boss flashes red & shakes when harpooned
+    if (f.isBoss && f.hitFlash > 0) {
+      drawGlow(x, y, th, "#ff3030", Math.min(0.85, f.hitFlash * 2.2));
+      x += (Math.random() - 0.5) * 7; y += (Math.random() - 0.5) * 7;
+    }
 
     // swim animation: gentle body tilt + squash/stretch (jellies pulse instead)
     var wig = WIGGLE[f.def.shape] != null ? WIGGLE[f.def.shape] : 1;
@@ -1555,6 +1642,9 @@
     var atTop = run.diver.y <= 30;
     document.getElementById("surface-hint").style.display = atTop ? "block" : "none";
     document.getElementById("btn-seed").style.display = atTop ? "block" : "none";
+    var hb = document.getElementById("btn-harpoon");
+    hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
+    if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
   }
 
   // ---------------------------------------------------------------------
@@ -1765,6 +1855,7 @@
     document.getElementById("hud").style.display = show ? "flex" : "none";
     document.getElementById("surface-hint").style.display = "none";
     document.getElementById("btn-seed").style.display = "none";
+    document.getElementById("btn-harpoon").style.display = "none";
     document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
 
@@ -1777,27 +1868,25 @@
 
     html += '<div class="shop-tabs">'
       + '<button class="tab active" data-tab="gear">Gear</button>'
+      + '<button class="tab" data-tab="tools">Tools</button>'
       + '<button class="tab" data-tab="charms">Charms</button>'
-      + '<button class="tab" data-tab="hints">Secret Hints</button>'
+      + '<button class="tab" data-tab="hints">Hints</button>'
       + '</div>';
 
-    // GEAR
+    // GEAR (everything except the net, which lives under Tools)
     html += '<div class="tab-body" data-body="gear">';
     for (var key in D.UPGRADES) {
-      var u = D.UPGRADES[key];
-      var lvl = state.upgrades[key];
-      var maxed = lvl >= u.levels.length - 1;
-      var cur = u.levels[lvl].value;
-      var next = maxed ? null : u.levels[lvl + 1];
-      html += '<div class="shop-item">'
-        + '<div class="si-info"><b>' + u.name + '</b> <span class="lvl">Lv ' + lvl + (maxed ? ' · MAX' : '') + '</span>'
-        + '<p>' + u.desc + '</p>'
-        + '<small>Now: ' + fmtVal(cur, u.unit) + (next ? ' → ' + fmtVal(next.value, u.unit) : '') + '</small></div>'
-        + '<div class="si-buy">'
-        + (maxed ? '<span class="maxed">MAX</span>'
-          : '<button data-buyup="' + key + '" ' + (state.money < next.cost ? 'disabled' : '') + '>$' + fmt(next.cost) + '</button>')
-        + '</div></div>';
+      if (key === "scoop") continue;
+      html += upgradeRow(key);
     }
+    html += '</div>';
+
+    // TOOLS — Fishing Net + Harpoons
+    html += '<div class="tab-body hidden" data-body="tools">';
+    html += upgradeRow("scoop");
+    html += '<div class="shop-item"><div class="si-info"><b>Harpoons</b> <span class="lvl">×' + state.harpoons + '</span>'
+      + '<p>Ammo for boss fights. Aim with the joystick and tap 🔱 to throw — 3 hits beats the Kraken or blobfish.</p></div>'
+      + '<div class="si-buy"><button data-buyharpoon="1" ' + (state.money < 1500 ? 'disabled' : '') + '>5 for $1,500</button></div></div>';
     html += '</div>';
 
     // CHARMS
@@ -1880,9 +1969,32 @@
         toast(it.name + " acquired!", "good", 1600); showShop();
       };
     });
+    ov.querySelectorAll("[data-buyharpoon]").forEach(function (b) {
+      b.onclick = function () {
+        if (state.money < 1500) return;
+        state.money -= 1500; state.harpoons += 5; saveGame();
+        toast("Bought 5 harpoons! (×" + state.harpoons + ")", "good", 1500); showShop();
+      };
+    });
     ov.querySelectorAll("[data-buyhint]").forEach(function (b) {
       b.onclick = function () { buyHint(b.getAttribute("data-buyhint")); };
     });
+  }
+
+  function upgradeRow(key) {
+    var u = D.UPGRADES[key];
+    var lvl = state.upgrades[key];
+    var maxed = lvl >= u.levels.length - 1;
+    var cur = u.levels[lvl].value;
+    var next = maxed ? null : u.levels[lvl + 1];
+    return '<div class="shop-item">'
+      + '<div class="si-info"><b>' + u.name + '</b> <span class="lvl">Lv ' + lvl + (maxed ? ' · MAX' : '') + '</span>'
+      + '<p>' + u.desc + '</p>'
+      + '<small>Now: ' + fmtVal(cur, u.unit) + (next ? ' → ' + fmtVal(next.value, u.unit) : '') + '</small></div>'
+      + '<div class="si-buy">'
+      + (maxed ? '<span class="maxed">MAX</span>'
+        : '<button data-buyup="' + key + '" ' + (state.money < next.cost ? 'disabled' : '') + '>$' + fmt(next.cost) + '</button>')
+      + '</div></div>';
   }
 
   function buyUpgrade(key) {
@@ -2505,6 +2617,9 @@
     // scatter-seed button (surface) → bird picker
     var sb = document.getElementById("btn-seed");
     if (sb) sb.addEventListener("click", function () { if (scene === "dive" && run) showSeedPicker(); });
+    // harpoon throw button (boss fights)
+    var hb = document.getElementById("btn-harpoon");
+    if (hb) hb.addEventListener("click", function () { if (scene === "dive" && run) throwHarpoon(); });
     // cozy UI click sounds
     document.addEventListener("click", function (e) {
       var el = e.target;
@@ -2536,6 +2651,7 @@
         var d = D.FISH.filter(function (f) { return f.bird && f.area === run.area; })[0];
         if (d) run.birds.push({ def: d, x: run.diver.x + 100, y: -180, vx: 10, phase: 0, shiny: true, mode: "descend" });
       },
+      throwHarpoon: function () { state.harpoons = 10; throwHarpoon(); },
       forceShinyNext: function () { state.charms.shiny = 999; },
     },
   };

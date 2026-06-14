@@ -40,6 +40,8 @@
     // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power
     // chords, pounding bass). Epic, not eerie.
     boss:      { tonic: 45, bpm: 156, density: 0.78, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, power: true, heavyBass: true },
+    // Blobfish theme — goofy, bouncy, NOT epic (you got pranked)
+    blob:      { tonic: 50, bpm: 124, density: 0.7, lead: "square", bells: false, waves: false, prog: ["I", "IV", "V", "V"], heavyBass: true },
   };
 
   // ---- audio graph ------------------------------------------------------
@@ -49,13 +51,18 @@
       var AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
       ctx = new AC();
-      master = ctx.createGain(); master.gain.value = muted ? 0 : 0.3;
+      master = ctx.createGain(); master.gain.value = muted ? 0 : 0.22;
+      // a hard-ish limiter so stacked notes never clip into static
       var comp = ctx.createDynamicsCompressor();
+      try {
+        comp.threshold.value = -14; comp.knee.value = 6; comp.ratio.value = 14;
+        comp.attack.value = 0.003; comp.release.value = 0.25;
+      } catch (e) {}
       master.connect(comp); comp.connect(ctx.destination);
-      dryBus = ctx.createGain(); dryBus.gain.value = 0.92; dryBus.connect(master);
-      var conv = ctx.createConvolver(); conv.buffer = impulse(0.6, 3.2); // short, tasteful
-      var wet = ctx.createGain(); wet.gain.value = 0.22; conv.connect(wet); wet.connect(master);
-      reverbSend = ctx.createGain(); reverbSend.gain.value = 0.18; reverbSend.connect(conv);
+      dryBus = ctx.createGain(); dryBus.gain.value = 0.85; dryBus.connect(master);
+      var conv = ctx.createConvolver(); conv.buffer = impulse(0.55, 3.4);
+      var wet = ctx.createGain(); wet.gain.value = 0.16; conv.connect(wet); wet.connect(master);
+      reverbSend = ctx.createGain(); reverbSend.gain.value = 0.13; reverbSend.connect(conv);
       return true;
     } catch (e) { return false; }
   }
@@ -187,12 +194,13 @@
   window.AUDIO = {
     init: function (m) { muted = !!m; ensure(); },
     resume: function () { if (ensure() && ctx.state === "suspended") ctx.resume(); },
-    setMuted: function (m) { muted = !!m; if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 0.3, (ctx ? ctx.currentTime : 0) + 0.2); },
+    setMuted: function (m) { muted = !!m; if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 0.22, (ctx ? ctx.currentTime : 0) + 0.2); },
     toggleMute: function () { this.setMuted(!muted); return muted; },
     isMuted: function () { return muted; },
     playArea: function (a) { this.resume(); startTrack(a); },
     playMenu: function () { this.resume(); startTrack("menu"); },
     playBoss: function () { this.resume(); startTrack("boss"); },
+    playBlob: function () { this.resume(); startTrack("blob"); },
     stopAll: function () { clearSchedule(); cfgCur = null; mode = null; },
     // deep rumbling tremor for the Kraken's arrival
     rumble: function () {

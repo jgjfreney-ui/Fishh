@@ -216,6 +216,12 @@
     { id: "kingcrab",   name: "King Crab",    area: "trench", creature: true, rarity: "rare",    size: 3, value: 460, color: "#b0503a", shape: "crab" },
     { id: "starcrab",   name: "Star Crab",    area: "sanctuary", creature: true, rarity: "rare", size: 2, value: 420, color: "#9f7bff", shape: "crab" },
     { id: "prismstar",  name: "Prism Star",   area: "sanctuary", creature: true, rarity: "epic", size: 1, value: 760, color: "#7affd0", shape: "starfish" },
+    // +1 more creature per area (varying rarity)
+    { id: "hermitcrab", name: "Hermit Crab",  area: "coral", creature: true, rarity: "rare",      size: 1, value: 320,  color: "#c98a5a", shape: "crab" },
+    { id: "riversnail", name: "River Snail",  area: "river", creature: true, rarity: "common",    size: 1, value: 45,   color: "#7a6a4a", shape: "urchin" },
+    { id: "abalone",    name: "Abalone",      area: "kelp",  creature: true, rarity: "uncommon",  size: 1, value: 150,  color: "#8a7a9a", shape: "urchin" },
+    { id: "seacucumber",name: "Sea Cucumber", area: "trench", creature: true, rarity: "rare",     size: 2, value: 380,  color: "#6a4a5a", shape: "bug" },
+    { id: "voidstar",   name: "Void Star",    area: "sanctuary", creature: true, rarity: "legendary", size: 1, value: 1800, color: "#9f7bff", shape: "starfish" },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
@@ -367,11 +373,11 @@
       desc: "Scoop sea-floor creatures (crabs, starfish, lobsters...). A bigger net each level — Lv 0 means no net.",
       unit: "px",
       levels: [
-        { cost: 0,     value: 0 },
-        { cost: 2500,  value: 55 },
-        { cost: 5500,  value: 80 },
-        { cost: 11000, value: 110 },
-        { cost: 22000, value: 145 },
+        { cost: 0,    value: 0 },
+        { cost: 800,  value: 55 },
+        { cost: 2000, value: 80 },
+        { cost: 4500, value: 110 },
+        { cost: 9000, value: 145 },
       ],
     },
   };
