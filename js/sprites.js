@@ -23,8 +23,10 @@
     var a = hex(h1), b = hex(h2);
     return rgb([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
   }
-  // shiny = rotate the hue ~150° and boost saturation/brightness, so each
-  // species gets its OWN distinct shiny colour (not all pink).
+  // shiny = remap the hue and boost saturation/brightness so each species gets
+  // its OWN distinct shiny colour. We *stretch* the hue wheel (not just rotate)
+  // so the many similar blue/teal base colours diverge into real variety
+  // instead of all collapsing into the same pink.
   function shinyShift(h) {
     var c = hex(h), r = c[0] / 255, g = c[1] / 255, b = c[2] / 255;
     var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, s = 0, hh = 0;
@@ -36,9 +38,9 @@
       else hh = (r - g) / dd + 4;
       hh /= 6;
     }
-    hh = (hh + 0.46) % 1;                       // hue rotation
-    s = Math.min(1, s * 1.25 + 0.4);            // more saturated
-    l = Math.min(0.74, Math.max(0.5, l * 0.85 + 0.22)); // brighter
+    hh = (hh * 1.6 + 0.12) % 1;                  // stretch + offset → spread of hues
+    s = Math.min(1, s * 1.2 + 0.45);             // more saturated
+    l = Math.min(0.76, Math.max(0.52, l * 0.8 + 0.24)); // brighter
     function h2(p, q, t) { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; }
     var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
     return rgb([h2(p, q, hh + 1 / 3) * 255, h2(p, q, hh) * 255, h2(p, q, hh - 1 / 3) * 255]);

@@ -21,51 +21,53 @@
 
   // --- Locations ---------------------------------------------------------
   // depth is in "meters" used by the gameplay (world pixels = meters * PXPM).
+  // Listed in intended unlock order (cheaper + shallower first, ramping to the
+  // deepest). The menu and Collection iterate this object, so order = progression.
   const LOCATIONS = {
     coral: {
-      id: "coral", name: "Coral Coast",
+      id: "coral", name: "Coral Coast", tint: "#ff8a5c",
       blurb: "Sun-dappled shallows bursting with colour. A gentle place to start.",
       maxDepth: 280, worldWidth: 2400, topColor: "#39c4d6", deepColor: "#063a6b",
       shinyBonus: 0, unlocked: true, cost: 0,
       sky: { top: "#9fd8ff", bottom: "#e6f7ff" },
     },
     river: {
-      id: "river", name: "River Run",
+      id: "river", name: "River Run", tint: "#5fc46a",
       blurb: "A bright freshwater river winding between the coast and the kelp — trout, pike, catfish and more.",
       maxDepth: 220, worldWidth: 2200, topColor: "#4a9ec4", deepColor: "#143a2a",
       shinyBonus: 0, unlocked: false, cost: 500,
       sky: { top: "#bfe8ff", bottom: "#eafce0" },
     },
     kelp: {
-      id: "kelp", name: "Kelp Forest",
+      id: "kelp", name: "Kelp Forest", tint: "#2fb59a",
       blurb: "Towering green columns hide clever, slippery creatures.",
       maxDepth: 520, worldWidth: 2600, topColor: "#2f9e8f", deepColor: "#04332f",
       shinyBonus: 0, unlocked: false, cost: 1200,
       sky: { top: "#9fb6b0", bottom: "#d6e6dc" },
     },
     arctic: {
-      id: "arctic", name: "Arctic Shelf",
+      id: "arctic", name: "Arctic Shelf", tint: "#8fd0f0",
       blurb: "Frigid water beneath the ice. Belugas, narwhals and pale giants drift through the cold.",
       maxDepth: 700, worldWidth: 2600, topColor: "#6fb0d0", deepColor: "#08243a",
-      shinyBonus: 0, unlocked: false, cost: 4000,
+      shinyBonus: 0, unlocked: false, cost: 3500,
       sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
     },
-    ancient: {
-      id: "ancient", name: "Fossil Abyss",
-      blurb: "A primordial sea sealed in the deep, where prehistoric monsters never went extinct.",
-      maxDepth: 1000, worldWidth: 2600, topColor: "#5e7050", deepColor: "#160f04",
-      shinyBonus: 0, unlocked: false, cost: 9000,
-      sky: { top: "#cdbb8a", bottom: "#ece0c0" },
-    },
     opensea: {
-      id: "opensea", name: "Open Sea",
+      id: "opensea", name: "Open Sea", tint: "#2f8fe0",
       blurb: "Endless blue with no land in sight — giant pelagic wanderers cruise the open water.",
       maxDepth: 850, worldWidth: 2800, topColor: "#1f7fc4", deepColor: "#04204a",
-      shinyBonus: 0, unlocked: false, cost: 12000,
+      shinyBonus: 0, unlocked: false, cost: 7000,
       sky: { top: "#aee0ff", bottom: "#e8f6ff" },
     },
+    ancient: {
+      id: "ancient", name: "Fossil Abyss", tint: "#c79a52",
+      blurb: "A primordial sea sealed in the deep, where prehistoric monsters never went extinct.",
+      maxDepth: 1000, worldWidth: 2600, topColor: "#5e7050", deepColor: "#160f04",
+      shinyBonus: 0, unlocked: false, cost: 11000,
+      sky: { top: "#cdbb8a", bottom: "#ece0c0" },
+    },
     trench: {
-      id: "trench", name: "Sunken Trench",
+      id: "trench", name: "Sunken Trench", tint: "#5a6cff",
       blurb: "The deepest, final frontier — a crushing abyss where the Kraken itself waits.",
       maxDepth: 1400, worldWidth: 2600, topColor: "#13496e", deepColor: "#01040c",
       shinyBonus: 0, unlocked: false, cost: 20000,
@@ -73,7 +75,7 @@
       sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
     sanctuary: {
-      id: "sanctuary", name: "Starlight Sanctuary",
+      id: "sanctuary", name: "Starlight Sanctuary", tint: "#b07bff",
       blurb: "A post-game paradise where EVERY creature in the sea gathers — and shinies bloom like stars.",
       maxDepth: 900, worldWidth: 2600, topColor: "#5a3ea8", deepColor: "#0a0226",
       shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 50000,

@@ -627,6 +627,12 @@
     if (diver.y > 26) {
       var drain = (1 + depthFactor(diver.y, loc) * 0.6) * oxygenMul();
       run.oxygen -= drain * dt;
+      // manual venting: dump air fast (for low-oxygen secrets) but never below
+      // a safe floor just under the "low oxygen" threshold so you can't drown
+      if (run.venting) {
+        run.oxygen = Math.max(run.oxygen - 26 * dt, run.maxO * 0.12);
+        if (Math.random() < 0.9) run.bubbles.push({ x: diver.x + (Math.random() - 0.5) * 14, y: diver.y - 4, r: 2 + Math.random() * 4, vy: 60 + Math.random() * 40, life: 1.6 });
+      }
       if (run.oxygen <= 0) { driftHome(); return; }
     } else {
       run.oxygen = run.maxO; // refill at surface
@@ -1742,6 +1748,12 @@
     var atTop = run.diver.y <= 30;
     document.getElementById("surface-hint").style.display = atTop ? "block" : "none";
     document.getElementById("btn-seed").style.display = atTop ? "block" : "none";
+    // vent button: only useful once submerged (dump air for low-oxygen secrets)
+    var vb = document.getElementById("btn-vent");
+    if (vb) {
+      vb.style.display = atTop ? "none" : "block";
+      if (atTop && run.venting) { run.venting = false; vb.classList.remove("venting"); }
+    }
     var hb = document.getElementById("btn-harpoon");
     hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
     if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
@@ -1974,6 +1986,9 @@
     document.getElementById("surface-hint").style.display = "none";
     document.getElementById("btn-seed").style.display = "none";
     document.getElementById("btn-harpoon").style.display = "none";
+    var vb = document.getElementById("btn-vent");
+    if (vb) { vb.style.display = "none"; vb.classList.remove("venting"); }
+    if (run) run.venting = false;
     document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
 
@@ -2521,13 +2536,16 @@
       if (!unlocked && loc.requireBosses && !(state.krakenCaught && state.blobfishCaught)) {
         gate = "🔒 Defeat the Kraken (and the blobfish) to unlock";
       }
-      html += '<div class="area-card ' + (unlocked ? '' : 'locked') + (id === "sanctuary" ? ' sanctuary' : '') + '">'
-        + '<div class="area-info"><b>' + loc.name + '</b>'
+      var tint = loc.tint || "#6fd0ff";
+      var cardStyle = ' style="border-left:5px solid ' + tint + ';"';
+      var goStyle = ' style="background:' + tint + ';border-color:' + tint + ';color:#04121c;"';
+      html += '<div class="area-card ' + (unlocked ? '' : 'locked') + (id === "sanctuary" ? ' sanctuary' : '') + '"' + cardStyle + '>'
+        + '<div class="area-info"><b style="color:' + tint + ';">' + loc.name + '</b>'
         + '<p>' + loc.blurb + '</p>'
         + '<small>Max depth ' + loc.maxDepth + 'm' + (loc.shinyBonus ? ' · ✦ Shiny haven' : '') + '</small></div>'
         + '<div class="area-act">'
         + (unlocked
-            ? '<button data-go="' + id + '">Dive Here</button>'
+            ? '<button data-go="' + id + '"' + goStyle + '>Dive Here</button>'
             : gate
               ? '<span class="pv-locked">' + gate + '</span>'
               : '<button data-unlock="' + id + '" ' + (state.money < loc.cost ? 'disabled' : '') + '>Unlock $' + fmt(loc.cost) + '</button>')
@@ -2943,6 +2961,18 @@
     // harpoon throw button (boss fights)
     var hb = document.getElementById("btn-harpoon");
     if (hb) hb.addEventListener("click", function () { if (scene === "dive" && run) throwHarpoon(); });
+    // vent-air button (press & hold to drain oxygen)
+    var vb = document.getElementById("btn-vent");
+    if (vb) {
+      var startVent = function (e) { if (e) e.preventDefault(); if (scene === "dive" && run) { run.venting = true; vb.classList.add("venting"); } };
+      var stopVent = function () { if (run) run.venting = false; vb.classList.remove("venting"); };
+      vb.addEventListener("pointerdown", startVent);
+      vb.addEventListener("pointerup", stopVent);
+      vb.addEventListener("pointerleave", stopVent);
+      vb.addEventListener("pointercancel", stopVent);
+      vb.addEventListener("touchstart", startVent, { passive: false });
+      vb.addEventListener("touchend", stopVent);
+    }
     // aquarium controls
     bind("aqua-prev", function () { aquaNav(-1); });
     bind("aqua-next", function () { aquaNav(1); });
