@@ -19,6 +19,9 @@ on:
       - "capacitor.config.json"
       - ".github/workflows/android.yml"
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
@@ -72,3 +75,26 @@ jobs:
           name: deep-sea-diver-apk
           path: deep-sea-diver.apk
           if-no-files-found: error
+
+      # Publish the raw .apk as a Release asset so it can be downloaded and
+      # installed with a single tap on a phone (no unzipping needed). The
+      # "latest" link below always points at the newest build.
+      - name: Publish APK to a Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Deep Sea Diver v1.0.${{ github.run_number }}
+          make_latest: "true"
+          files: deep-sea-diver.apk
+          body: |
+            ## 📲 Install / update Deep Sea Diver on your phone
+
+            **Tap this link on your phone** to download and install:
+            👉 https://github.com/jgjfreney-ui/Fishh/releases/latest/download/deep-sea-diver.apk
+
+            It downloads the `deep-sea-diver.apk` file directly (no unzipping).
+            Tap the downloaded file, allow "install unknown apps" if asked, and
+            tap **Install** (or **Update** if you already have it). Your saved
+            progress is kept across updates.
+
+            Or just tap **deep-sea-diver.apk** in the Assets list below.
