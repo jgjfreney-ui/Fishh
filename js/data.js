@@ -57,12 +57,19 @@
       shinyBonus: 0, unlocked: false, cost: 9000,
       sky: { top: "#cdbb8a", bottom: "#ece0c0" },
     },
+    opensea: {
+      id: "opensea", name: "Open Sea",
+      blurb: "Endless blue with no land in sight — giant pelagic wanderers cruise the open water.",
+      maxDepth: 850, worldWidth: 2800, topColor: "#1f7fc4", deepColor: "#04204a",
+      shinyBonus: 0, unlocked: false, cost: 12000,
+      sky: { top: "#aee0ff", bottom: "#e8f6ff" },
+    },
     trench: {
       id: "trench", name: "Sunken Trench",
       blurb: "The deepest, final frontier — a crushing abyss where the Kraken itself waits.",
       maxDepth: 1400, worldWidth: 2600, topColor: "#13496e", deepColor: "#01040c",
       shinyBonus: 0, unlocked: false, cost: 20000,
-      requireAreas: ["river", "kelp", "arctic", "ancient"], // always the last to unlock
+      requireAreas: ["river", "kelp", "arctic", "ancient", "opensea"], // always the last to unlock
       sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
     sanctuary: {
@@ -266,6 +273,27 @@
     { id: "pteranodon", name: "Pteranodon",   area: "ancient", bird: true, rarity: "rare", size: 3, value: 700, color: "#8a6a4a", shape: "bird", seedCost: 1500 },
     { id: "ancientlev", name: "Ancient Leviathan", area: "ancient", rarity: "mythic", size: 10, value: 16000, minDepth: 800, color: "#5a4a2a", shape: "eel", secret: true,
       hint: "The first and largest serpent, fossilised legends say it still hunts the abyss floor (below 800m).", condition: { minDepth: 800 } },
+
+    // ======== Open Sea ========
+    { id: "mahimahi",  name: "Mahi-Mahi",    area: "opensea", rarity: "common",   size: 2, value: 90,  minDepth: 0,   color: "#3ad0a0", shape: "longfish" },
+    { id: "flyingfish",name: "Flying Fish",  area: "opensea", rarity: "common",   size: 1, value: 70,  minDepth: 0,   color: "#5fb0e0", shape: "longfish" },
+    { id: "skipjack",  name: "Skipjack Tuna", area: "opensea", rarity: "common",  size: 2, value: 100, minDepth: 30,  color: "#3a6fb0", shape: "longfish" },
+    { id: "wahoo",     name: "Wahoo",        area: "opensea", rarity: "uncommon", size: 3, value: 240, minDepth: 80,  color: "#4a7a9a", shape: "longfish" },
+    { id: "opah",      name: "Opah",         area: "opensea", rarity: "uncommon", size: 3, value: 320, minDepth: 100, color: "#e0533a", shape: "tang" },
+    { id: "bluemarlin",name: "Blue Marlin",  area: "opensea", rarity: "rare",     size: 5, value: 700, minDepth: 160, color: "#2a4a8a", shape: "sword" },
+    { id: "whaleshark",name: "Whale Shark",  area: "opensea", rarity: "epic",     size: 9, value: 2400, minDepth: 250, color: "#4a6a7a", shape: "shark" },
+    { id: "bluewhale", name: "Blue Whale",   area: "opensea", rarity: "legendary", size: 10, value: 7000, minDepth: 400, color: "#3a5a8a", shape: "whale" },
+    { id: "glasssquid",name: "Glass Squid",  area: "opensea", creature: true, rarity: "uncommon", size: 1, value: 180, color: "#bfe6ff", shape: "urchin" },
+    { id: "seaspider", name: "Sea Spider",   area: "opensea", creature: true, rarity: "rare",     size: 2, value: 340, color: "#8a6a5a", shape: "crab" },
+    { id: "booby",     name: "Booby",        area: "opensea", bird: true, rarity: "common",   size: 1, value: 140, color: "#cdb89a", shape: "bird", seedCost: 400 },
+    { id: "frigatebird",name: "Frigatebird", area: "opensea", bird: true, rarity: "uncommon", size: 2, value: 260, color: "#2a2e34", shape: "bird", seedCost: 600 },
+    { id: "phantomjelly", name: "Phantom Jelly", area: "opensea", rarity: "mythic", size: 6, value: 7000, minDepth: 120, color: "#c46bff", accent: "#7affd0", shape: "jelly", secret: true,
+      hint: "A ghostly giant jelly that rises only to the breathless — let your oxygen run very low.", condition: { lowOxygen: true } },
+
+    // ======== Area bosses (rise once you've caught every fish in their area) ========
+    { id: "manowar",   name: "Man o' War",   area: "coral",   areaBoss: true, rarity: "mythic", size: 7,  value: 3000, minDepth: 120, color: "#b06bd0", shape: "jelly", hp: 3 },
+    { id: "siphonophore", name: "Siphonophore", area: "opensea", areaBoss: true, rarity: "mythic", size: 10, value: 6000, minDepth: 200, color: "#ff6f91", shape: "eel", hp: 3, reward: "necklace" },
+    { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "shark", hp: 3 },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });
@@ -292,7 +320,7 @@
   // areas that actually exist yet — so not-yet-built zones like the River
   // don't make completion impossible.)
   const COMPLETION_FISH = FISH.filter(function (f) {
-    return !f.isKraken && !f.isBlob && !f.secret && LOCATIONS[f.area];
+    return !f.isKraken && !f.isBlob && !f.areaBoss && !f.secret && LOCATIONS[f.area];
   }).map(function (f) { return f.id; });
 
   // --- Treasures (from shipwrecks) --------------------------------------

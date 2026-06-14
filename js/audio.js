@@ -39,6 +39,7 @@
     sanctuary: { tonic: 67, bpm: 96,  density: 0.5, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
     arctic:    { tonic: 67, bpm: 84,  density: 0.45, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
     ancient:   { tonic: 50, bpm: 104, density: 0.55, lead: "square",   bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
+    opensea:   { tonic: 60, bpm: 108, density: 0.55, lead: "triangle", bells: false, waves: false, prog: ["I", "V", "IV", "I"] },
     // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power
     // chords, pounding bass). Epic, not eerie.
     boss:      { tonic: 45, bpm: 156, density: 0.78, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, power: true, heavyBass: true },
@@ -178,6 +179,7 @@
     arctic: { fn: ambIce,    min: 4500, max: 11000 },
     ancient:{ fn: ambWhale,  min: 7000, max: 15000 },
     trench: { fn: ambWhale,  min: 5500, max: 13000 },
+    opensea: { fn: ambWhale, min: 6000, max: 13000 },
     sanctuary: { fn: ambShimmer, min: 3000, max: 8000 },
   };
   function scheduleAmb() {

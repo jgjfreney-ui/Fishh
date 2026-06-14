@@ -23,7 +23,8 @@
       money: 0,
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0 },
       charms: { rarity: 0, shiny: 0 },
-      areas: { coral: true, river: false, kelp: false, trench: false, sanctuary: false, arctic: false, ancient: false },
+      areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false, sanctuary: false },
+      areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
       shinyFound: {},     // fishId -> true
@@ -168,6 +169,7 @@
     sanctuary: { plants: ["crystal", "crystal", "coral"], plantColors: ["#a07bff", "#7affd0", "#ff8be0", "#9fd8ff"], rock: "#2a1e55", floor: "#1a0f3a" },
     arctic:    { plants: ["crystal", "rock", "rock"], plantColors: ["#bfe6ff", "#8fb0c4", "#dff2ff"], rock: "#3a4a58", floor: "#3a5060" },
     ancient:   { plants: ["coral", "rock", "vent"], plantColors: ["#8a7a4a", "#b09a5a", "#6a8a5a"], rock: "#3a2e1a", floor: "#2a2010" },
+    opensea:   { plants: ["rock", "coral", "rock"], plantColors: ["#2a6a9a", "#3a8aaa", "#4a6a8a"], rock: "#1a3a5a", floor: "#123048" },
   };
 
   function generateDecor(loc) {
@@ -190,7 +192,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire" }[loc.id] || "bigkelp";
     var bcount = Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -323,7 +325,7 @@
       var f = D.FISH[i];
       if (!allContent && f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
-      if (f.isKraken || f.isBlob || f.creature || f.bird) continue;
+      if (f.isKraken || f.isBlob || f.areaBoss || f.creature || f.bird) continue;
       if (depthM < f.minDepth) continue;
       if (f.secret) {
         // secrets need a purchased hint + meeting their depth condition
@@ -452,6 +454,31 @@
     if (!state.blobfishCaught && requiredMet()) return "blobfish";
     if (!state.krakenCaught && trueComplete()) return "kraken";
     return null;
+  }
+
+  // area bosses: appear once every regular fish in their area is caught
+  var AREA_BOSS_BY_AREA = {};
+  D.FISH.forEach(function (f) { if (f.areaBoss) AREA_BOSS_BY_AREA[f.area] = f.id; });
+  function areaBossForArea(area) {
+    var id = AREA_BOSS_BY_AREA[area];
+    if (!id || state.areaBossCaught[id]) return null;
+    for (var i = 0; i < D.FISH.length; i++) {
+      var f = D.FISH[i];
+      if (f.area === area && !f.secret && !f.creature && !f.bird && !f.areaBoss && !f.isKraken && !f.isBlob) {
+        if (!state.discovered[f.id]) return null;
+      }
+    }
+    return id;
+  }
+  function spawnAreaBoss(id) {
+    var def = D.FISH_BY_ID[id], loc = D.LOCATIONS[run.area];
+    run.fish.push({
+      uid: id, def: def, x: loc.worldWidth / 2, y: loc.maxDepth * PXPM - 60, baseY: loc.maxDepth * PXPM - 60,
+      vx: 18, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, areaBoss: true, hp: def.hp || 3, hitFlash: 0,
+    });
+    run.bossPresent = true;
+    if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
+    toast("A monstrous " + def.name + " rises! Harpoon it! 🔱", "epic", 5000);
   }
 
   // ---------------------------------------------------------------------
@@ -607,11 +634,16 @@
       run.spawnTimer = 0.5 + Math.random() * 0.8;
       spawnFish(false);
     }
-    // boss summon (blobfish fake-out, or the true Kraken at 100%)
-    if (!run.bossPresent && run.area === "trench" && depthM > 400) {
-      var boss = bossToSummon();
-      if (boss === "kraken") spawnBoss("kraken", false);
-      else if (boss === "blobfish") spawnBoss("blobfish", true);
+    // boss summon: Trench has the blobfish/Kraken; other areas have area bosses
+    if (!run.bossPresent && depthM > 200) {
+      if (run.area === "trench") {
+        var boss = bossToSummon();
+        if (boss === "kraken") spawnBoss("kraken", false);
+        else if (boss === "blobfish") spawnBoss("blobfish", true);
+      } else {
+        var ab = areaBossForArea(run.area);
+        if (ab) spawnAreaBoss(ab);
+      }
     }
 
     // --- update fish (MAGNET catching: fish are drawn toward you) ---
@@ -865,12 +897,23 @@
   function harpoonHit(boss) {
     boss.hp--; boss.hitFlash = 0.4; boss.fleeing = 0.5;
     if (boss.hp <= 0) {
-      if (boss.isBlob) catchBlobfish(boss.shiny);
+      if (boss.areaBoss) catchAreaBoss(boss);
+      else if (boss.isBlob) catchBlobfish(boss.shiny);
       else catchKraken(boss.shiny);
       run.bossPresent = false;
     } else {
       toast("HIT! " + boss.hp + " more to go! 🔱", "epic", 1400);
     }
+  }
+
+  function catchAreaBoss(boss) {
+    var def = boss.def;
+    state.areaBossCaught[def.id] = true;
+    state.money += def.value;
+    if (def.reward === "necklace") state.items.necklace = true;
+    run.bossPresent = false;
+    saveGame();
+    setTimeout(function () { showAreaBossEnding(def); }, 700);
   }
 
   function useSeed(birdId) {
@@ -920,9 +963,10 @@
 
   function collectTreasure(tr) {
     var def = tr.def;
-    run.bagTreasure.push({ id: def.id, value: def.value, name: def.name, color: def.color });
+    var mult = state.items.necklace ? 2 : 1; // Multiplier Necklace doubles treasure
+    run.bagTreasure.push({ id: def.id, value: def.value * mult, name: def.name, color: def.color });
     state.treasures[def.id] = (state.treasures[def.id] || 0) + 1;
-    run.floaters.push({ x: tr.x, y: tr.y, text: def.name, color: def.color, life: 1.5 });
+    run.floaters.push({ x: tr.x, y: tr.y, text: def.name + (mult > 1 ? " ×2" : ""), color: def.color, life: 1.5 });
     toast("Treasure recovered: " + def.name + "!", "good", 1600);
     saveGame();
   }
@@ -1375,6 +1419,7 @@
     { name: "Starlight", area: "sanctuary", color: "#7a5cff" },
     { name: "Arctic",    area: "arctic",    color: "#bfe6ff" },
     { name: "Fossil",    area: "ancient",   color: "#a8843e" },
+    { name: "Open Sea",  area: "opensea",   color: "#1f7fc4" },
   ];
   // ... and one per secret fish (unlock by catching that secret)
   var SECRET_SUITS = D.FISH.filter(function (f) { return f.secret; })
@@ -1815,6 +1860,7 @@
     html += '<button id="btn-area" class="big">🗺️ Change Area</button>';
     html += '<button id="btn-stats" class="big">📊 Stats</button>';
     html += '<button id="btn-seedshop" class="big">🌾 Seed Shop</button>';
+    html += '<button id="btn-items" class="big">🎒 Items</button>';
     html += '<button id="btn-treasures" class="big">🏺 Treasures</button>';
     html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
     html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
@@ -1845,6 +1891,7 @@
     bind("btn-area", showAreas);
     bind("btn-stats", showStats);
     bind("btn-seedshop", showSeedShop);
+    bind("btn-items", showInventory);
     bind("btn-treasures", showTreasureGallery);
     bind("btn-trade", function () { lastGiftCode = null; showTrade(); });
     bind("btn-rename", function () {
@@ -2106,10 +2153,11 @@
       if (!fishes.length) continue;
       html += '<h3>' + D.LOCATIONS[areaId].name + '</h3><div class="coll-grid">';
       fishes.forEach(function (f) {
-        var special = f.isKraken || f.isBlob;
+        var special = f.isKraken || f.isBlob || f.areaBoss;
         var found, sh, hidden;
         if (f.isKraken) { found = state.krakenCaught; sh = state.krakenShiny; hidden = !found; }
         else if (f.isBlob) { found = state.blobfishCaught; sh = state.blobfishShiny; hidden = !found; }
+        else if (f.areaBoss) { found = !!state.areaBossCaught[f.id]; sh = false; hidden = !found; }
         else { found = !!state.discovered[f.id]; sh = !!state.shinyFound[f.id]; hidden = f.secret && !found && !state.hints[f.id]; }
         if (!special) { totalAll++; if (found) totalFound++; if (sh) shinyFound++; }
         var showShiny = collShinyView && sh && found;
@@ -2122,7 +2170,7 @@
           + (found && !special ? ' · ' + (state.counts[f.id] || 0) + ' caught' : '')
           + (f.creature ? ' · Creature' : '') + (f.secret ? ' · Secret' : '') + '</div>';
         if (!special) html += '<div class="coll-meta">Size ' + f.size + ' · $' + fmt(f.value) + '</div>';
-        else html += '<div class="coll-meta">' + (found ? 'Caught!' : 'Needs 100%') + '</div>';
+        else html += '<div class="coll-meta">' + (found ? 'Defeated!' : (f.areaBoss ? 'Catch every fish here' : 'Needs 100%')) + '</div>';
         html += '</div>';
       });
       html += '</div>';
@@ -2415,6 +2463,28 @@
     saveGame();
   }
 
+  function showAreaBossEnding(def) {
+    scene = "ending";
+    sellHud(false);
+    var ov = overlay("modal");
+    var img = SPRITES.dataURL(SPRITES.archetypeForShape(def.shape), { color: def.color, accent: def.accent, scale: 5 });
+    var html = '<div class="panel ending-panel">';
+    html += '<h1>⚔️ ' + def.name + ' defeated! ⚔️</h1>';
+    html += '<div class="blob-reveal" style="background-image:url(' + img + ')"></div>';
+    if (def.reward === "necklace") {
+      html += '<p>Tangled in its tendrils you find the legendary <b>Multiplier Necklace</b>! ✨</p>';
+      html += '<p class="prize">Every treasure you recover is now worth <b>DOUBLE</b>.</p>';
+    } else {
+      html += '<p>A mighty trophy added to your collection.</p>';
+      html += '<p class="prize">+$' + fmt(def.value) + '</p>';
+    }
+    html += '<button id="btn-continue" class="big primary">Continue</button></div>';
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
+    saveGame();
+  }
+
   // ---------------------------------------------------------------------
   //  Helpers
   // ---------------------------------------------------------------------
@@ -2584,6 +2654,30 @@
     });
   }
 
+  // ----- Owned items -----
+  function showInventory() {
+    var ov = overlay("shop");
+    function row(n, v) { return '<div class="stat-row"><span>' + n + '</span><b>' + v + '</b></div>'; }
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🎒 Your Items</h2>'
+      + '<button class="close" data-close="shop">✕</button></div><div class="stats-list">';
+    html += row("🔱 Harpoons", state.harpoons);
+    html += row("🥅 Fishing Net", state.upgrades.scoop > 0 ? "Lv " + state.upgrades.scoop : "— not owned");
+    if (state.items.necklace) html += row("📿 Multiplier Necklace", "treasures worth ×2");
+    if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
+    if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
+    var seedTotal = 0; for (var s in state.seeds) seedTotal += state.seeds[s];
+    html += row("🌾 Bird seeds", seedTotal);
+    html += row("🍀 Rarity Charms", "×" + state.charms.rarity);
+    html += row("✦ Shiny Charms", "×" + state.charms.shiny);
+    var ab = 0; for (var b in state.areaBossCaught) if (state.areaBossCaught[b]) ab++;
+    html += row("⚔️ Area bosses beaten", ab + " / " + Object.keys(AREA_BOSS_BY_AREA).length);
+    html += row("🦑 Kraken", state.krakenCaught ? (state.krakenShiny ? "✦ shiny!" : "defeated") : "at large");
+    html += '</div></div>';
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
+  }
+
   // ----- Treasure gallery -----
   function showTreasureGallery() {
     var ov = overlay("shop");
@@ -2703,6 +2797,7 @@
         if (d) run.birds.push({ def: d, x: run.diver.x + 100, y: -180, vx: 10, phase: 0, shiny: true, mode: "descend" });
       },
       throwHarpoon: function () { state.harpoons = 10; throwHarpoon(); },
+      spawnAreaBoss: function () { if (!run) return; var f = D.FISH.filter(function (x) { return x.areaBoss && x.area === run.area; })[0]; if (f) spawnAreaBoss(f.id); },
       forceShinyNext: function () { state.charms.shiny = 999; },
     },
   };
