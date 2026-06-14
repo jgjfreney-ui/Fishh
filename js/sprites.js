@@ -23,11 +23,25 @@
     var a = hex(h1), b = hex(h2);
     return rgb([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
   }
+  // shiny = rotate the hue ~150° and boost saturation/brightness, so each
+  // species gets its OWN distinct shiny colour (not all pink).
   function shinyShift(h) {
-    var c = hex(h);
-    // hue-rotate-ish toward an iridescent palette + brighten
-    var alt = [(c[0] * 0.4 + 150), (c[1] * 0.5 + 90), (c[2] * 0.6 + 180)];
-    return rgb([Math.min(255, alt[0]), Math.min(255, alt[1]), Math.min(255, alt[2])]);
+    var c = hex(h), r = c[0] / 255, g = c[1] / 255, b = c[2] / 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, s = 0, hh = 0;
+    if (mx !== mn) {
+      var dd = mx - mn;
+      s = l > 0.5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+      if (mx === r) hh = (g - b) / dd + (g < b ? 6 : 0);
+      else if (mx === g) hh = (b - r) / dd + 2;
+      else hh = (r - g) / dd + 4;
+      hh /= 6;
+    }
+    hh = (hh + 0.46) % 1;                       // hue rotation
+    s = Math.min(1, s * 1.25 + 0.4);            // more saturated
+    l = Math.min(0.74, Math.max(0.5, l * 0.85 + 0.22)); // brighter
+    function h2(p, q, t) { if (t < 0) t += 1; if (t > 1) t -= 1; if (t < 1 / 6) return p + (q - p) * 6 * t; if (t < 1 / 2) return q; if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6; return p; }
+    var q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    return rgb([h2(p, q, hh + 1 / 3) * 255, h2(p, q, hh) * 255, h2(p, q, hh - 1 / 3) * 255]);
   }
 
   function deriveColors(base, accent, shiny) {
@@ -49,6 +63,16 @@
 
   // ---- sprite grids (face RIGHT by default) ----------------------------
   var GRID = {
+    bird: [
+      ".....bBBb....",
+      "...bBBBBBBb..",
+      "f.bBBBBBBEPb.",
+      "fbBBBBBBBBEPG",
+      "fbBBBBBBBBBb.",
+      ".FFbBBBBBb...",
+      "..FFFFb.b....",
+      ".....bb......",
+    ],
     fish: [
       "...........MMM........",
       "..F......MMMMM........",
@@ -86,16 +110,17 @@
       "...A.A.A.A...",
     ],
     shark: [
-      ".............FFFF......",
-      "............FFFFFF.....",
-      "f.......bbBBBBBBBBbb...",
-      "ffbbBBBBBBBBBBBBBBBBb..",
-      "fbBBBBBBBBBBBBBBBBBBEPb",
-      "fbBBLLLLLLLLLLLLLBBBEPM",
-      "fbBBBBBBBBBBBBBBBBBBBb.",
-      "ffbbBBBBBBBBBBBBBBBBb..",
-      "f.......bbBBBBBBBbb....",
-      "............AAA.AAA....",
+      "...........FF..........",
+      "..........FFFF.........",
+      "F........FFFFFF........",
+      "FFF.....bBBBBBBBbb.....",
+      "FFbbBBBBBBBBBBBBBBBbb..",
+      "fbBBBBBBBBBBBBBBBBBBBEP",
+      "fbBBLLLLLLLLLLLLLLBBBPM",
+      "FFbbBBBBBBBBBBBBBBBbb..",
+      "FFF......bBBBBBBb......",
+      "F..........AAAA.......",
+      "...........AA.........",
     ],
     sword: [
       "..........FF............",
@@ -145,14 +170,14 @@
       "............AA....",
     ],
     eel: [
-      "....bBBBb.........bBBBb..",
-      "..bBBBBBBBb....bBBBBBBBb.",
-      ".bBBBBBBBBBb..bBBBBBBBBEP",
-      ".bBBLLLBBBBBbbBBBBBBBBBPM",
-      ".bBBLLLBBBBBbbBBBBBBBBBPM",
-      ".bBBBBBBBBBb..bBBBBBBBBEP",
-      "..bBBBBBBBb....bBBBBBBBb.",
-      "....bBBBb.........bBBb...",
+      ".................bBBBb...",
+      "..........bBBb..bBBBBBBb.",
+      "....bBBb.bBBBBbbBBBLLBBEP",
+      "..bBBBBBBBBLLBBBBBBBBBBPM",
+      "fbBBBBLLBBBBBBBBBBBBBBBb.",
+      "fbBBBBBBBBBBBBBBBBBBBBb..",
+      "..bbBBBBbbb..bbBBBBbb....",
+      "....bbb........bbb.......",
     ],
     squid: [
       "......BB......",
@@ -249,12 +274,14 @@
       "......FFF......",
     ],
     mosasaur: [
-      "f.....bBBBBBBBBBBBBBBb....",
-      "ffbbBBBBBBBBBBBBBBBBBBBbEP",
-      "ffBBBBLLLLLLLLLLLBBBBMMMMM",
-      "ffbbBBBBBBBBBBBBBBBBBBBbEP",
-      "f.....bBBBBBBBBBBBBBBb....",
-      "...FF........FF..........",
+      "F..........bBBBBBBBBBb....",
+      "FFF....bbBBBBBBBBBBBBBBb..",
+      "FFbbBBBBBBBBBBBBBBBBBBBBEP",
+      "FFbBBBLLLLLLLLLLLLLLBBMMMM",
+      "FFbbBBBBBBBBBBBBBBBBBBBBEP",
+      "FFF....bbBBBBBBBBBBBBBBb..",
+      "F.....FF........FF.......",
+      "......FF........FF.......",
     ],
     armored: [
       "f....bBBBBb..AAAAAA..",
@@ -525,7 +552,7 @@
 
   // map a fish "shape" to a sprite archetype
   var SHAPE_MAP = {
-    fish: "fish", round: "round", shark: "shark", sword: "sword", hammer: "hammer",
+    fish: "fish", round: "round", shark: "shark", sword: "sword", hammer: "hammer", bird: "bird",
     whale: "whale", turtle: "turtle", ray: "ray", eel: "eel", squid: "squid",
     octopus: "octopus", jelly: "jelly", seahorse: "seahorse", otter: "otter",
     angler: "angler", lantern: "lantern", kraken: "kraken", blob: "blob",

@@ -342,7 +342,7 @@
     if (c.minDepth != null && depthM < c.minDepth) return false;
     if (c.maxDepth != null && depthM > c.maxDepth) return false;
     // special catch methods (read live dive state)
-    if (c.circle && Math.abs(run.spin || 0) < 2.5) return false;
+    if (c.circle && Math.abs(run.spin || 0) < 2.0) return false;
     if (c.lowOxygen && run.oxygen / run.maxO > 0.2) return false;
     if (c.fast && Math.hypot(run.diver.vx, run.diver.vy) < speed() * 0.8) return false;
     if (c.still && (run.stillTimer || 0) < 2) return false;
@@ -600,10 +600,13 @@
       diver.vx = diver.vy = 0;
     }
 
-    // track special secret-catch movement: circling & stillness
-    var dspd = Math.hypot(diver.vx, diver.vy);
-    if (dspd > 8) {
-      var ang = Math.atan2(diver.vy, diver.vx);
+    // track special secret-catch movement: circling & stillness.
+    // Prefer the joystick angle — that way just swirling your thumb in a
+    // circle counts, even if the diver bumps a wall and barely moves.
+    var ang = null;
+    if (joy.active && joy.mag > 0.15) ang = Math.atan2(joy.dy, joy.dx);
+    else if (Math.hypot(diver.vx, diver.vy) > 8) ang = Math.atan2(diver.vy, diver.vx);
+    if (ang != null) {
       if (run.lastAng != null) {
         var dA = ang - run.lastAng;
         while (dA > Math.PI) dA -= 2 * Math.PI;
@@ -614,7 +617,7 @@
     } else {
       run.lastAng = null; run.stillTimer = (run.stillTimer || 0) + dt;
     }
-    run.spin = (run.spin || 0) * 0.99; // slow decay
+    run.spin = (run.spin || 0) * 0.995; // slow decay (gives time to complete the loop)
 
     var depthM = diver.y / PXPM;
     run.diveDepthReached = Math.max(run.diveDepthReached, depthM);
@@ -668,6 +671,10 @@
       if (f.isBoss) { canGrab = false; if (f.hitFlash > 0) f.hitFlash -= dt; } // bosses need harpoons
       // Jelly Stinger: zap nearby fish so they stop fleeing (easy to magnet)
       if (state.items.jellystinger && !f.isBoss && dist < mRange + 50) { f.fleeing = 0; f.stunned = 0.3; }
+      // cargo-full notice: a catchable fish came into range but won't fit
+      if (full && !canGrab && !f.isBoss && dist < mRange) {
+        if (run.time - (run.fullHint || -99) > 5) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1500); }
+      }
       var grabbing = false;
       if (canGrab && dist < mRange) {
         // pull toward the diver (stronger when closer; big fish resist)
@@ -909,6 +916,7 @@
       else if (boss.isBlob) catchBlobfish(boss.shiny);
       else catchKraken(boss.shiny);
       run.bossPresent = false;
+      var bi = run.fish.indexOf(boss); if (bi >= 0) run.fish.splice(bi, 1);
     } else {
       toast("HIT! " + boss.hp + " more to go! 🔱", "epic", 1400);
     }
@@ -1948,6 +1956,19 @@
     if (window.AUDIO) AUDIO.playArea(areaId);
   }
 
+  // return to an in-progress dive after a boss-defeat overlay (so you can
+  // keep exploring the run instead of being yanked back to the boat).
+  function resumeDive() {
+    closeOverlay("modal");
+    if (!run) { goToBoat(); return; }
+    for (var i = run.fish.length - 1; i >= 0; i--) {
+      if (run.fish[i].isBoss && run.fish[i].hp <= 0) run.fish.splice(i, 1);
+    }
+    scene = "dive";
+    sellHud(true);
+    if (window.AUDIO) AUDIO.playArea(run.area);
+  }
+
   function sellHud(show) {
     document.getElementById("hud").style.display = show ? "flex" : "none";
     document.getElementById("surface-hint").style.display = "none";
@@ -1957,21 +1978,27 @@
   }
 
   // ----- Shop -----
+  var shopTab = "gear"; // remembered across re-renders (e.g. after a purchase)
   function showShop() {
     var ov = overlay("shop");
     var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🛒 Helpful Shop</h2>'
       + '<div class="money-line">💰 $' + fmt(state.money) + '</div>'
       + '<button class="close" data-close="shop">✕</button></div>';
 
+    function tabBtn(id, label) {
+      return '<button class="tab' + (shopTab === id ? ' active' : '') + '" data-tab="' + id + '">' + label + '</button>';
+    }
+    function bodyClass(id) { return shopTab === id ? '' : ' hidden'; }
+
     html += '<div class="shop-tabs">'
-      + '<button class="tab active" data-tab="gear">Gear</button>'
-      + '<button class="tab" data-tab="tools">Tools</button>'
-      + '<button class="tab" data-tab="charms">Charms</button>'
-      + '<button class="tab" data-tab="hints">Hints</button>'
+      + tabBtn("gear", "Gear")
+      + tabBtn("tools", "Tools")
+      + tabBtn("charms", "Charms")
+      + tabBtn("hints", "Hints")
       + '</div>';
 
     // GEAR (everything except the net, which lives under Tools)
-    html += '<div class="tab-body" data-body="gear">';
+    html += '<div class="tab-body' + bodyClass("gear") + '" data-body="gear">';
     for (var key in D.UPGRADES) {
       if (key === "scoop") continue;
       html += upgradeRow(key);
@@ -1979,7 +2006,7 @@
     html += '</div>';
 
     // TOOLS — Fishing Net + Harpoons
-    html += '<div class="tab-body hidden" data-body="tools">';
+    html += '<div class="tab-body' + bodyClass("tools") + '" data-body="tools">';
     html += upgradeRow("scoop");
     html += '<div class="shop-item"><div class="si-info"><b>Harpoons</b> <span class="lvl">×' + state.harpoons + '</span>'
       + '<p>Ammo for boss fights. Aim with the joystick and tap 🔱 to throw — 3 hits beats the Kraken or blobfish.</p></div>'
@@ -1987,7 +2014,7 @@
     html += '</div>';
 
     // CHARMS
-    html += '<div class="tab-body hidden" data-body="charms">';
+    html += '<div class="tab-body' + bodyClass("charms") + '" data-body="charms">';
     for (var ck in D.CHARMS) {
       var c = D.CHARMS[ck];
       var owned = state.charms[ck];
@@ -2021,7 +2048,7 @@
     html += '</div>';
 
     // HINTS
-    html += '<div class="tab-body hidden" data-body="hints">';
+    html += '<div class="tab-body' + bodyClass("hints") + '" data-body="hints">';
     html += '<p class="tiny">Every area hides a <b>secret fish</b>. Buy its hint here, then meet the condition while diving.</p>';
     D.FISH.filter(function (f) { return f.secret && D.LOCATIONS[f.area]; }).forEach(function (f) {
       var owned = state.hints[f.id];
@@ -2045,10 +2072,11 @@
     // tab switching
     ov.querySelectorAll(".tab").forEach(function (t) {
       t.onclick = function () {
+        shopTab = t.getAttribute("data-tab");
         ov.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("active"); });
         ov.querySelectorAll(".tab-body").forEach(function (x) { x.classList.add("hidden"); });
         t.classList.add("active");
-        ov.querySelector('[data-body="' + t.getAttribute("data-tab") + '"]').classList.remove("hidden");
+        ov.querySelector('[data-body="' + shopTab + '"]').classList.remove("hidden");
       };
     });
     ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
@@ -2316,7 +2344,13 @@
     ov.classList.add("open");
     ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
     var tg = ov.querySelector("#coll-shiny-toggle");
-    if (tg) tg.onclick = function () { collShinyView = !collShinyView; showCollection(); };
+    if (tg) tg.onclick = function () {
+      collShinyView = !collShinyView;
+      showCollection();
+      // jump back to the top so you don't lose your place mid-list
+      var o = document.getElementById("shop");
+      if (o) { o.scrollTop = 0; var cs = o.querySelector(".collection-scroll"); if (cs) cs.scrollTop = 0; }
+    };
   }
 
   // ----- Diver customization -----
@@ -2587,10 +2621,12 @@
     html += '<p class="prize">— a <b>Blobfish</b>. 🫠</p>';
     html += '<p>It looks at you. You look at it. Somewhere, a crab laughs.</p>';
     html += '<p>Turns out that list of "required" fish was a load of barnacles. To truly summon the Kraken you must catch <b>100% of everything</b> — every fish, and one day every bird and sea creature too.</p>';
-    html += '<button id="btn-continue" class="big primary">Hmph. Back to it.</button>';
+    html += '<button id="btn-resume" class="big primary">🤿 Keep Diving</button>';
+    html += '<button id="btn-continue" class="big">⬆ Back to Boat</button>';
     html += '</div>';
     ov.innerHTML = html;
     ov.classList.add("open");
+    bind("btn-resume", function () { resumeDive(); });
     bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
     saveGame();
   }
@@ -2616,9 +2652,11 @@
       html += '<p>A mighty trophy added to your collection.</p>';
       html += '<p class="prize">+$' + fmt(def.value) + '</p>';
     }
-    html += '<button id="btn-continue" class="big primary">Continue</button></div>';
+    html += '<button id="btn-resume" class="big primary">🤿 Keep Diving</button>';
+    html += '<button id="btn-continue" class="big">⬆ Back to Boat</button></div>';
     ov.innerHTML = html;
     ov.classList.add("open");
+    bind("btn-resume", function () { resumeDive(); });
     bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
     saveGame();
   }
