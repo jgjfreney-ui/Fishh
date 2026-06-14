@@ -251,10 +251,18 @@
     voices = [];
   }
 
-  function startTrack(id) {
+  var curNight = false;
+  function startTrack(id, night) {
     if (!ensure()) return;
-    if (mode === id) return;
-    mode = id; cfgCur = TRACKS[id] || TRACKS.menu;
+    night = !!night;
+    if (mode === id && curNight === night) return;
+    mode = id; curNight = night;
+    var base = TRACKS[id] || TRACKS.menu;
+    // at night, play a slower, mellower version of the area's track
+    cfgCur = night ? { tonic: base.tonic - 0, bpm: Math.round(base.bpm * 0.78), density: base.density * 0.8,
+                       lead: base.lead, bells: base.bells, waves: base.waves, prog: base.prog,
+                       pent: base.pent, hook: base.hook, power: base.power, heavyBass: base.heavyBass }
+                    : base;
     clearSchedule();
     step = 0; melIdx = 4; nextTime = ctx.currentTime + 0.12;
     if (cfgCur.waves) { startWaves(); scheduleGulls(); }
@@ -268,7 +276,7 @@
     setMuted: function (m) { muted = !!m; if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 0.22, (ctx ? ctx.currentTime : 0) + 0.2); },
     toggleMute: function () { this.setMuted(!muted); return muted; },
     isMuted: function () { return muted; },
-    playArea: function (a) { this.resume(); startTrack(a); },
+    playArea: function (a, night) { this.resume(); startTrack(a, night); },
     playMenu: function () { this.resume(); startTrack("menu"); },
     playBoss: function () { this.resume(); startTrack("boss"); },
     playBlob: function () { this.resume(); startTrack("blob"); },

@@ -141,6 +141,7 @@
       diveDepthReached: 0,
       night: !!state.nextNight,   // this dive's time of day
       sonarTimer: 0,
+      secretShown: {},            // secretId -> already popped in this dive
     };
     placeWrecks(loc);
     generateDecor(loc);
@@ -408,9 +409,6 @@
 
     var def = pool[(Math.random() * pool.length) | 0];
 
-    // Secrets / mythics are extra rare even once eligible
-    if (def.secret && Math.random() > 0.6) return; // hint owned → show up readily
-
     var shiny = Math.random() < shinyChance(run.area);
 
     var x = initial
@@ -428,6 +426,20 @@
       shiny: shiny,
       size: def.size,
       fleeing: 0,
+    });
+  }
+
+  // spawn a SPECIFIC fish near the diver (used so secret fish pop in the
+  // instant you meet their condition, then mingle with the regular pool)
+  function spawnSpecificFish(def) {
+    var loc = D.LOCATIONS[run.area];
+    var sy = clamp(run.diver.y + (Math.random() - 0.5) * 180, 30, loc.maxDepth * PXPM);
+    var sx = run.diver.x + (Math.random() < 0.5 ? -1 : 1) * (120 + Math.random() * 80);
+    run.fish.push({
+      uid: "s" + (Math.random() * 1e9 | 0) + run.time, def: def,
+      x: clamp(sx, 20, loc.worldWidth - 20), y: sy, baseY: sy,
+      vx: 40 * (Math.random() < 0.5 ? -1 : 1), phase: Math.random() * 6,
+      shiny: Math.random() < shinyChance(run.area), size: def.size, fleeing: 0,
     });
   }
 
@@ -703,6 +715,20 @@
     if (run.spawnTimer <= 0) {
       run.spawnTimer = 0.5 + Math.random() * 0.8;
       spawnFish(false);
+    }
+
+    // --- secret fish: pop in the INSTANT you satisfy their condition ---
+    for (var sx2 = 0; sx2 < D.FISH.length; sx2++) {
+      var sf = D.FISH[sx2];
+      if (!sf.secret || run.secretShown[sf.id]) continue;
+      if (sf.area !== run.area && !loc.allContent) continue;
+      if (!state.hints[sf.id]) continue;            // still need the hint bought
+      if (sf.night && !run.night) continue;
+      if (secretConditionMet(sf, depthM)) {
+        spawnSpecificFish(sf);
+        run.secretShown[sf.id] = true;
+        toast("Something rare stirs nearby... ✦", "epic", 1600);
+      }
     }
     // boss summon: Trench has the blobfish/Kraken; other areas have area bosses
     if (!run.bossPresent && depthM > 200) {
@@ -1544,6 +1570,7 @@
     { id: "gold",   color: "#c79a2e", accent: "#3a2a10", cost: 1500 },
     { id: "neon",   color: "#1fd6a0", accent: "#ff5bd0", cost: 1500 },
     { id: "void",   color: "#2a2350", accent: "#9f7bff", cost: 3000 },
+    { id: "rainbow", color: "#ff5b7f", accent: "#7afcff", cost: 8000 },
   ];
   function suitAccentFor(color) { return mix(color, "#ffffff", 0.42); }
   var LOOKS = [
@@ -1803,6 +1830,13 @@
       return; // labels handled by drawFishLabels()
     }
     var arch = SPRITES.archetypeForShape(f.def.shape);
+
+    // rainbow species shimmer through the colour wheel
+    if (f.def.rainbow) {
+      var RB = ["#ff5b7f", "#ff9a4a", "#ffe14d", "#6dd36d", "#4aa3ff", "#b96bff"];
+      var rci = Math.floor((run.time * 4 + f.x * 0.04) % RB.length);
+      drawGlow(x, y, th * 1.1, RB[(rci + RB.length) % RB.length], 0.55);
+    }
 
     var glow = fishGlow(f);
     if (glow) drawGlow(x, y, th * 0.95, glow.color, glow.alpha);
@@ -2104,7 +2138,7 @@
     scene = "dive";
     newRun(areaId);
     state.lastArea = areaId;
-    if (window.AUDIO) AUDIO.playArea(areaId);
+    if (window.AUDIO) AUDIO.playArea(areaId, run && run.night);
   }
 
   // return to an in-progress dive after a boss-defeat overlay (so you can
@@ -2117,7 +2151,7 @@
     }
     scene = "dive";
     sellHud(true);
-    if (window.AUDIO) AUDIO.playArea(run.area);
+    if (window.AUDIO) AUDIO.playArea(run.area, run.night);
   }
 
   function sellHud(show) {
@@ -2350,9 +2384,10 @@
   function showAquarium() {
     closeOverlay("modal"); closeOverlay("shop"); sellHud(false);
     scene = "aquarium";
-    aqua = { areaList: Object.keys(D.LOCATIONS), idx: 0, time: 0, entities: [], diverActive: false,
+    aqua = { areaList: Object.keys(D.LOCATIONS), idx: 0, time: 0, entities: [], diverActive: false, night: false,
       diver: { x: W / 2, y: H / 2, vx: 0, vy: 0, face: 1 } };
     setupTank(0);
+    var dn = document.getElementById("aqua-daynight"); if (dn) dn.textContent = "🌙";
     document.getElementById("aqua-ui").style.display = "flex";
   }
   function exitAquarium() {
@@ -2367,7 +2402,7 @@
     var n = aqua.areaList.length;
     aqua.idx = (aqua.idx + dir + n) % n;
     setupTank(aqua.idx);
-    if (window.AUDIO) AUDIO.playArea(aqua.area);
+    if (window.AUDIO) AUDIO.playArea(aqua.area, aqua.night);
   }
   function setupTank(idx) {
     var areaId = aqua.areaList[idx];
@@ -2424,11 +2459,21 @@
   }
   function renderAquarium() {
     var loc = D.LOCATIONS[aqua.area], floorY = H - 56, top = 54;
+    var night = !!aqua.night;
     ctx.clearRect(0, 0, W, H);
     var sky = loc.sky || { top: "#aee0ff", bottom: "#e8f6ff" };
-    var sg = ctx.createLinearGradient(0, 0, 0, top); sg.addColorStop(0, sky.top); sg.addColorStop(1, sky.bottom);
+    var sg = ctx.createLinearGradient(0, 0, 0, top);
+    if (night) { sg.addColorStop(0, "#0a1030"); sg.addColorStop(1, "#22305a"); }
+    else { sg.addColorStop(0, sky.top); sg.addColorStop(1, sky.bottom); }
     ctx.fillStyle = sg; ctx.fillRect(0, 0, W, top);
-    var wg = ctx.createLinearGradient(0, top, 0, floorY); wg.addColorStop(0, loc.topColor); wg.addColorStop(1, mix(loc.topColor, loc.deepColor, 0.6));
+    if (night) { // stars + moon
+      ctx.fillStyle = "#fff";
+      for (var st = 0; st < 22; st++) { if (Math.sin(aqua.time * 0.6 + st) > 0.1) ctx.fillRect((st * 47) % W, (st * 17) % top, 2, 2); }
+      ctx.fillStyle = "rgba(230,235,255,0.9)"; ctx.beginPath(); ctx.arc(W * 0.82, top * 0.5, 10, 0, 7); ctx.fill();
+    }
+    var wg = ctx.createLinearGradient(0, top, 0, floorY);
+    if (night) { wg.addColorStop(0, mix(loc.topColor, "#04060f", 0.55)); wg.addColorStop(1, mix(loc.deepColor, "#04060f", 0.4)); }
+    else { wg.addColorStop(0, loc.topColor); wg.addColorStop(1, mix(loc.topColor, loc.deepColor, 0.6)); }
     ctx.fillStyle = wg; ctx.fillRect(0, top, W, floorY - top);
     ctx.fillStyle = "rgba(255,255,255,0.25)"; ctx.fillRect(0, top - 2, W, 3);
     var d = DECOR[aqua.area] || DECOR.coral;
@@ -3145,7 +3190,7 @@
       var firstGesture = function () {
         AUDIO.resume();
         if (state && state.settings) AUDIO.setMuted(state.settings.muted);
-        if (scene === "dive" && run) AUDIO.playArea(run.area);
+        if (scene === "dive" && run) AUDIO.playArea(run.area, run.night);
         else AUDIO.playMenu();
         window.removeEventListener("pointerdown", firstGesture);
         window.removeEventListener("keydown", firstGesture);
@@ -3184,6 +3229,12 @@
     // aquarium controls
     bind("aqua-prev", function () { aquaNav(-1); });
     bind("aqua-next", function () { aquaNav(1); });
+    bind("aqua-daynight", function () {
+      if (!aqua) return;
+      aqua.night = !aqua.night;
+      document.getElementById("aqua-daynight").textContent = aqua.night ? "☀️" : "🌙";
+      if (window.AUDIO) AUDIO.playArea(aqua.area, aqua.night);
+    });
     bind("aqua-close", exitAquarium);
     bind("aqua-list", showCollection);
     bind("aqua-swim", function () {
