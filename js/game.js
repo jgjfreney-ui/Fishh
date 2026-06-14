@@ -78,7 +78,7 @@
   // ---------------------------------------------------------------------
   function up(track) { return D.UPGRADES[track].levels[state.upgrades[track]].value; }
   function maxOxygen() { return up("oxygen"); }
-  function speed() { return up("fins"); }
+  function speed() { return up("fins") * (state.items.orcawhistle ? 1.25 : 1); } // Orca Whistle = +25% swim speed
   function catchRadius() { return up("net"); }
   function reelMul() { return up("reel"); }
   function inventoryCap() { return up("inventory"); }
@@ -935,6 +935,7 @@
     if (def.reward === "necklace") state.items.necklace = true;
     else if (def.reward === "stinger") state.items.jellystinger = true;
     else if (def.reward === "megtooth") state.items.megtooth = true;
+    else if (def.reward === "orcawhistle") state.items.orcawhistle = true;
     run.bossPresent = false;
     saveGame();
     setTimeout(function () { showAreaBossEnding(def); }, 700);
@@ -2666,6 +2667,9 @@
     } else if (def.reward === "megtooth") {
       html += '<p>You pry loose a giant <b>Meg Tooth</b>! 🦷</p>';
       html += '<p class="prize">Every boss now takes <b>one fewer harpoon</b> to defeat.</p>';
+    } else if (def.reward === "orcawhistle") {
+      html += '<p>The pod accepts you — you earn a carved <b>Orca Whistle</b>! 🐋</p>';
+      html += '<p class="prize">You now swim <b>25% faster</b>, forever.</p>';
     } else {
       html += '<p>A mighty trophy added to your collection.</p>';
       html += '<p class="prize">+$' + fmt(def.value) + '</p>';

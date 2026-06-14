@@ -17,6 +17,11 @@
   function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
   var PENTA = [0, 2, 4, 7, 9];       // major pentatonic — always pleasant
   var PENTA_MIN = [0, 3, 5, 7, 10];  // minor pentatonic — dramatic (boss)
+  // Repeating, hummable melodic HOOKS (indices into the pentatonic; null = rest)
+  // over a 16-eighth (2-bar) phrase. A fixed motif is what makes a tune catchy
+  // and memorable, vs. an aimless random walk.
+  var HOOK      = [0, null, 2, 4, 4, null, 2, 0, 2, null, 4, 7, 7, 4, 2, null];
+  var HOOK_BOSS = [0, 0, 3, 0, 5, 3, 0, null, 0, 0, 3, 5, 7, 5, 3, 0];
   function penta(base, idx, sc) { sc = sc || PENTA; return base + sc[((idx % 5) + 5) % 5] + 12 * Math.floor(idx / 5); }
 
   // bright major triads relative to a tonic
@@ -206,14 +211,21 @@
     else bass(bassRoot(tonic, deg) + 7, t, spb * 0.3, 0.09);
     // chord stabs on the offbeats (oom-PAH)
     if (pos === 2 || pos === 6) ch.forEach(function (m) { blip(m + 12, t, eighth * 0.8, "triangle", cfg.power ? 0.05 : 0.04, cfg.power ? 2400 : 1800); });
-    // sparkle bells
-    if (cfg.bells) { blip(penta(tonic + 12, s, pent) + 12, t, eighth * 1.3, "triangle", 0.045, 3000); }
-    // lead melody — steady eighths over the chosen pentatonic
-    if (!cfg.bells && Math.random() < cfg.density) {
-      melIdx += [-2, -1, 0, 0, 1, 1, 2][(Math.random() * 7) | 0];
-      melIdx = Math.max(0, Math.min(9, melIdx));
-      var m2 = penta(tonic + 12, melIdx, pent);
-      blip(m2, t, eighth * (Math.random() < 0.25 ? 1.8 : 0.9), cfg.lead, 0.055, 2600);
+    // sparkle bells (gentle twinkle for icy / starlit areas)
+    if (cfg.bells) { blip(penta(tonic + 12, s, pent) + 12, t, eighth * 1.3, "triangle", 0.04, 3000); }
+    // lead melody — a repeating, hummable HOOK so each area has a real tune,
+    // with the odd grace note to keep it lively (not robotic).
+    var hook = cfg.hook || (cfg.power || cfg.heavyBass ? HOOK_BOSS : HOOK);
+    var hi = ((s % hook.length) + hook.length) % hook.length;
+    var note = hook[hi];
+    var leadVol = cfg.bells ? 0.03 : 0.058;  // softer over twinkly areas
+    if (note != null) {
+      var m2 = penta(tonic + 12, note, pent);
+      var longNote = (hi % 8 === 0);
+      blip(m2, t, eighth * (longNote ? 1.7 : 0.92), cfg.lead, leadVol, 2600);
+    } else if (Math.random() < cfg.density * 0.35) {
+      var nxt = hook[(hi + 1) % hook.length]; if (nxt == null) nxt = 2;
+      blip(penta(tonic + 12, nxt, pent), t, eighth * 0.55, cfg.lead, leadVol * 0.6, 2400);
     }
   }
 
