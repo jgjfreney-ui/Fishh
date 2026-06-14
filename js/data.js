@@ -185,8 +185,8 @@
     { id: "leafydragon",name: "Leafy Seadragon",area: "kelp",      rarity: "mythic", size: 2, value: 3000, minDepth: 100,color: "#7fc36b", shape: "seahorse", secret: true,
       hint: "Camouflaged among deep kelp (below 100m). You must be patient and still.",
       condition: { minDepth: 100 } },
-    { id: "ghostlev",   name: "Ghost Leviathan",area: "trench",    rarity: "mythic", size: 9, value: 9000, minDepth: 900,color: "#bfe6ff", shape: "whale", secret: true,
-      hint: "A pale giant haunts the very bottom of the Trench (below 900m). Only the brave reach it.",
+    { id: "deeplev",    name: "Deep Leviathan", area: "trench",    rarity: "mythic", size: 9, value: 9000, minDepth: 900,color: "#3a4e6a", shape: "eel", secret: true,
+      hint: "A colossal sea-serpent coils through the very bottom of the Trench (below 900m). Only the brave reach it.",
       condition: { minDepth: 900 } },
     { id: "celestserp", name: "Celestial Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#c9b3ff", shape: "eel", secret: true,
       hint: "Coils through the deepest starlight (below 400m), woven from the night sky itself.",
@@ -199,12 +199,26 @@
       condition: { minDepth: 90 } },
 
     // ---- The "Kraken" fake-out + the true Kraken ----
-    { id: "blobfish",   name: "Blobfish",     area: "trench", rarity: "mythic", size: 6, value: 50, minDepth: 600, color: "#e0909e", shape: "blob",
+    { id: "blobfish",   name: "Blobfish",     area: "trench", rarity: "legendary", size: 6, value: 50, minDepth: 800, color: "#e0909e", shape: "blob",
       isBlob: true },
-    { id: "kraken",     name: "The Kraken",   area: "trench", rarity: "mythic", size: 10, value: 25000, minDepth: 600, color: "#7a1f3d", shape: "kraken",
+    { id: "kraken",     name: "The Kraken",   area: "trench", rarity: "legendary", size: 10, value: 25000, minDepth: 1000, color: "#7a1f3d", shape: "kraken",
       isKraken: true,
       hint: "The true legend. It only rises once you have caught 100% of everything in the sea." },
+
+    // ======== Sea-floor Creatures (caught with a Net) — 2 per area ========
+    { id: "crab",       name: "Crab",         area: "coral", creature: true, rarity: "common",   size: 1, value: 40,  color: "#d8654a", shape: "crab" },
+    { id: "starfish",   name: "Starfish",     area: "coral", creature: true, rarity: "uncommon", size: 1, value: 85,  color: "#ff8f4a", shape: "starfish" },
+    { id: "crayfish",   name: "Crayfish",     area: "river", creature: true, rarity: "common",   size: 1, value: 50,  color: "#a04a3a", shape: "lobster" },
+    { id: "waterbug",   name: "Water Bug",    area: "river", creature: true, rarity: "uncommon", size: 1, value: 95,  color: "#5a6a3a", shape: "bug" },
+    { id: "seaurchin",  name: "Sea Urchin",   area: "kelp",  creature: true, rarity: "common",   size: 1, value: 65,  color: "#6a3a7a", shape: "urchin" },
+    { id: "lobster",    name: "Lobster",      area: "kelp",  creature: true, rarity: "uncommon", size: 2, value: 170, color: "#9a3a2a", shape: "lobster" },
+    { id: "giantisopod",name: "Giant Isopod", area: "trench", creature: true, rarity: "rare",    size: 2, value: 320, color: "#8a8a7a", shape: "bug" },
+    { id: "kingcrab",   name: "King Crab",    area: "trench", creature: true, rarity: "rare",    size: 3, value: 460, color: "#b0503a", shape: "crab" },
+    { id: "starcrab",   name: "Star Crab",    area: "sanctuary", creature: true, rarity: "rare", size: 2, value: 420, color: "#9f7bff", shape: "crab" },
+    { id: "prismstar",  name: "Prism Star",   area: "sanctuary", creature: true, rarity: "epic", size: 1, value: 760, color: "#7affd0", shape: "starfish" },
   ];
+
+  const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });
 
   // The fish the game *claims* you need to summon the Kraken (a curated spread
   // of notable catches per area). Catching them all triggers the blobfish
@@ -355,6 +369,11 @@
 
   // One-time purchasable items
   const ITEMS = {
+    net: {
+      name: "Crab Net",
+      desc: "Scoop up sea-floor creatures — crabs, starfish, lobsters and more — by getting close to them on the seabed.",
+      cost: 2500,
+    },
     goggles: {
       name: "Wide-View Goggles",
       desc: "Crystal-clear goggles — see much further underwater and spot distant fish from a long way off.",
@@ -374,6 +393,7 @@
     FISH_BY_ID: FISH_BY_ID,
     COMPLETION_FISH: COMPLETION_FISH,
     REQUIRED_FISH: REQUIRED_FISH,
+    CREATURES: CREATURES,
     TREASURES: TREASURES,
     UPGRADES: UPGRADES,
     CHARMS: CHARMS,

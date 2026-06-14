@@ -271,6 +271,8 @@ button.big { padding: 16px; font-size: 16px; font-weight: 600; }
 .coll-card.required { box-shadow: inset 0 0 0 2px rgba(255, 210, 74, 0.55); }
 .coll-card { position: relative; }
 .req-badge { position: absolute; top: 4px; right: 6px; font-size: 13px; }
+.coll-toggle { padding: 6px 12px; font-size: 12px; }
+.coll-toggle.on { background: var(--gold); color: #2a1f00; font-weight: 700; border-color: transparent; }
 .req-banner {
   background: rgba(255, 210, 74, 0.12);
   border: 1px solid rgba(255, 210, 74, 0.35);

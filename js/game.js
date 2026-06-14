@@ -30,12 +30,13 @@
       counts: {},         // fishId -> total caught
       treasures: {},      // treasureId -> count
       blobfishCaught: false,
+      blobfishShiny: false,
       krakenCaught: false,
       krakenShiny: false,
       stats: { maxDepth: 0, totalCaught: 0, earned: 0, dives: 0 },
       lastArea: "coral",
       settings: { muted: false },
-      diver: { skin: 2, suit: "#1f7d9c", look: "short" },
+      diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", look: "short" },
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
     };
@@ -109,6 +110,7 @@
       bagTreasure: carryTreasure,
       bagUsed: carryUsed,
       fish: [],
+      creatures: [],
       treasures: [],
       wrecks: [],
       bubbles: [],
@@ -116,6 +118,7 @@
       target: null,       // current reel target id
       reel: 0,
       spawnTimer: 0,
+      creatureTimer: 2,
       treasureTimer: 4,
       time: 0,
       surfaced: false,
@@ -125,7 +128,27 @@
     generateDecor(loc);
     // initial population
     for (var i = 0; i < 14; i++) spawnFish(true);
+    for (var ci = 0; ci < 4; ci++) spawnCreature(true);
     state.stats.dives++;
+  }
+
+  function spawnCreature(initial) {
+    var loc = D.LOCATIONS[run.area];
+    if (run.creatures.length > 7) return;
+    var pool = D.CREATURES.map(function (id) { return D.FISH_BY_ID[id]; })
+      .filter(function (c) { return c.area === run.area; });
+    if (!pool.length) return;
+    // rarity-weighted pick (commoner creatures appear more)
+    var total = 0, weights = pool.map(function (c) { var w = D.RARITY[c.rarity].weight; total += w; return w; });
+    var pick = Math.random() * total, def = pool[0];
+    for (var i = 0; i < pool.length; i++) { pick -= weights[i]; if (pick <= 0) { def = pool[i]; break; } }
+    var x = initial ? Math.random() * loc.worldWidth : (Math.random() < 0.5 ? -30 : loc.worldWidth + 30);
+    run.creatures.push({
+      uid: "c" + (Math.random() * 1e9 | 0) + run.time,
+      def: def, x: x, y: run.floorY - 8,
+      vx: (Math.random() < 0.5 ? -1 : 1) * (12 + Math.random() * 10),
+      phase: Math.random() * 6, shiny: Math.random() < shinyChance(run.area), size: def.size,
+    });
   }
 
   // per-area decoration recipe: seabed flora/rock + a couple of background ridges
@@ -287,7 +310,7 @@
       var f = D.FISH[i];
       if (f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
-      if (f.isKraken || f.isBlob) continue;
+      if (f.isKraken || f.isBlob || f.creature) continue;
       if (depthM < f.minDepth) continue;
       if (f.secret) {
         // secrets need a purchased hint + meeting their depth condition
@@ -363,7 +386,7 @@
   function spawnBoss(defId, isBlob) {
     var loc = D.LOCATIONS[run.area];
     var def = D.FISH_BY_ID[defId];
-    var shiny = !isBlob && Math.random() < shinyChance(run.area);
+    var shiny = Math.random() < shinyChance(run.area);
     run.fish.push({
       uid: defId,
       def: def,
@@ -556,7 +579,10 @@
       f.phase += dt * 2;
       var dx = diver.x - f.x, dy = diver.y - f.y;
       var dist = Math.hypot(dx, dy) || 0.001;
-      var canGrab = !full || (f.shiny && state.items.shinyPocket);
+      // only pull fish that actually fit (or shinies with a Shiny Pocket) —
+      // this also stops the "hold full" toast from spamming on big fish
+      var fits = run.bagUsed + f.size <= inventoryCap();
+      var canGrab = fits || (f.shiny && state.items.shinyPocket);
       var grabbing = false;
       if (canGrab && dist < mRange) {
         // pull toward the diver (stronger when closer; big fish resist)
@@ -584,6 +610,26 @@
       }
     }
     var cr = mRange;
+
+    // --- sea-floor creatures (caught with a Net; magnet ignores them) ---
+    run.creatureTimer -= dt;
+    if (run.creatureTimer <= 0) { run.creatureTimer = 1.5 + Math.random() * 2.5; spawnCreature(false); }
+    var hasNet = !!state.items.net;
+    var netR = cr * 0.7;
+    for (var ci = run.creatures.length - 1; ci >= 0; ci--) {
+      var c = run.creatures[ci];
+      c.phase += dt * 5;
+      c.x += c.vx * dt;
+      c.y = run.floorY - 8 + Math.sin(c.phase) * 1.2;
+      if (c.x < -60 || c.x > loc.worldWidth + 60) { run.creatures.splice(ci, 1); continue; }
+      var cdx = diver.x - c.x, cdy = diver.y - c.y, cdist = Math.hypot(cdx, cdy);
+      if (hasNet) {
+        if (cdist < netR && catchCreature(c)) { run.creatures.splice(ci, 1); }
+      } else if (cdist < netR && run.time - (run.netHint || -99) > 12) {
+        run.netHint = run.time;
+        toast("You need a Crab Net (in the shop) to scoop up sea creatures!", "bad", 2400);
+      }
+    }
 
     // --- treasures near wrecks ---
     run.treasureTimer -= dt;
@@ -642,7 +688,7 @@
     // Shiny Pocket lets shinies through even when the hold is full
     var pocketed = f.shiny && state.items.shinyPocket;
     if (run.bagUsed + def.size > inventoryCap() && !pocketed) {
-      toast("Cargo hold full! Surface to sell.", "bad", 1400);
+      if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1400); }
       f.fleeing = 1.0; // push it away so the magnet doesn't keep grabbing
       return;
     }
@@ -663,7 +709,7 @@
 
     run.floaters.push({ x: f.x, y: f.y, text: (f.shiny ? "✦ " : "") + def.name, color: f.shiny ? "#ffe66d" : "#dff", life: 1.4 });
 
-    if (def.isBlob) { catchBlobfish(); return; }
+    if (def.isBlob) { catchBlobfish(f.shiny); return; }
     if (def.isKraken) { catchKraken(f.shiny); return; }
     if (firstEver) toast("NEW! You caught a " + def.name + (def.secret ? " (Secret!)" : "") + "!", def.secret ? "epic" : "good", 2600);
     else if (firstShiny) toast("✦ SHINY " + def.name + "! ✦", "shiny", 2600);
@@ -671,11 +717,35 @@
     saveGame();
   }
 
-  function catchBlobfish() {
+  function catchCreature(c) {
+    var def = c.def;
+    var pocketed = c.shiny && state.items.shinyPocket;
+    if (run.bagUsed + def.size > inventoryCap() && !pocketed) {
+      if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1400); }
+      return false;
+    }
+    var val = def.value * (c.shiny ? D.SHINY_VALUE_MULT : 1);
+    run.bag.push({ fishId: def.id, shiny: c.shiny, size: def.size, value: val, name: def.name, color: def.color });
+    run.bagUsed += def.size;
+    var firstEver = !state.discovered[def.id];
+    var firstShiny = c.shiny && !state.shinyFound[def.id];
+    state.discovered[def.id] = true;
+    if (c.shiny) state.shinyFound[def.id] = true;
+    state.counts[def.id] = (state.counts[def.id] || 0) + 1;
+    state.stats.totalCaught++;
+    run.floaters.push({ x: c.x, y: c.y, text: (c.shiny ? "✦ " : "") + def.name, color: c.shiny ? "#ffe66d" : "#dff", life: 1.4 });
+    if (firstEver) toast("NEW! Netted a " + def.name + "!", "good", 2400);
+    else if (firstShiny) toast("✦ SHINY " + def.name + "! ✦", "shiny", 2400);
+    saveGame();
+    return true;
+  }
+
+  function catchBlobfish(shiny) {
     state.blobfishCaught = true;
+    if (shiny) state.blobfishShiny = true;
     run.bossPresent = false;
     saveGame();
-    setTimeout(function () { showBlobEnding(); }, 700);
+    setTimeout(function () { showBlobEnding(shiny); }, 700);
   }
 
   function catchKraken(shiny) {
@@ -733,6 +803,7 @@
 
     // --- scene objects ---
     for (var i = 0; i < run.wrecks.length; i++) drawWreck(run.wrecks[i]);
+    drawCreatures();
     for (var t = 0; t < run.treasures.length; t++) drawTreasure(run.treasures[t]);
     for (var f = 0; f < run.fish.length; f++) drawFishEntity(run.fish[f]);
     drawBubbles();
@@ -1092,17 +1163,18 @@
   var SKIN_TONES = ["#f4c9a3", "#e8b088", "#d39a6e", "#b87a4f", "#8d5524", "#5a3318"];
   var HAIR_COLORS = ["#2b1d12", "#5a3a1a", "#a85e2e", "#caa33a", "#d8d8da", "#3a3f55", "#8a3b6b", "#2f6f5e"];
   var SUITS = [
-    { id: "teal",   color: "#1f7d9c", cost: 0 },
-    { id: "navy",   color: "#26407a", cost: 0 },
-    { id: "red",    color: "#b03a3a", cost: 0 },
-    { id: "green",  color: "#2f7d4a", cost: 0 },
-    { id: "purple", color: "#6a3aa0", cost: 0 },
-    { id: "pink",   color: "#c0508f", cost: 250 },
-    { id: "orange", color: "#d8742e", cost: 250 },
-    { id: "gold",   color: "#c79a2e", cost: 1500 },
-    { id: "neon",   color: "#1fd6a0", cost: 1500 },
-    { id: "void",   color: "#2a2350", cost: 3000 },
+    { id: "teal",   color: "#1f7d9c", accent: "#ffd24a", cost: 0 },
+    { id: "navy",   color: "#26407a", accent: "#e08a3a", cost: 0 },
+    { id: "red",    color: "#b03a3a", accent: "#f3e6c8", cost: 0 },
+    { id: "green",  color: "#2f7d4a", accent: "#ffd24a", cost: 0 },
+    { id: "purple", color: "#6a3aa0", accent: "#7affd0", cost: 0 },
+    { id: "pink",   color: "#c0508f", accent: "#ffe14d", cost: 250 },
+    { id: "orange", color: "#d8742e", accent: "#2a5a7a", cost: 250 },
+    { id: "gold",   color: "#c79a2e", accent: "#3a2a10", cost: 1500 },
+    { id: "neon",   color: "#1fd6a0", accent: "#ff5bd0", cost: 1500 },
+    { id: "void",   color: "#2a2350", accent: "#9f7bff", cost: 3000 },
   ];
+  function suitAccentFor(color) { return mix(color, "#ffffff", 0.42); }
   var LOOKS = [
     { id: "short", name: "Short" },
     { id: "long",  name: "Long" },
@@ -1160,48 +1232,52 @@
     R(-8, -1 + legTop, 4, 2, suit);
     R(-8 - finLen, 4 + legBot, finLen, 2, fin); R(-8 - finLen, 5 + legBot, finLen, 1, suitD);
     R(-8, 3 + legBot, 4, 2, suit);
-    // torso (wetsuit) with shading + accent stripe
+    var accent = opts.suitAccent || mix(suit, "#ffffff", 0.4);
+    // torso (wetsuit) — chunky & cute, two-tone
     R(-4, -2, 9, 5, suit);
     R(-4, -2, 9, 1, mix(suit, "#fff", 0.3));    // top highlight
-    R(-4, 0, 9, 1, mix(suit, "#fff", 0.16));    // accent stripe
+    R(-4, 0, 9, 1, accent);                     // two-tone accent stripe
     R(-4, 2, 9, 1, "#2c2620");                  // weight belt
     R(-4, -2, 1, 5, mix(suit, "#fff", 0.14));   // back rim light
     // forward arm + glove
     R(3, 2, 5, 2, suit); R(3, 3, 5, 1, suitD);
-    R(6, 2, 1, 2, suitD);                       // cuff
+    R(6, 2, 1, 2, accent);                      // cuff (accent)
     R(7, 2, 2, 2, skin);                        // hand
-    // head
-    R(5, -4, 4, 5, skin);
-    R(5, -4, 4, 1, mix(skin, "#fff", 0.35));    // forehead highlight
-    R(5, 0, 4, 1, mix(skin, "#000", 0.28));     // jaw shadow
+    // BIG cute head
+    R(5, -6, 5, 7, skin);
+    R(5, -6, 5, 1, mix(skin, "#fff", 0.35));    // forehead highlight
+    R(5, 1, 5, 1, mix(skin, "#000", 0.22));     // chin shadow
+    R(10, -2, 1, 1, mix(skin, "#ff9a9a", 0.55)); // rosy cheek :)
     // hair by look
-    if (look === "short") { R(4, -5, 5, 2, hair); R(4, -4, 1, 3, hair); }
-    else if (look === "long") { R(4, -5, 5, 2, hair); R(3, -4, 2, 6, hair); }
-    else if (look === "bun") { R(4, -5, 5, 2, hair); R(3, -6, 2, 2, hair); }
-    else { R(5, -5, 4, 1, hair); } // buzz
-    // mask strap across the head
-    R(4, -3, 4, 1, "#16323f");
-    // dive mask (framed) + eye
-    R(7, -4, 4, 1, "#16323f");                  // mask frame top
-    R(7, -3, 3, 3, maskGlass);                  // glass
-    R(8, -2, 1, 1, "#0b2a3a");                  // eye
-    R(9, -3, 1, 1, mix(maskGlass, "#fff", 0.7)); // glint
-    R(7, 0, 3, 1, "#16323f");                   // mask frame bottom
-    // regulator + hose curving up to the tank
-    R(9, 1, 1, 1, "#2a2f36");                   // mouthpiece
-    R(7, 1, 1, 1, "#222831"); R(5, 1, 1, 1, "#222831");
+    if (look === "short") { R(4, -7, 6, 2, hair); R(4, -6, 1, 4, hair); }
+    else if (look === "long") { R(4, -7, 6, 2, hair); R(3, -6, 2, 8, hair); }
+    else if (look === "bun") { R(4, -7, 6, 2, hair); R(3, -8, 2, 2, hair); }
+    else { R(5, -7, 5, 1, hair); } // buzz
+    // mask strap
+    R(4, -3, 5, 1, "#16323f");
+    // big round dive mask + cute eye
+    R(7, -4, 5, 1, "#16323f");
+    R(7, -3, 5, 4, maskGlass);
+    R(8, -2, 2, 2, "#0b2a3a");                  // big eye
+    R(9, -2, 1, 1, "#ffffff");                  // sparkle
+    R(11, -3, 1, 1, mix(maskGlass, "#fff", 0.7));
+    R(7, 1, 5, 1, "#16323f");
+    // regulator + hose
+    R(10, 2, 1, 1, "#2a2f36");
+    R(7, 2, 1, 1, "#222831"); R(5, 1, 1, 1, "#222831");
     R(2, 0, 1, 1, "#222831"); R(0, -1, 1, 1, "#222831"); R(-2, -2, 1, 1, "#222831");
 
     // --- gear that visibly reflects your upgrades & items ---
     var up = (state && state.upgrades) || {};
     var items = (state && state.items) || {};
-    if (up.net > 0) { R(5, 3, 3, 1, "#9aa6b0"); R(8, 2, 1, 1, "#5cd0ff"); }        // magnet gadget on wrist
-    if (up.suit >= D.UPGRADES.suit.levels.length - 1) { R(-4, -2, 9, 1, "#ffd24a"); } // maxed suit gold trim
-    if (items.shinyPocket) { R(-1, 2, 2, 2, "#ffd24a"); R(0, 1, 1, 1, "#fff7c0"); }   // shiny pouch on belt
-    if (up.light > 0) { R(6, -6, 2, 2, "#2a2f36"); R(7, -6, 1, 1, "#fff3b0"); }       // headlamp
+    R(-8 - finLen, -2 + legTop, finLen, 1, accent);   // fin trim (two-tone)
+    if (up.net > 0) { R(5, 3, 3, 1, "#9aa6b0"); R(8, 2, 1, 1, "#5cd0ff"); }            // wrist magnet
+    if (up.suit >= D.UPGRADES.suit.levels.length - 1) { R(-4, 0, 9, 1, "#ffd24a"); }  // maxed suit gold trim
+    if (items.shinyPocket) { R(-1, 2, 2, 2, "#ffd24a"); R(0, 1, 1, 1, "#fff7c0"); }   // shiny pouch
+    if (up.light > 0) { R(6, -8, 2, 2, "#2a2f36"); R(7, -8, 1, 1, "#fff3b0"); }       // headlamp
     if (items.goggles) {                                                              // wide-view goggles
-      R(6, -4, 5, 1, "#0e2a36"); R(6, -3, 5, 3, mix(maskGlass, "#fff", 0.15));
-      R(6, 0, 5, 1, "#0e2a36"); R(8, -2, 1, 1, "#0b2a3a"); R(9, -3, 1, 1, "#ffffff");
+      R(6, -4, 6, 1, "#0e2a36"); R(6, -3, 6, 4, mix(maskGlass, "#fff", 0.15));
+      R(6, 1, 6, 1, "#0e2a36"); R(8, -2, 2, 2, "#0b2a3a"); R(9, -2, 1, 1, "#ffffff");
     }
   }
 
@@ -1215,6 +1291,36 @@
       || (d.area === "trench" && D.RARITY[d.rarity].order >= 2) || d.area === "sanctuary";
     if (biolum) return { color: d.color, alpha: 0.26 };
     return null;
+  }
+
+  // sea-floor creatures (crawling, caught with the net)
+  function drawCreatures() {
+    var noNet = !state.items.net;
+    for (var i = 0; i < run.creatures.length; i++) {
+      var c = run.creatures[i];
+      var x = c.x - cam.x, y = c.y - cam.y;
+      if (x < -120 || x > W + 120 || y < -120 || y > H + 120) continue;
+      var th = 18 + c.size * 5;
+      var arch = SPRITES.archetypeForShape(c.def.shape);
+      var biolum = c.shiny || c.def.area === "sanctuary";
+      if (biolum) drawGlow(x, y, th * 0.9, c.shiny ? "#fff0a0" : c.def.color, c.shiny ? 0.4 : 0.22);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.sin(c.phase) * 0.05);
+      if (noNet) ctx.globalAlpha = 0.85;
+      SPRITES.draw(ctx, arch, 0, 0, { color: c.def.color, shiny: c.shiny, flip: c.vx < 0, targetH: th });
+      ctx.restore();
+      if (c.shiny) {
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        if (Math.sin(run.time * 3 + c.phase) > 0.6) ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2);
+      }
+      var dist = Math.hypot(c.x - run.diver.x, c.y - run.diver.y);
+      if ((D.RARITY[c.def.rarity].order >= 2 || c.shiny) && dist < 220) {
+        ctx.fillStyle = c.shiny ? "#ffe66d" : D.RARITY[c.def.rarity].color;
+        ctx.font = "11px 'Segoe UI', sans-serif"; ctx.textAlign = "center";
+        ctx.fillText((c.shiny ? "✦" : "") + c.def.name, x, y - th * 0.6 - 6);
+      }
+    }
   }
 
   // how much each body type wiggles when swimming
@@ -1663,16 +1769,15 @@
   }
 
   // ----- Collection -----
+  var collShinyView = false;
   function showCollection() {
     var ov = overlay("shop");
     var byArea = {};
-    D.FISH.forEach(function (f) {
-      if (f.isKraken || f.isBlob) return;
-      (byArea[f.area] = byArea[f.area] || []).push(f);
-    });
+    D.FISH.forEach(function (f) { (byArea[f.area] = byArea[f.area] || []).push(f); });
     var REQ = {}; D.REQUIRED_FISH.forEach(function (id) { REQ[id] = true; });
     var totalFound = 0, totalAll = 0, shinyFound = 0;
     var html = '<div class="panel shop-panel"><div class="panel-head"><h2>📖 Collection</h2>'
+      + '<button id="coll-shiny-toggle" class="coll-toggle ' + (collShinyView ? 'on' : '') + '">' + (collShinyView ? '✦ Shiny view' : 'Normal view') + '</button>'
       + '<button class="close" data-close="shop">✕</button></div>';
     html += '<div class="collection-scroll">';
     var reqDone = 0; D.REQUIRED_FISH.forEach(function (id) { if (state.discovered[id]) reqDone++; });
@@ -1681,47 +1786,40 @@
 
     for (var areaId in D.LOCATIONS) {
       var fishes = byArea[areaId] || [];
+      if (!fishes.length) continue;
       html += '<h3>' + D.LOCATIONS[areaId].name + '</h3><div class="coll-grid">';
       fishes.forEach(function (f) {
-        totalAll++;
-        var found = !!state.discovered[f.id];
-        if (found) totalFound++;
-        var sh = !!state.shinyFound[f.id];
-        if (sh) shinyFound++;
-        var hidden = f.secret && !found && !state.hints[f.id];
+        var special = f.isKraken || f.isBlob;
+        var found, sh, hidden;
+        if (f.isKraken) { found = state.krakenCaught; sh = state.krakenShiny; hidden = !found; }
+        else if (f.isBlob) { found = state.blobfishCaught; sh = state.blobfishShiny; hidden = !found; }
+        else { found = !!state.discovered[f.id]; sh = !!state.shinyFound[f.id]; hidden = f.secret && !found && !state.hints[f.id]; }
+        if (!special) { totalAll++; if (found) totalFound++; if (sh) shinyFound++; }
+        var showShiny = collShinyView && sh && found;
         html += '<div class="coll-card ' + (found ? 'found' : 'missing') + ' r-' + f.rarity + (REQ[f.id] ? ' required' : '') + '">';
         if (REQ[f.id]) html += '<div class="req-badge" title="Required to summon the Kraken">🗝️</div>';
-        html += '<div class="coll-sprite" style="background-image:url(' + collSprite(f, found, sh, hidden) + ')"></div>';
-        html += '<div class="coll-name">' + (hidden ? "???" : f.name) + (sh ? ' <span class="shiny-tag">✦</span>' : '') + '</div>';
+        html += '<div class="coll-sprite" style="background-image:url(' + collSprite(f, found, showShiny, hidden) + ')"></div>';
+        var nm = hidden ? "???" : (f.isBlob ? "Blobfish 🫠" : f.name);
+        html += '<div class="coll-name">' + nm + (sh ? ' <span class="shiny-tag">✦</span>' : '') + '</div>';
         html += '<div class="coll-meta">' + D.RARITY[f.rarity].name
-          + (found ? ' · ' + (state.counts[f.id] || 0) + ' caught' : '')
-          + (f.secret ? ' · Secret' : '') + '</div>';
-        html += '<div class="coll-meta">Size ' + f.size + ' · $' + fmt(f.value) + '</div>';
+          + (found && !special ? ' · ' + (state.counts[f.id] || 0) + ' caught' : '')
+          + (f.creature ? ' · Creature' : '') + (f.secret ? ' · Secret' : '') + '</div>';
+        if (!special) html += '<div class="coll-meta">Size ' + f.size + ' · $' + fmt(f.value) + '</div>';
+        else html += '<div class="coll-meta">' + (found ? 'Caught!' : 'Needs 100%') + '</div>';
         html += '</div>';
       });
       html += '</div>';
     }
-    // kraken card
-    var k = D.FISH_BY_ID.kraken, blob = D.FISH_BY_ID.blobfish;
-    html += '<h3>The Legend</h3><div class="coll-grid">';
-    if (state.blobfishCaught) {
-      html += '<div class="coll-card found r-mythic">'
-        + '<div class="coll-sprite" style="background-image:url(' + collSprite(blob, true, false, false) + ')"></div>'
-        + '<div class="coll-name">Blobfish 🫠</div>'
-        + '<div class="coll-meta">The "Kraken" (lol)</div></div>';
-    }
-    html += '<div class="coll-card ' + (state.krakenCaught ? 'found' : 'missing') + ' r-mythic">'
-      + '<div class="coll-sprite" style="background-image:url(' + collSprite(k, state.krakenCaught, state.krakenShiny, false) + ')"></div>'
-      + '<div class="coll-name">' + (state.krakenCaught ? "The Kraken" : "???") + (state.krakenShiny ? ' <span class="shiny-tag">✦</span>' : '') + '</div>'
-      + '<div class="coll-meta">' + (state.krakenCaught ? "Vanquished" : "Catch 100% of everything") + '</div></div>';
-    html += '</div>';
 
     html += '</div>';
-    html += '<div class="coll-footer">Discovered <b>' + totalFound + '/' + totalAll + '</b> fish · Shinies <b>' + shinyFound + '</b> ✦</div>';
+    html += '<div class="coll-footer">Discovered <b>' + totalFound + '/' + totalAll + '</b> · Shinies <b>' + shinyFound + '</b> ✦ '
+      + '· <span class="tiny">' + (collShinyView ? 'showing shiny colours' : 'tap "Normal view" to flip shiny ↔ normal') + '</span></div>';
     html += '</div>';
     ov.innerHTML = html;
     ov.classList.add("open");
     ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
+    var tg = ov.querySelector("#coll-shiny-toggle");
+    if (tg) tg.onclick = function () { collShinyView = !collShinyView; showCollection(); };
   }
 
   // ----- Diver customization -----
@@ -1746,11 +1844,12 @@
       var by = c.height - ((t * 22 + i * 33) % c.height);
       p.fillRect(bx | 0, by | 0, 2, 2);
     }
-    // preview the focused suit colour (if any) without committing
+    // preview the focused suit (colour + accent) without committing
     var suitCol = (diverPreviewSuit && diverPreviewSuit.owned !== false && diverPreviewSuit.color) ? diverPreviewSuit.color
       : (diverPreviewSuit && diverPreviewSuit.previewColor) ? diverPreviewSuit.previewColor
       : state.diver.suit;
-    var opts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look, suit: suitCol };
+    var suitAcc = diverPreviewSuit ? diverPreviewSuit.accent : state.diver.suitAccent;
+    var opts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look, suit: suitCol, suitAccent: suitAcc };
     drawDiverPixel(p, c.width / 2, c.height / 2, 6, 1, opts, t * 7);
   }
 
@@ -1759,17 +1858,17 @@
     var list = [];
     SUITS.forEach(function (s) {
       var owned = s.cost === 0 || state.diverUnlocks[s.id];
-      list.push({ key: "s_" + s.id, name: cap(s.id), color: s.color, owned: owned,
+      list.push({ key: "s_" + s.id, name: cap(s.id), color: s.color, accent: s.accent, owned: owned,
         buy: (!owned && s.cost > 0) ? { id: s.id, cost: s.cost } : null, group: "Wetsuits" });
     });
     LOCATION_SUITS.forEach(function (s) {
       var unlocked = s.always || state.areas[s.area];
-      list.push({ key: "l_" + s.area, name: s.name, color: s.color, owned: unlocked,
+      list.push({ key: "l_" + s.area, name: s.name, color: s.color, accent: suitAccentFor(s.color), owned: unlocked,
         previewColor: s.color, lockReason: unlocked ? null : ("Reach " + (D.LOCATIONS[s.area] ? D.LOCATIONS[s.area].name : s.name)), group: "Location suits" });
     });
     SECRET_SUITS.forEach(function (s) {
       var unlocked = !!state.discovered[s.id];
-      list.push({ key: "x_" + s.id, name: unlocked ? s.name : "???", color: unlocked ? s.color : "#16242f", owned: unlocked,
+      list.push({ key: "x_" + s.id, name: unlocked ? s.name : "???", color: unlocked ? s.color : "#16242f", accent: suitAccentFor(s.color), owned: unlocked,
         lockReason: unlocked ? null : "Catch its secret fish", group: "Secret suits" });
     });
     return list;
@@ -1792,7 +1891,7 @@
     if (pv.lockReason) html += '<span class="pv-locked">🔒 ' + pv.lockReason + '</span>';
     else if (pv.buy) html += '<button class="primary" data-suitbuy="' + pv.buy.id + '" ' + (state.money < pv.buy.cost ? 'disabled' : '') + '>Buy &amp; Wear — $' + fmt(pv.buy.cost) + '</button>';
     else if (state.diver.suit === pv.color) html += '<button disabled>Wearing ✓</button>';
-    else html += '<button class="primary" data-suitequip="' + pv.color + '">Equip</button>';
+    else html += '<button class="primary" data-suitequip="' + pv.color + '" data-suitaccent="' + (pv.accent || "") + '">Equip</button>';
     html += '</div>';
     html += '<p class="tiny" style="text-align:center">Tap any item to preview it on your diver. Purely cosmetic!</p>';
 
@@ -1857,15 +1956,16 @@
     });
     ov.querySelectorAll("[data-suitequip]").forEach(function (b) {
       b.onclick = function () {
-        state.diver.suit = b.getAttribute("data-suitequip"); saveGame();
-        toast("Wetsuit equipped!", "good", 1200); showDiverShop();
+        state.diver.suit = b.getAttribute("data-suitequip");
+        state.diver.suitAccent = b.getAttribute("data-suitaccent") || suitAccentFor(state.diver.suit);
+        saveGame(); toast("Wetsuit equipped!", "good", 1200); showDiverShop();
       };
     });
     ov.querySelectorAll("[data-suitbuy]").forEach(function (b) {
       b.onclick = function () {
         var s = SUITS.filter(function (x) { return x.id === b.getAttribute("data-suitbuy"); })[0];
         if (!s || state.money < s.cost || state.diverUnlocks[s.id]) return;
-        state.money -= s.cost; state.diverUnlocks[s.id] = true; state.diver.suit = s.color;
+        state.money -= s.cost; state.diverUnlocks[s.id] = true; state.diver.suit = s.color; state.diver.suitAccent = s.accent;
         saveGame(); toast("Unlocked & equipped the " + cap(s.id) + " wetsuit!", "good", 1800);
         diverPreviewSuit = null; showDiverShop();
       };
@@ -1967,11 +2067,11 @@
   }
 
   // the blobfish fake-out "ending"
-  function showBlobEnding() {
+  function showBlobEnding(shiny) {
     scene = "ending";
     sellHud(false);
     var ov = overlay("modal");
-    var img = SPRITES.dataURL("blob", { color: "#e0909e", scale: 6 });
+    var img = SPRITES.dataURL("blob", { color: "#e0909e", shiny: !!shiny, scale: 6 });
     var html = '<div class="panel ending-panel">';
     html += '<h1>🦑 ... the legend rises ... 🦑</h1>';
     html += '<div class="blob-reveal" style="background-image:url(' + img + ')"></div>';
