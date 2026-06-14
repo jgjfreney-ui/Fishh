@@ -164,7 +164,21 @@
     { id: "sturgeon",   name: "Sturgeon",      area: "river", rarity: "epic",     size: 5, value: 900, minDepth: 100, color: "#7a8a6a", shape: "fish" },
 
     // ---- Secret fish (need a purchased hint + a condition; spawn rarely) ----
-    { id: "goldenkoi",  name: "Golden Koi",    area: "coral",     rarity: "mythic", size: 2, value: 2600, minDepth: 0,   color: "#ffd54a", shape: "fish",  secret: true,
+    // Special catch methods: circle = swim in tight circles · lowOxygen = let
+    // your air drop low · fast = move at full speed · still = stay perfectly still.
+    { id: "dolphin",    name: "Spinner Dolphin", area: "coral", rarity: "mythic", size: 4, value: 5200, minDepth: 0, color: "#8fb0c4", accent: "#ffffff", shape: "dolphin", secret: true,
+      hint: "A playful spinner — it only leaps out to copy you. Swim in tight CIRCLES to call it!",
+      condition: { circle: true } },
+    { id: "seaangel",   name: "Sea Angel",     area: "arctic", rarity: "mythic", size: 1, value: 6500, minDepth: 60, color: "#cfe8ff", accent: "#ffd24a", shape: "clione", secret: true,
+      hint: "A clione that drifts to divers near their last breath — let your OXYGEN run very low (below 20%).",
+      condition: { lowOxygen: true } },
+    { id: "sailfish",   name: "Sailfish",      area: "river", rarity: "mythic", size: 4, value: 5800, minDepth: 30, color: "#3a6fb0", accent: "#7affd0", shape: "sword", secret: true,
+      hint: "The fastest fish in the sea — it only races into view when YOU are moving at full speed (max fins help!).",
+      condition: { fast: true } },
+    { id: "stonefish",  name: "Stonefish",     area: "kelp", rarity: "mythic", size: 2, value: 4800, minDepth: 80, color: "#7a6a4a", accent: "#e0533a", shape: "round", secret: true,
+      hint: "A master of disguise — hold perfectly STILL on the seabed and it may reveal itself.",
+      condition: { still: true } },
+    { id: "goldenkoi",  name: "Golden Koi",    area: "coral",     rarity: "mythic", size: 2, value: 2600, minDepth: 0,   color: "#ffd54a", accent: "#fff3b0", shape: "fish",  secret: true,
       hint: "Shimmers only in the brightest shallows of Coral Coast (above 60m). Rare and skittish.",
       condition: { maxDepth: 60 } },
     { id: "leafydragon",name: "Leafy Seadragon",area: "kelp",      rarity: "mythic", size: 2, value: 3000, minDepth: 100,color: "#7fc36b", shape: "seahorse", secret: true,

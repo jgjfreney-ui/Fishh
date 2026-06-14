@@ -339,6 +339,11 @@
     var c = f.condition || {};
     if (c.minDepth != null && depthM < c.minDepth) return false;
     if (c.maxDepth != null && depthM > c.maxDepth) return false;
+    // special catch methods (read live dive state)
+    if (c.circle && Math.abs(run.spin || 0) < 2.5) return false;
+    if (c.lowOxygen && run.oxygen / run.maxO > 0.2) return false;
+    if (c.fast && Math.hypot(run.diver.vx, run.diver.vy) < speed() * 0.8) return false;
+    if (c.still && (run.stillTimer || 0) < 2) return false;
     return true;
   }
 
@@ -561,6 +566,22 @@
     } else {
       diver.vx = diver.vy = 0;
     }
+
+    // track special secret-catch movement: circling & stillness
+    var dspd = Math.hypot(diver.vx, diver.vy);
+    if (dspd > 8) {
+      var ang = Math.atan2(diver.vy, diver.vx);
+      if (run.lastAng != null) {
+        var dA = ang - run.lastAng;
+        while (dA > Math.PI) dA -= 2 * Math.PI;
+        while (dA < -Math.PI) dA += 2 * Math.PI;
+        run.spin = (run.spin || 0) + dA;
+      }
+      run.lastAng = ang; run.stillTimer = 0;
+    } else {
+      run.lastAng = null; run.stillTimer = (run.stillTimer || 0) + dt;
+    }
+    run.spin = (run.spin || 0) * 0.99; // slow decay
 
     var depthM = diver.y / PXPM;
     run.diveDepthReached = Math.max(run.diveDepthReached, depthM);
@@ -1357,7 +1378,7 @@
   ];
   // ... and one per secret fish (unlock by catching that secret)
   var SECRET_SUITS = D.FISH.filter(function (f) { return f.secret; })
-    .map(function (f) { return { id: f.id, name: f.name, color: f.color }; });
+    .map(function (f) { return { id: f.id, name: f.name, color: f.color, accent: f.accent }; });
 
   // Draw a clearly-human side-view diver with kicking legs/fins.
   // ctx2: target context · (cx,cy): screen centre · SC: pixel scale ·
@@ -2164,7 +2185,7 @@
     });
     SECRET_SUITS.forEach(function (s) {
       var unlocked = !!state.discovered[s.id];
-      list.push({ key: "x_" + s.id, name: unlocked ? s.name : "???", color: unlocked ? s.color : "#16242f", accent: suitAccentFor(s.color), owned: unlocked,
+      list.push({ key: "x_" + s.id, name: unlocked ? s.name : "???", color: unlocked ? s.color : "#16242f", accent: s.accent || suitAccentFor(s.color), owned: unlocked,
         lockReason: unlocked ? null : "Catch its secret fish", group: "Secret suits" });
     });
     return list;

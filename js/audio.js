@@ -11,7 +11,7 @@
   var ctx = null, master = null, dryBus = null, reverbSend = null;
   var muted = false;
   var voices = [];
-  var schedTimer = null, gullTimer = null;
+  var schedTimer = null, gullTimer = null, ambTimer = null;
   var mode = null, nextTime = 0, step = 0, melIdx = 4, cfgCur = null;
 
   function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
@@ -138,6 +138,53 @@
   }
   function scheduleGulls() { gullTimer = setTimeout(function () { gull(); scheduleGulls(); }, 6000 + Math.random() * 9000); }
 
+  // ---- per-location ambient SFX ----------------------------------------
+  function ambBubble() {
+    if (!ctx) return; var t = ctx.currentTime, n = 2 + ((Math.random() * 3) | 0);
+    for (var i = 0; i < n; i++) {
+      var o = ctx.createOscillator(), g = ctx.createGain(), f0 = 380 + Math.random() * 520;
+      o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 1.8, t + 0.12);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.04, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.2); t += 0.08 + Math.random() * 0.1;
+    }
+  }
+  function ambWhale() {
+    if (!ctx) return; var t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    var f0 = 64 + Math.random() * 40;
+    o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * 1.7, t + 0.9); o.frequency.linearRampToValueAtTime(f0 * 1.2, t + 2.0);
+    lp.type = "lowpass"; lp.frequency.value = 380;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 0.6); g.gain.linearRampToValueAtTime(0.0001, t + 2.4);
+    o.connect(lp); lp.connect(g); g.connect(master); o.start(t); o.stop(t + 2.5);
+  }
+  function ambIce() {
+    if (!ctx) return; var t = ctx.currentTime, src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = noiseBuffer(); bp.type = "bandpass"; bp.frequency.setValueAtTime(320, t); bp.frequency.linearRampToValueAtTime(160, t + 0.7); bp.Q.value = 9;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    src.connect(bp); bp.connect(g); g.connect(master); src.start(t); src.stop(t + 1.0);
+  }
+  function ambShimmer() {
+    if (!ctx) return; var t = ctx.currentTime;
+    for (var i = 0; i < 3; i++) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle"; o.frequency.value = 900 + Math.random() * 1300;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.022, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.6); t += 0.12;
+    }
+  }
+  var AMB = {
+    coral:  { fn: ambBubble, min: 1500, max: 4000 },
+    river:  { fn: ambBubble, min: 2000, max: 5000 },
+    kelp:   { fn: ambBubble, min: 2500, max: 6000 },
+    arctic: { fn: ambIce,    min: 4500, max: 11000 },
+    ancient:{ fn: ambWhale,  min: 7000, max: 15000 },
+    trench: { fn: ambWhale,  min: 5500, max: 13000 },
+    sanctuary: { fn: ambShimmer, min: 3000, max: 8000 },
+  };
+  function scheduleAmb() {
+    var a = AMB[mode]; if (!a) return;
+    ambTimer = setTimeout(function () { if (!muted) a.fn(); scheduleAmb(); }, a.min + Math.random() * (a.max - a.min));
+  }
+
   // ---- sequencer (steady, bouncy) --------------------------------------
   function scheduler() {
     if (!ctx || !cfgCur) return;
@@ -171,6 +218,7 @@
   function clearSchedule() {
     if (schedTimer) { clearInterval(schedTimer); schedTimer = null; }
     if (gullTimer) { clearTimeout(gullTimer); gullTimer = null; }
+    if (ambTimer) { clearTimeout(ambTimer); ambTimer = null; }
     var now = ctx ? ctx.currentTime : 0;
     voices.forEach(function (v) {
       try {
@@ -190,6 +238,7 @@
     clearSchedule();
     step = 0; melIdx = 4; nextTime = ctx.currentTime + 0.12;
     if (cfgCur.waves) { startWaves(); scheduleGulls(); }
+    scheduleAmb();
     schedTimer = setInterval(scheduler, 25);
   }
 

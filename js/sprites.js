@@ -286,6 +286,26 @@
       ".bBBLLLLBBb.",
       "..AAA.AAA...",
     ],
+    dolphin: [
+      "..........bBBb...",
+      "f.....bbBBBBBBBb.",
+      "ffbBBBBBBBBBBBBEP",
+      "ffBBLLLLLLLLBBBBM",
+      "ffbBBBBBBBBBBBBb.",
+      "f...bbBBBBBb.....",
+      ".......FF........",
+    ],
+    clione: [
+      "..G.....G..",
+      ".GGG...GGG.",
+      "..GG.b.GG..",
+      "...bBBBb...",
+      "..bBLLBBb..",
+      "..bBLLBBb..",
+      "...bBBBb...",
+      "....bBb....",
+      ".....b.....",
+    ],
     flatfish: [
       "....E.E.......",
       "..bBBBBBBBBBb.",
@@ -512,6 +532,7 @@
     crab: "crab", lobster: "lobster", starfish: "starfish", urchin: "urchin", bug: "bug",
     narwhal: "narwhal", coelacanth: "coelacanth", mosasaur: "mosasaur", armored: "armored",
     trilobite: "trilobite", ammonite: "ammonite", tang: "tang", flatfish: "flatfish",
+    dolphin: "dolphin", clione: "clione",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
