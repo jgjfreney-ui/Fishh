@@ -174,6 +174,12 @@
     { id: "celestserp", name: "Celestial Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#c9b3ff", shape: "eel", secret: true,
       hint: "Coils through the deepest starlight (below 400m), woven from the night sky itself.",
       condition: { minDepth: 400 } },
+    { id: "rainbowtrout", name: "Rainbow Trout", area: "river", rarity: "mythic", size: 2, value: 3400, minDepth: 0, color: "#6fd0c0", shape: "fish", secret: true,
+      hint: "A dazzling trout that glints with every colour, darting through bright river shallows (above 40m).",
+      condition: { maxDepth: 40 } },
+    { id: "rivergiant", name: "River Leviathan", area: "river", rarity: "mythic", size: 8, value: 11000, minDepth: 90, color: "#3a5a4a", shape: "eel", secret: true,
+      hint: "An enormous serpent said to lurk in the deepest river pools (below 90m).",
+      condition: { minDepth: 90 } },
 
     // ---- The Kraken (final boss fish) ----
     { id: "kraken",     name: "The Kraken",   area: "trench", rarity: "mythic", size: 10, value: 25000, minDepth: 600, color: "#7a1f3d", shape: "kraken",

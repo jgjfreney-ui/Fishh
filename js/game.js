@@ -1444,7 +1444,7 @@
     // HINTS
     html += '<div class="tab-body hidden" data-body="hints">';
     html += '<p class="tiny">Every area hides a <b>secret fish</b>. Buy its hint here, then meet the condition while diving.</p>';
-    D.FISH.filter(function (f) { return f.secret; }).forEach(function (f) {
+    D.FISH.filter(function (f) { return f.secret && D.LOCATIONS[f.area]; }).forEach(function (f) {
       var owned = state.hints[f.id];
       var found = state.discovered[f.id];
       var cost = 1000;
