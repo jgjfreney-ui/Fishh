@@ -344,6 +344,18 @@
         { cost: 2200, value: 340 },
       ],
     },
+    scoop: {
+      name: "Fishing Net",
+      desc: "Scoop sea-floor creatures (crabs, starfish, lobsters...). A bigger net each level — Lv 0 means no net.",
+      unit: "px",
+      levels: [
+        { cost: 0,     value: 0 },
+        { cost: 2500,  value: 55 },
+        { cost: 5500,  value: 80 },
+        { cost: 11000, value: 110 },
+        { cost: 22000, value: 145 },
+      ],
+    },
   };
 
   // --- Charms (stackable consumable-style permanent buffs) --------------
@@ -369,11 +381,6 @@
 
   // One-time purchasable items
   const ITEMS = {
-    net: {
-      name: "Crab Net",
-      desc: "Scoop up sea-floor creatures — crabs, starfish, lobsters and more — by getting close to them on the seabed.",
-      cost: 2500,
-    },
     goggles: {
       name: "Wide-View Goggles",
       desc: "Crystal-clear goggles — see much further underwater and spot distant fish from a long way off.",

@@ -21,7 +21,7 @@
       created: Date.now(),
       username: "Diver",
       money: 0,
-      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0 },
+      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, trench: false, sanctuary: false },
       hints: {},          // fishId -> true (purchased hint)
@@ -81,6 +81,7 @@
   function inventoryCap() { return up("inventory"); }
   function oxygenMul() { return up("suit"); }
   function lightRadius() { return up("light"); }
+  function netSize() { return up("scoop"); }
 
   function rarityCharmTilt() { return state.charms.rarity * D.CHARMS.rarity.perStack; }
   function shinyChance(area) {
@@ -111,6 +112,7 @@
       bagUsed: carryUsed,
       fish: [],
       creatures: [],
+      netFx: [],
       treasures: [],
       wrecks: [],
       bubbles: [],
@@ -419,10 +421,11 @@
     for (var j = 0; j < D.FISH.length; j++) { var f = D.FISH[j]; if (f.secret && !state.discovered[f.id]) return false; }
     return true;
   }
-  // What (if anything) should rise in the Trench right now?
+  // What (if anything) should rise in the Trench right now? Blobfish first —
+  // so you still meet it even if you hit 100% before triggering the fake-out.
   function bossToSummon() {
-    if (!state.krakenCaught && trueComplete()) return "kraken";
     if (!state.blobfishCaught && requiredMet()) return "blobfish";
+    if (!state.krakenCaught && trueComplete()) return "kraken";
     return null;
   }
 
@@ -614,8 +617,8 @@
     // --- sea-floor creatures (caught with a Net; magnet ignores them) ---
     run.creatureTimer -= dt;
     if (run.creatureTimer <= 0) { run.creatureTimer = 1.5 + Math.random() * 2.5; spawnCreature(false); }
-    var hasNet = !!state.items.net;
-    var netR = cr * 0.7;
+    var netR = netSize();              // Fishing Net upgrade size (0 = none)
+    var hasNet = netR > 0;
     for (var ci = run.creatures.length - 1; ci >= 0; ci--) {
       var c = run.creatures[ci];
       c.phase += dt * 5;
@@ -624,12 +627,14 @@
       if (c.x < -60 || c.x > loc.worldWidth + 60) { run.creatures.splice(ci, 1); continue; }
       var cdx = diver.x - c.x, cdy = diver.y - c.y, cdist = Math.hypot(cdx, cdy);
       if (hasNet) {
-        if (cdist < netR && catchCreature(c)) { run.creatures.splice(ci, 1); }
-      } else if (cdist < netR && run.time - (run.netHint || -99) > 12) {
+        if (cdist < netR && catchCreature(c)) { startNetFx(c, netR); run.creatures.splice(ci, 1); }
+      } else if (cdist < 60 && run.time - (run.netHint || -99) > 12) {
         run.netHint = run.time;
-        toast("You need a Crab Net (in the shop) to scoop up sea creatures!", "bad", 2400);
+        toast("Buy a Fishing Net (Shop → Gear) to scoop up sea creatures!", "bad", 2400);
       }
     }
+    // advance net-swipe effects
+    for (var ni = run.netFx.length - 1; ni >= 0; ni--) { run.netFx[ni].life -= dt; if (run.netFx[ni].life <= 0) run.netFx.splice(ni, 1); }
 
     // --- treasures near wrecks ---
     run.treasureTimer -= dt;
@@ -808,6 +813,7 @@
     for (var f = 0; f < run.fish.length; f++) drawFishEntity(run.fish[f]);
     drawBubbles();
     drawDiver();
+    drawNetFx();
 
     // --- volumetric lighting / depth darkness ---
     drawLighting(loc, darkness);
@@ -1272,6 +1278,7 @@
     var items = (state && state.items) || {};
     R(-8 - finLen, -2 + legTop, finLen, 1, accent);   // fin trim (two-tone)
     if (up.net > 0) { R(5, 3, 3, 1, "#9aa6b0"); R(8, 2, 1, 1, "#5cd0ff"); }            // wrist magnet
+    if (up.scoop > 0) { R(-6, -6, 1, 5, "#caa15a"); R(-8, -8, 5, 3, mix(suit, "#fff", 0.5)); R(-8, -8, 5, 1, "#caa15a"); } // net on the back
     if (up.suit >= D.UPGRADES.suit.levels.length - 1) { R(-4, 0, 9, 1, "#ffd24a"); }  // maxed suit gold trim
     if (items.shinyPocket) { R(-1, 2, 2, 2, "#ffd24a"); R(0, 1, 1, 1, "#fff7c0"); }   // shiny pouch
     if (up.light > 0) { R(6, -8, 2, 2, "#2a2f36"); R(7, -8, 1, 1, "#fff3b0"); }       // headlamp
@@ -1295,7 +1302,7 @@
 
   // sea-floor creatures (crawling, caught with the net)
   function drawCreatures() {
-    var noNet = !state.items.net;
+    var noNet = netSize() <= 0;
     for (var i = 0; i < run.creatures.length; i++) {
       var c = run.creatures[i];
       var x = c.x - cam.x, y = c.y - cam.y;
@@ -1320,6 +1327,39 @@
         ctx.font = "11px 'Segoe UI', sans-serif"; ctx.textAlign = "center";
         ctx.fillText((c.shiny ? "✦" : "") + c.def.name, x, y - th * 0.6 - 6);
       }
+    }
+  }
+
+  // net-scoop animation: creature gets caught in a net that swipes back to you
+  function startNetFx(c, netR) {
+    run.netFx.push({ x: c.x, y: c.y, dx: run.diver.x, dy: run.diver.y, life: 0.55, max: 0.55,
+      size: 12 + netR * 0.16, def: c.def, shiny: c.shiny });
+  }
+  function drawNetFx() {
+    for (var i = 0; i < run.netFx.length; i++) {
+      var fx = run.netFx[i];
+      var p = 1 - fx.life / fx.max;                 // 0 -> 1
+      var px = fx.x + (fx.dx - fx.x) * p, py = fx.y + (fx.dy - fx.y) * p;
+      var sx = px - cam.x, sy = py - cam.y, sz = fx.size * (1 - p * 0.35);
+      var dvx = fx.dx - cam.x, dvy = fx.dy - cam.y;
+      ctx.save();
+      ctx.globalAlpha = fx.life > 0.12 ? 1 : Math.max(0, fx.life / 0.12);
+      // handle from the diver to the net (the swipe)
+      ctx.strokeStyle = "rgba(225,232,240,0.85)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(dvx, dvy); ctx.lineTo(sx, sy); ctx.stroke();
+      // the trapped creature, jiggling
+      var jig = Math.sin(run.time * 30 + i) * 1.5;
+      SPRITES.draw(ctx, SPRITES.archetypeForShape(fx.def.shape), sx + jig, sy, { color: fx.def.color, shiny: fx.shiny, targetH: sz * 1.5 });
+      // mesh
+      ctx.strokeStyle = "rgba(240,248,255,0.55)"; ctx.lineWidth = 1;
+      for (var m = -2; m <= 2; m++) {
+        ctx.beginPath(); ctx.moveTo(sx + m * sz * 0.45, sy - sz); ctx.lineTo(sx + m * sz * 0.45, sy + sz); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(sx - sz, sy + m * sz * 0.45); ctx.lineTo(sx + sz, sy + m * sz * 0.45); ctx.stroke();
+      }
+      // golden rim
+      ctx.strokeStyle = "#d9b24a"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(sx, sy, sz, 0, 7); ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -1406,8 +1446,9 @@
   // ---------------------------------------------------------------------
   function toast(msg, kind, dur) {
     var host = document.getElementById("toasts");
+    if (!host) return;
     // never let toasts blanket the screen: drop the oldest if too many stack up
-    while (host.children.length >= 4) host.removeChild(host.firstChild);
+    while (host.children && host.children.length >= 4) host.removeChild(host.firstChild);
     // skip exact duplicate of the most recent toast still showing
     if (host.lastChild && host.lastChild.textContent === msg) return;
     var el = document.createElement("div");
