@@ -265,6 +265,11 @@
     { id: "ruby",    name: "Blood Ruby",     value: 700,  color: "#e23b5a", rarity: "rare" },
     { id: "amulet",  name: "Ancient Amulet", value: 1200, color: "#49d6c0", rarity: "rare" },
     { id: "crown",   name: "Sunken Crown",   value: 3200, color: "#ffcf3a", rarity: "epic" },
+    // plane-wreck-only treasures (rarer & more valuable)
+    { id: "blackbox", name: "Black Box",      value: 1600, color: "#e8852a", rarity: "rare",  plane: true },
+    { id: "pilotwatch", name: "Pilot's Watch", value: 2400, color: "#cfd6de", rarity: "epic",  plane: true },
+    { id: "turbine", name: "Jet Turbine",    value: 4200, color: "#8aa0b0", rarity: "epic",  plane: true },
+    { id: "goldwings", name: "Golden Wings",  value: 6500, color: "#ffcf3a", rarity: "legendary", plane: true },
   ];
 
   // --- Upgrade tracks ----------------------------------------------------

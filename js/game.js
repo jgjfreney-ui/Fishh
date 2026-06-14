@@ -271,8 +271,10 @@
   function placeWrecks(loc) {
     run.wrecks = [];
     var n = loc.maxDepth > 700 ? 3 : 2;
+    var planeChance = loc.id === "trench" ? 0.45 : (loc.id === "river" ? 0.1 : 0.28);
     for (var i = 0; i < n; i++) {
       run.wrecks.push({
+        type: Math.random() < planeChance ? "plane" : "ship",
         x: 200 + Math.random() * (loc.worldWidth - 400),
         y: loc.maxDepth * (0.45 + 0.5 * (i / n)) + Math.random() * 40,
         w: 180 + Math.random() * 120,
@@ -693,13 +695,17 @@
   function maybeSpawnTreasure() {
     if (run.wrecks.length === 0) return;
     var wreck = run.wrecks[(Math.random() * run.wrecks.length) | 0];
-    // weighted treasure by depth
     var df = depthFactor(wreck.y, D.LOCATIONS[run.area]);
+    var isPlane = wreck.type === "plane";
+    // ship wrecks: regular loot only. plane wrecks: regular + a chance at the
+    // exclusive plane treasures (rarer & richer).
     var pool = D.TREASURES.filter(function (tt) {
+      if (tt.plane && !isPlane) return false;            // plane loot only from planes
+      if (tt.plane) return Math.random() < 0.5;          // ~half of a plane's drops are exclusive
       var ro = D.RARITY[tt.rarity].order;
       return Math.random() < (0.3 + df * 0.9) || ro <= 1;
     });
-    if (pool.length === 0) pool = D.TREASURES;
+    if (pool.length === 0) pool = D.TREASURES.filter(function (tt) { return !tt.plane; });
     var def = pool[(Math.random() * pool.length) | 0];
     run.treasures.push({
       def: def, x: wreck.x + (Math.random() - 0.5) * wreck.w, y: wreck.y - 10 - Math.random() * 30, phase: Math.random() * 6,
@@ -1152,21 +1158,40 @@
     if (x < -wk.w || x > W + wk.w || y < -120 || y > H + 80) return;
     ctx.save();
     ctx.translate(x, y);
-    ctx.fillStyle = "rgba(20,30,30,0.9)";
-    ctx.strokeStyle = "rgba(60,90,80,0.9)";
     ctx.lineWidth = 4;
-    // hull
-    ctx.beginPath();
-    ctx.moveTo(-wk.w / 2, 0);
-    ctx.quadraticCurveTo(-wk.w / 2, 50, 0, 56);
-    ctx.quadraticCurveTo(wk.w / 2, 50, wk.w / 2, 0);
-    ctx.lineTo(wk.w / 2 - 20, -8);
-    ctx.lineTo(-wk.w / 2 + 20, -8);
-    ctx.closePath();
-    ctx.fill(); ctx.stroke();
-    // broken mast
-    ctx.strokeStyle = "rgba(40,60,55,0.9)";
-    ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(-30, -64); ctx.stroke();
+    if (wk.type === "plane") {
+      // sunken plane: fuselage + broken wing + tail
+      ctx.fillStyle = "rgba(36,42,50,0.92)";
+      ctx.strokeStyle = "rgba(120,140,155,0.9)";
+      var hw = wk.w / 2;
+      ctx.beginPath();
+      ctx.moveTo(-hw, 0);
+      ctx.quadraticCurveTo(-hw - 16, 14, -hw, 26);
+      ctx.lineTo(hw - 10, 22);
+      ctx.quadraticCurveTo(hw + 18, 12, hw - 6, 2);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      // windows
+      ctx.fillStyle = "rgba(120,200,255,0.5)";
+      for (var w = -hw + 18; w < hw - 24; w += 16) ctx.fillRect(w, 8, 7, 5);
+      // broken wing
+      ctx.fillStyle = "rgba(46,54,64,0.92)";
+      ctx.beginPath(); ctx.moveTo(-6, 18); ctx.lineTo(38, 50); ctx.lineTo(54, 46); ctx.lineTo(2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+      // tail fin
+      ctx.beginPath(); ctx.moveTo(-hw + 4, 2); ctx.lineTo(-hw - 6, -34); ctx.lineTo(-hw + 16, -2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.fillStyle = "rgba(20,30,30,0.9)";
+      ctx.strokeStyle = "rgba(60,90,80,0.9)";
+      ctx.beginPath();
+      ctx.moveTo(-wk.w / 2, 0);
+      ctx.quadraticCurveTo(-wk.w / 2, 50, 0, 56);
+      ctx.quadraticCurveTo(wk.w / 2, 50, wk.w / 2, 0);
+      ctx.lineTo(wk.w / 2 - 20, -8);
+      ctx.lineTo(-wk.w / 2 + 20, -8);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = "rgba(40,60,55,0.9)";
+      ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(-30, -64); ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -1663,6 +1688,7 @@
     html += '<button id="btn-area" class="big">🗺️ Change Area</button>';
     html += '<button id="btn-stats" class="big">📊 Stats</button>';
     html += '<button id="btn-seedshop" class="big">🌾 Seed Shop</button>';
+    html += '<button id="btn-treasures" class="big">🏺 Treasures</button>';
     html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
     html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
     html += '<button id="btn-menu" class="big">💾 Save &amp; Menu</button>';
@@ -1690,6 +1716,7 @@
     bind("btn-area", showAreas);
     bind("btn-stats", showStats);
     bind("btn-seedshop", showSeedShop);
+    bind("btn-treasures", showTreasureGallery);
     bind("btn-trade", function () { lastGiftCode = null; showTrade(); });
     bind("btn-rename", function () {
       askText("Name your captain", state.username || "Diver", function (name) {
@@ -2392,6 +2419,31 @@
         toast("Bought 3 " + d.name + " seeds!", "good", 1400); showSeedShop();
       };
     });
+  }
+
+  // ----- Treasure gallery -----
+  function showTreasureGallery() {
+    var ov = overlay("shop");
+    var found = 0, total = D.TREASURES.length, worth = 0;
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🏺 Treasure Gallery</h2>'
+      + '<button class="close" data-close="shop">✕</button></div><div class="collection-scroll">';
+    [["Shipwreck loot", false], ["✈ Plane-wreck loot (rare!)", true]].forEach(function (g) {
+      html += '<h3>' + g[0] + '</h3><div class="coll-grid">';
+      D.TREASURES.filter(function (t) { return !!t.plane === g[1]; }).forEach(function (t) {
+        var n = state.treasures[t.id] || 0, got = n > 0;
+        if (got) { found++; worth += n * t.value; }
+        html += '<div class="coll-card ' + (got ? 'found' : 'missing') + ' r-' + t.rarity + '">'
+          + '<div class="treasure-gem" style="background:' + (got ? t.color : '#16242f') + '"></div>'
+          + '<div class="coll-name">' + (got ? t.name : '???') + '</div>'
+          + '<div class="coll-meta">' + D.RARITY[t.rarity].name + (got ? ' · ×' + n : '') + '</div>'
+          + '<div class="coll-meta">$' + fmt(t.value) + ' each</div></div>';
+      });
+      html += '</div>';
+    });
+    html += '</div><div class="coll-footer">Recovered <b>' + found + '/' + total + '</b> kinds · total pawned <b>$' + fmt(worth) + '</b></div></div>';
+    ov.innerHTML = html;
+    ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
   }
 
   function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
