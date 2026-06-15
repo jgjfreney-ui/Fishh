@@ -1837,6 +1837,9 @@
       }
     }
 
+    // The Backrooms: damp yellow office walls behind the water
+    if (loc.id === "backrooms") drawBackroomsAtmos(loc);
+
     // Ornate Ocean: red torii gates in the haze + drifting cherry-blossom petals
     if (loc.id === "japan") drawJapanAtmos(loc);
 
@@ -2097,11 +2100,71 @@
 
   // Sky above the waterline (different per area) + the rippling water surface.
   // Birds will eventually fly in this sky strip.
+  // suspended office drop-ceiling: a grid of ceiling tiles with humming
+  // fluorescent light panels — stands in for the "sky" in the Backrooms
+  function drawDropCeiling(surfaceY) {
+    ctx.fillStyle = "#c9bd6a";
+    ctx.fillRect(0, 0, W, surfaceY);
+    var tile = 46, ox = -(cam.x * 0.4 % tile);
+    // tile grid
+    ctx.strokeStyle = "rgba(90,80,30,0.55)"; ctx.lineWidth = 2;
+    for (var gx = ox - tile; gx < W + tile; gx += tile) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, surfaceY); ctx.stroke();
+    }
+    for (var gy = 0; gy < surfaceY; gy += tile) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+      // speckled ceiling-tile texture
+      ctx.fillStyle = "rgba(120,108,40,0.25)";
+      for (var sp = 0; sp < W; sp += 13) ctx.fillRect((sp + (gy * 7) % 13) | 0, (gy + ((sp * 5) % tile)) | 0, 2, 2);
+    }
+    // fluorescent light panels (every few tiles), gently flickering/humming
+    for (var lx = ox - tile; lx < W + tile; lx += tile * 3) {
+      for (var ly = tile; ly + tile < surfaceY; ly += tile * 2) {
+        var flick = 0.7 + 0.3 * (0.5 + 0.5 * Math.sin(run.time * 9 + lx * 0.3 + ly));
+        if (Math.sin(lx * 1.7 + ly) > 0.6) flick *= 0.4; // an occasional dead/buzzing panel
+        ctx.fillStyle = "rgba(255,255,235," + (0.55 * flick).toFixed(2) + ")";
+        ctx.fillRect(lx + 5, ly + 5, tile - 10, tile - 10);
+        ctx.fillStyle = "rgba(255,255,255," + (0.35 * flick).toFixed(2) + ")";
+        ctx.fillRect(lx + 9, ly + 9, tile - 18, 3);
+        drawGlow(lx + tile / 2, ly + tile / 2, 30 * flick, "#fffbe0", 0.12 * flick);
+      }
+    }
+  }
+  // damp yellow wallpaper office walls seen behind the flooded rooms
+  function drawBackroomsAtmos(loc) {
+    var ox = -(cam.x * 0.5 % 120);
+    // mono-yellow wallpaper panels with a faint vertical pattern
+    for (var px = ox - 120; px < W + 120; px += 120) {
+      ctx.fillStyle = (((px / 120) | 0) % 2 === 0) ? "rgba(180,160,40,0.10)" : "rgba(150,135,30,0.10)";
+      ctx.fillRect(px, 0, 120, H);
+      ctx.fillStyle = "rgba(110,98,24,0.10)";
+      ctx.fillRect(px + 58, 0, 3, H); // panel seam
+    }
+    // faint horizontal wainscoting / skirting band
+    var bandY = -cam.y + 140;
+    if (bandY > -20 && bandY < H) { ctx.fillStyle = "rgba(90,80,24,0.18)"; ctx.fillRect(0, bandY, W, 10); }
+    // damp water stains
+    ctx.fillStyle = "rgba(70,60,20,0.10)";
+    for (var s = 0; s < 5; s++) {
+      var stx = ((s * 421 - cam.x * 0.5) % (W + 200) + (W + 200)) % (W + 200) - 100;
+      var sty = ((s * 233) % H);
+      ctx.beginPath(); ctx.ellipse(stx, sty, 50, 28, 0, 0, 7); ctx.fill();
+    }
+  }
   function drawSky(loc) {
     var surfaceY = -cam.y;            // screen y of the waterline (world y = 0)
     if (surfaceY <= 0) return;        // fully underwater — no sky in view
     var sky = loc.sky || { top: "#9fd8ff", bottom: "#e6f7ff" };
     var isNight = run.night || sky.night;
+    // The Backrooms: the "sky" is a humming office drop-ceiling, not open air
+    if (loc.id === "backrooms") {
+      drawDropCeiling(surfaceY);
+      // waterline band just below the ceiling
+      var wbk = ctx.createLinearGradient(0, surfaceY, 0, surfaceY + 24);
+      wbk.addColorStop(0, "rgba(220,220,160,0.3)"); wbk.addColorStop(1, "rgba(220,220,160,0)");
+      ctx.fillStyle = wbk; ctx.fillRect(0, surfaceY, W, 24);
+      return;
+    }
     var g = ctx.createLinearGradient(0, 0, 0, surfaceY);
     if (isNight) { g.addColorStop(0, "#0a1030"); g.addColorStop(1, "#22305a"); }
     else { g.addColorStop(0, sky.top); g.addColorStop(1, sky.bottom); }
