@@ -21,7 +21,7 @@
       created: Date.now(),
       username: "Diver",
       money: 0,
-      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0 },
+      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, backrooms: false, japan: false, secretcave: false,
@@ -100,6 +100,9 @@
   function lightRadius() { return up("light"); }
   function netSize() { return up("scoop"); }
   function trapSize() { return up("trap"); } // Deploy Net coverage radius (0 = none)
+  function hammerLevel() { return up("hammer"); } // 0 = no sledgehammer
+  function shovelLevel() { return up("shovel"); } // 0 = no shovel
+  function slingShotsMax() { return up("sling"); } // shots per dive (0 = no slingshot)
 
   function rarityCharmTilt() { return state.charms.rarity * D.CHARMS.rarity.perStack; }
   function shinyChance(area) {
@@ -150,6 +153,9 @@
       sonarTimer: 0,
       secretShown: {},            // secretId -> already popped in this dive
       trap: { active: false, x: 0, y: 0, r: 0 }, // deployed net
+      slingShots: slingShotsMax(), // slingshot ammo this dive
+      pebbles: [],                 // slingshot projectiles
+      bellUsed: false,
     };
     placeWrecks(loc);
     placeCages(loc);
@@ -814,7 +820,13 @@
         run.oxygen = Math.max(run.oxygen - 26 * dt, run.maxO * 0.12);
         if (Math.random() < 0.9) run.bubbles.push({ x: diver.x + (Math.random() - 0.5) * 14, y: diver.y - 4, r: 2 + Math.random() * 4, vy: 60 + Math.random() * 40, life: 1.6 });
       }
-      if (run.oxygen <= 0) { driftHome(); return; }
+      if (run.oxygen <= 0) {
+        // Diving Bell: a one-per-dive emergency air reserve
+        if (state.items.divingbell && !run.bellUsed) {
+          run.bellUsed = true; run.oxygen = run.maxO;
+          toast("🛎️ Your Diving Bell kicks in — oxygen restored! (once per dive)", "good", 2600);
+        } else { driftHome(); return; }
+      }
     } else {
       run.oxygen = run.maxO; // refill at surface
     }
@@ -931,7 +943,7 @@
       var cdx = diver.x - c.x, cdy = diver.y - c.y, cdist = Math.hypot(cdx, cdy);
       if (c.def.tool === "shovel") {            // clams: prised open with the Shovel — only while OPEN
         var clamOpen = Math.sin(c.phase) > 0.1;
-        if (state.items.shovel) {
+        if (shovelLevel() > 0) {
           if (clamOpen && cdist < 55 && catchCreature(c)) { startNetFx(c, 55); if (c.hasPearl) dropPearl(c); run.creatures.splice(ci, 1); }
           else if (!clamOpen && cdist < 50 && run.time - (run.netHint || -99) > 6) { run.netHint = run.time; toast("Wait for the clam to open...", "bad", 1400); }
         } else if (cdist < 60 && run.time - (run.netHint || -99) > 12) {
@@ -979,6 +991,24 @@
       }
     }
 
+    // --- slingshot pebbles (knock birds down) ---
+    if (run.pebbles) {
+      for (var pe = run.pebbles.length - 1; pe >= 0; pe--) {
+        var pb = run.pebbles[pe];
+        pb.x += pb.vx * dt; pb.vy += 220 * dt; pb.y += pb.vy * dt; pb.life -= dt; // gravity arc
+        var pHit = false;
+        for (var pbi = run.birds.length - 1; pbi >= 0; pbi--) {
+          var bd2 = run.birds[pbi];
+          if (Math.hypot(bd2.x - pb.x, bd2.y - pb.y) < 22 + bd2.def.size * 3) {
+            catchBird(bd2); run.birds.splice(pbi, 1); pHit = true;
+            run.floaters.push({ x: pb.x, y: pb.y, text: "🪃", color: "#ffe9b0", life: 1.0 });
+            break;
+          }
+        }
+        if (pHit || pb.life <= 0 || pb.y > diver.y + 400) run.pebbles.splice(pe, 1);
+      }
+    }
+
     // --- harpoon projectiles (boss combat) ---
     for (var hi = run.harpoonFx.length - 1; hi >= 0; hi--) {
       var hp = run.harpoonFx[hi];
@@ -1011,11 +1041,11 @@
         var cg = run.cages[cgi];
         if (cg.opened) continue;
         if (Math.hypot(cg.x - diver.x, cg.y - diver.y) < 46) {
-          if (state.items.sledgehammer) {
+          if (hammerLevel() > 0) {
             cg.opened = true;
             if (window.AUDIO) AUDIO.rumble();
-            // a small burst of treasure (no longer a jackpot)
-            for (var bt = 0; bt < 1 + (Math.random() * 2 | 0); bt++) {
+            // a small burst of treasure (more per cage with a stronger hammer)
+            for (var bt = 0; bt < (1 + (Math.random() * 2 | 0)) + (hammerLevel() - 1); bt++) {
               var pdef = D.TREASURES[(Math.random() * 7) | 0]; // common-ish loot
               run.treasures.push({ def: pdef, x: cg.x + (Math.random() - 0.5) * 40, y: cg.y - 14 - Math.random() * 24, phase: Math.random() * 6 });
             }
@@ -1202,6 +1232,23 @@
     run.harpoonFx.push({ x: run.diver.x, y: run.diver.y, vx: ax * spd, vy: ay * spd, life: 1.4, ang: Math.atan2(ay, ax) });
   }
 
+  // Slingshot: fire a pebble to knock a bird out of the sky (catch on hit)
+  function fireSling() {
+    if (slingShotsMax() <= 0 || run.slingShots <= 0) { toast("No slingshot shots left this dive.", "bad"); return; }
+    var ax, ay;
+    if (joy.active && joy.mag > 0.2) { ax = joy.dx; ay = joy.dy; }   // aim with joystick
+    else {
+      // auto-aim at the nearest bird, else straight up
+      var best = null, bd = 1e9;
+      for (var i = 0; i < run.birds.length; i++) { var b = run.birds[i]; var d = Math.hypot(b.x - run.diver.x, b.y - run.diver.y); if (d < bd) { bd = d; best = b; } }
+      if (best) { ax = best.x - run.diver.x; ay = best.y - run.diver.y; var l = Math.hypot(ax, ay) || 1; ax /= l; ay /= l; }
+      else { ax = run.diver.face < 0 ? -0.3 : 0.3; ay = -1; }
+    }
+    run.slingShots--;
+    run.pebbles.push({ x: run.diver.x, y: run.diver.y, vx: ax * 520, vy: ay * 520, life: 1.6 });
+    if (window.AUDIO) AUDIO.ui("click");
+  }
+
   function harpoonHit(boss) {
     boss.hp--; boss.hitFlash = 0.4; boss.fleeing = 0.5;
     if (boss.hp <= 0) {
@@ -1219,7 +1266,7 @@
   function dropPearl(c) {
     if (!CLAM_PEARL) { for (var i = 0; i < D.TREASURES.length; i++) if (D.TREASURES[i].id === "clampearl") CLAM_PEARL = D.TREASURES[i]; }
     if (!CLAM_PEARL) return;
-    var mult = itemOn("necklace") ? 2 : 1;
+    var mult = (itemOn("necklace") ? 2 : 1) * (1 + Math.max(0, shovelLevel() - 1) * 0.5); // bigger shovel = richer pearls
     run.bagTreasure.push({ id: CLAM_PEARL.id, value: CLAM_PEARL.value * mult, name: CLAM_PEARL.name, color: CLAM_PEARL.color });
     state.treasures[CLAM_PEARL.id] = (state.treasures[CLAM_PEARL.id] || 0) + 1;
     run.floaters.push({ x: c.x, y: c.y - 16, text: "✦ Pearl!", color: "#fff0f6", life: 1.8 });
@@ -1352,6 +1399,7 @@
     drawBubbles();
     drawDiver();
     drawHarpoons();
+    drawPebbles();
     drawNetFx();
     drawTrap();
 
@@ -1705,6 +1753,14 @@
     ctx.restore();
   }
 
+  function drawPebbles() {
+    if (!run.pebbles) return;
+    for (var i = 0; i < run.pebbles.length; i++) {
+      var pb = run.pebbles[i], x = pb.x - cam.x, y = pb.y - cam.y;
+      ctx.fillStyle = "#cbb89a"; ctx.fillRect((x - 2) | 0, (y - 2) | 0, 4, 4);
+      ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillRect((x - 2) | 0, (y - 2) | 0, 2, 1);
+    }
+  }
   function drawTrap() {
     if (!run.trap || !run.trap.active || run.trap.r <= 0) return;
     var x = run.trap.x - cam.x, y = run.trap.y - cam.y, r = run.trap.r;
@@ -2334,6 +2390,12 @@
       tb.style.display = (!atTop && trapSize() > 0) ? "block" : "none";
       tb.textContent = (run.trap && run.trap.active) ? "🪤 Move Net" : "🪤 Deploy Net";
     }
+    // slingshot button: shown when you own a slingshot and have shots left
+    var slb = document.getElementById("btn-sling");
+    if (slb) {
+      slb.style.display = (slingShotsMax() > 0 && run.slingShots > 0) ? "block" : "none";
+      slb.textContent = "🪃 Sling (" + run.slingShots + ")";
+    }
     var hb = document.getElementById("btn-harpoon");
     hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
     if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
@@ -2435,6 +2497,11 @@
     for (var k in base) if (!(k in s)) s[k] = base[k];
     for (var u in base.upgrades) if (s.upgrades[u] == null) s.upgrades[u] = 0;
     for (var a in base.areas) if (s.areas[a] == null) s.areas[a] = base.areas[a];
+    // carry over the old one-time hammer/shovel items into the new upgrade tracks
+    if (s.items) {
+      if (s.items.sledgehammer && !s.upgrades.hammer) s.upgrades.hammer = 1;
+      if (s.items.shovel && !s.upgrades.shovel) s.upgrades.shovel = 1;
+    }
     if (!s.stats) s.stats = base.stats;
     return s;
   }
@@ -2597,6 +2664,8 @@
     if (vb) { vb.style.display = "none"; vb.classList.remove("venting"); }
     var tb = document.getElementById("btn-trap");
     if (tb) tb.style.display = "none";
+    var slb = document.getElementById("btn-sling");
+    if (slb) slb.style.display = "none";
     if (run) run.venting = false;
     document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
@@ -2633,24 +2702,22 @@
     html += '<div class="tab-body' + bodyClass("tools") + '" data-body="tools">';
     html += upgradeRow("scoop");
     html += upgradeRow("trap");
+    html += upgradeRow("hammer");
+    html += upgradeRow("shovel");
+    html += upgradeRow("sling");
     html += '<div class="shop-item"><div class="si-info"><b>Harpoons</b> <span class="lvl">×' + state.harpoons + '</span>'
       + '<p>Ammo for boss fights. Aim with the joystick and tap 🔱 to throw — 3 hits beats the Kraken or blobfish.</p></div>'
       + '<div class="si-buy"><button data-buyharpoon="1" ' + (state.money < 2600 ? 'disabled' : '') + '>5 for $2,600</button></div></div>';
-    var hasHammer = !!state.items.sledgehammer;
-    html += '<div class="shop-item"><div class="si-info"><b>🔨 Sledgehammer</b>' + (hasHammer ? ' <span class="lvl">✓ Owned</span>' : '')
-      + '<p>Smash open locked <b>cages</b> on the sea floor — they\'re packed with treasure.</p></div>'
-      + '<div class="si-buy">' + (hasHammer ? '<span class="maxed">✓</span>'
-        : '<button data-buytool="sledgehammer:8000" ' + (state.money < 8000 ? 'disabled' : '') + '>$8,000</button>') + '</div></div>';
     var hasTorch = !!state.items.torch;
     html += '<div class="shop-item"><div class="si-info"><b>🔦 Torch</b>' + (hasTorch ? ' <span class="lvl">✓ Owned</span>' : '')
       + '<p>Casts a bright <b>beam of light</b> in the direction you face — pierces the gloom of the deep and dark caves.</p></div>'
       + '<div class="si-buy">' + (hasTorch ? '<span class="maxed">✓</span>'
         : '<button data-buytool="torch:9000" ' + (state.money < 9000 ? 'disabled' : '') + '>$9,000</button>') + '</div></div>';
-    var hasShovel = !!state.items.shovel;
-    html += '<div class="shop-item"><div class="si-info"><b>⛏️ Shovel</b>' + (hasShovel ? ' <span class="lvl">✓ Owned</span>' : '')
-      + '<p>Pry <b>clams</b> off the sea bed — some hold a precious <b>pearl</b>.</p></div>'
-      + '<div class="si-buy">' + (hasShovel ? '<span class="maxed">✓</span>'
-        : '<button data-buytool="shovel:6000" ' + (state.money < 6000 ? 'disabled' : '') + '>$6,000</button>') + '</div></div>';
+    var hasBell = !!state.items.divingbell;
+    html += '<div class="shop-item"><div class="si-info"><b>🛎️ Diving Bell</b>' + (hasBell ? ' <span class="lvl">✓ Owned</span>' : '')
+      + '<p>An emergency air reserve — <b>once per dive</b>, if you run out of oxygen it refills you instead of sending you home.</p></div>'
+      + '<div class="si-buy">' + (hasBell ? '<span class="maxed">✓</span>'
+        : '<button data-buytool="divingbell:14000" ' + (state.money < 14000 ? 'disabled' : '') + '>$14,000</button>') + '</div></div>';
     var hasWatch = !!state.items.stopwatch;
     html += '<div class="shop-item"><div class="si-info"><b>Tide Stopwatch</b>' + (hasWatch ? ' <span class="lvl">✓ Owned</span>' : '')
       + '<p>Choose whether each dive is <b>day or night</b> — tap the ☀️/🌙 on the boat to set it. Without it, day &amp; night just take turns.</p></div>'
@@ -2756,7 +2823,7 @@
         var p = b.getAttribute("data-buytool").split(":"), id = p[0], cost = +p[1];
         if (state.items[id] || state.money < cost) return;
         state.money -= cost; state.items[id] = true; saveGame();
-        var nm = id === "sledgehammer" ? "🔨 Sledgehammer" : id === "shovel" ? "⛏️ Shovel" : "🔦 Torch";
+        var nm = id === "torch" ? "🔦 Torch" : id === "divingbell" ? "🛎️ Diving Bell" : "Tool";
         toast(nm + " acquired!", "good", 1800); showShop();
       };
     });
@@ -3807,8 +3874,10 @@
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
     if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
     if (state.items.torch) html += row("🔦 Torch", "beam of light");
-    if (state.items.sledgehammer) html += row("🔨 Sledgehammer", "smash cages");
-    if (state.items.shovel) html += row("⛏️ Shovel", "pry clams");
+    if (state.items.divingbell) html += row("🛎️ Diving Bell", "1 air save / dive");
+    if (hammerLevel() > 0) html += row("🔨 Sledgehammer", "Lv " + hammerLevel());
+    if (shovelLevel() > 0) html += row("⛏️ Shovel", "Lv " + shovelLevel());
+    if (slingShotsMax() > 0) html += row("🪃 Slingshot", slingShotsMax() + " shots/dive");
     var seedTotal = 0; for (var s in state.seeds) seedTotal += state.seeds[s];
     html += row("🌾 Bird seeds", seedTotal);
     html += row("🍀 Rarity Charms", "×" + state.charms.rarity);
@@ -3951,6 +4020,9 @@
       run.trap.active = true; run.trap.x = run.diver.x; run.trap.y = run.diver.y; run.trap.r = trapSize();
       toast("🪤 Net deployed! Anything that swims in is bagged.", "good", 1600);
     });
+    // slingshot button (shoot a pebble to knock down birds)
+    var slb = document.getElementById("btn-sling");
+    if (slb) slb.addEventListener("click", function () { if (scene === "dive" && run) fireSling(); });
     // vent-air button (press & hold to drain oxygen)
     var vb = document.getElementById("btn-vent");
     if (vb) {

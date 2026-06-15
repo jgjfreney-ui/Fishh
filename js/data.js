@@ -720,6 +720,39 @@
         { cost: 70000, value: 330 },  // huge
       ],
     },
+    hammer: {
+      name: "Sledgehammer",
+      desc: "Smash open locked cages on the sea floor. Each upgrade cracks them harder for MORE treasure per cage.",
+      unit: "loot",
+      levels: [
+        { cost: 0,     value: 0 },   // not owned
+        { cost: 8000,  value: 1 },   // base
+        { cost: 22000, value: 2 },
+        { cost: 55000, value: 3 },
+      ],
+    },
+    shovel: {
+      name: "Shovel",
+      desc: "Pry clams off the sea bed. Each upgrade improves your odds of a pearl and the value you dig up.",
+      unit: "dig",
+      levels: [
+        { cost: 0,     value: 0 },   // not owned
+        { cost: 6000,  value: 1 },   // base
+        { cost: 18000, value: 2 },
+        { cost: 46000, value: 3 },
+      ],
+    },
+    sling: {
+      name: "Slingshot",
+      desc: "Knock birds out of the sky to catch them — aim with the joystick and tap 🪃. Upgrades give more shots per dive.",
+      unit: "shots",
+      levels: [
+        { cost: 0,     value: 0 },   // not owned
+        { cost: 7000,  value: 4 },
+        { cost: 20000, value: 7 },
+        { cost: 48000, value: 11 },
+      ],
+    },
   };
 
   // --- Charms (stackable consumable-style permanent buffs) --------------
