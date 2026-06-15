@@ -184,7 +184,7 @@
     var allContent = loc.allContent;
     // Sanctuary shows ONLY its starlight creatures (not every creature in the sea)
     var pool = D.CREATURES.map(function (id) { return D.FISH_BY_ID[id]; })
-      .filter(function (c) { return c.area === run.area && (!c.night || run.night); });
+      .filter(function (c) { return c.area === run.area && (!c.night || run.night) && (!c.day || !run.night); });
     if (!pool.length) return;
     // rarity-weighted pick (commoner creatures appear more)
     var total = 0, weights = pool.map(function (c) { var w = D.RARITY[c.rarity].weight; total += w; return w; });
@@ -1168,7 +1168,7 @@
   function spawnAmbientBird() {
     if (!run) return;
     var allContent = D.LOCATIONS[run.area].allContent;
-    var pool = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return (allContent || d.area === run.area) && (!d.night || run.night); });
+    var pool = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return (allContent || d.area === run.area) && (!d.night || run.night) && (!d.day || !run.night); });
     if (!pool.length) return;
     var ambient = 0;
     for (var i = 0; i < run.birds.length; i++) if (run.birds[i].mode === "ambient") ambient++;
@@ -1241,6 +1241,7 @@
     var def = D.FISH_BY_ID[birdId];
     if (def.area !== run.area && !D.LOCATIONS[run.area].allContent) { toast(def.name + " doesn't visit here.", "bad"); return; }
     if (def.night && !run.night) { toast(def.name + " only comes out at night. 🌙", "bad"); return; }
+    if (def.day && run.night) { toast(def.name + " only comes out by day. ☀️", "bad"); return; }
     if (!(state.seeds[birdId] > 0)) { toast("No " + def.name + " seed — buy some at the Seed Shop.", "bad"); return; }
     state.seeds[birdId]--; saveGame();
     run.birds.push({
@@ -3047,9 +3048,10 @@
         html += '<div class="coll-sprite" style="background-image:url(' + collSprite(f, found, showShiny, hidden) + ')"></div>';
         var nm = hidden ? "???" : (f.isBlob ? "Blobfish 🫠" : f.name);
         html += '<div class="coll-name">' + nm + (sh ? ' <span class="shiny-tag">✦</span>' : '') + '</div>';
+        var tod = f.night ? ' · 🌙 Night' : (f.day ? ' · ☀️ Day' : (special ? '' : ' · ⏱️ Any time'));
         html += '<div class="coll-meta">' + D.RARITY[f.rarity].name
           + (found && !special ? ' · ' + (state.counts[f.id] || 0) + ' caught' : '')
-          + (f.creature ? ' · Creature' : '') + (f.secret ? ' · Secret' : '') + '</div>';
+          + (f.creature ? ' · Creature' : (f.bird ? ' · Bird' : '')) + (f.secret ? ' · Secret' : '') + tod + '</div>';
         if (!special) html += '<div class="coll-meta">Size ' + f.size + ' · $' + fmt(f.value) + '</div>';
         else html += '<div class="coll-meta">' + (found ? 'Defeated!' : (f.areaBoss ? 'Catch every fish here' : 'Needs 100%')) + '</div>';
         html += '</div>';
@@ -3553,7 +3555,8 @@
         var price = seedPackPrice(d), n = state.seeds[d.id] || 0;
         var seen = !!state.discovered[d.id];   // don't spoil birds you haven't caught yet
         var nm = seen ? d.name : '<span class="unseen">??? </span>';
-        var info = seen ? (D.RARITY[d.rarity].name + ' bird · sells for $' + fmt(d.value))
+        var btod = d.night ? ' · 🌙 night' : (d.day ? ' · ☀️ day' : '');
+        var info = seen ? (D.RARITY[d.rarity].name + ' bird' + btod + ' · sells for $' + fmt(d.value))
                         : ('A mystery bird' + (d.night ? ' 🌙 (night)' : '') + ' — scatter its seed to reveal it');
         html += '<div class="shop-item"><div class="si-info"><b>' + nm + '</b> <span class="lvl">×' + n + ' seeds</span>'
           + '<p>' + info + '</p></div>'
