@@ -171,6 +171,7 @@
       smoke: [], smokeTimer: 0, wyrmTimer: 6, // ashen smoke + magma wyrm
       legendTimer: 35 + Math.random() * 35,   // defeated bosses return as legendary catches
       aimX: 1, aimY: 0,                        // last steering direction (torch/breath aim)
+      torpedoes: [],                           // homing torpedo-fish fired by the Rig Titan
       stormCd: 0, peakX: loc.peaks ? loc.worldWidth * 0.5 : null, // storm summoner + mountain peak
     };
     placeWrecks(loc);
@@ -1054,6 +1055,9 @@
       } else if (run.area === "cave" && state.hints.cavernwyrm && !state.cavernwyrmCaught
                  && depthM > loc.maxDepth * 0.82) {
         spawnSecretBoss("cavernwyrm");          // the giant wyrm wakes at the very bottom
+      } else if (run.area === "japan" && state.hints.mechakaiju && state.areaBossCaught.rigtitan
+                 && state.areaBossCaught.kaiju && !state.mechakaijuCaught) {
+        spawnSecretBoss("mechakaiju");          // wakes only after the Kaiju AND Rig Titan fall
       } else {
         var ab = areaBossForArea(run.area);
         if (ab) spawnAreaBoss(ab);
@@ -1134,6 +1138,7 @@
       for (var bx2 = 0; bx2 < run.fish.length; bx2++) if (run.fish[bx2].isBoss && run.fish[bx2].hp > 0) { theBoss = run.fish[bx2]; break; }
       if (theBoss) updateBossAI(theBoss, dt, diver);
     } else { run.grab = null; run.bossBeam = null; }
+    if (run.torpedoes.length) updateTorpedoes(dt, diver, loc);
 
     // --- Deploy Net: any fish inside the dropped net is bagged (ignores hold) ---
     if (run.trap && run.trap.active && run.trap.r > 0) {
@@ -1517,14 +1522,26 @@
   function updateBossAI(boss, dt, diver) {
     if (boss.mode == null) { boss.mode = "roam"; boss.atkT = 3 + Math.random() * 3; boss.modeT = 0; }
     boss.face = diver.x < boss.x ? -1 : 1;
-    var isKaiju = boss.def.id === "kaiju" || boss.def.id === "leviathanking";
+    var isKaiju = boss.def.id === "kaiju" || boss.def.id === "leviathanking" || boss.def.id === "mechakaiju";
     if (boss.hitFlash > 0) { boss.atkT = Math.max(boss.atkT, 1.0); } // don't attack mid-flinch
 
     if (boss.mode === "roam") {
       boss.atkT -= dt;
       if (boss.atkT <= 0 && !run.grab) {
-        if (isKaiju && Math.random() < 0.55) startBreath(boss, diver);
+        if (boss.def.torpedoes && Math.random() < 0.55) startTorpedo(boss);
+        else if (isKaiju && Math.random() < 0.55) startBreath(boss, diver);
         else startCharge(boss, diver);
+      }
+    } else if (boss.mode === "deploy") {
+      // hatch on top opens, a torpedo-fish rises out, then launches
+      boss.modeT -= dt;
+      boss.hatch = Math.min(1, (boss.hatch || 0) + dt * 2.5);
+      if (boss.modeT <= 0) {
+        run.torpedoes.push({ x: boss.x, y: boss.y - 30 - boss.size * 2, vx: 0, vy: -120,
+          beep: 0, life: 9, born: 0 });
+        if (window.AUDIO) AUDIO.rumble();
+        toast("🚀 The Rig Titan launches a TORPEDO FISH — RUN! 💨", "bad", 1600);
+        endBossAttack(boss);
       }
     } else if (boss.mode === "charge") {
       boss.modeT -= dt;
@@ -1570,6 +1587,76 @@
     run.grab = { boss: boss, wig: 0 }; boss.mode = "grab"; boss.modeT = 4.0;
     toast("GRABBED! Wiggle the joystick to break free! 🌀", "bad", 2000);
     if (window.AUDIO) AUDIO.rumble();
+  }
+  function startTorpedo(boss) {
+    boss.mode = "deploy"; boss.modeT = 0.7; boss.hatch = 0;
+    if (window.AUDIO) AUDIO.ui("back");
+  }
+  // homing torpedo-fish: chase the diver, beep faster as they near, explode on
+  // contact (or the seabed), draining your oxygen
+  function updateTorpedoes(dt, diver, loc) {
+    for (var i = run.torpedoes.length - 1; i >= 0; i--) {
+      var tp = run.torpedoes[i];
+      tp.born += dt; tp.life -= dt;
+      var dx = diver.x - tp.x, dy = diver.y - tp.y, dist = Math.hypot(dx, dy) || 1;
+      // after a short arming delay it homes in, accelerating
+      var spd = tp.born < 0.6 ? 90 : Math.min(260, 120 + tp.born * 60);
+      var steer = tp.born < 0.6 ? 0.5 : 3.0;
+      tp.vx += ((dx / dist) * spd - tp.vx) * Math.min(1, steer * dt);
+      tp.vy += ((dy / dist) * spd - tp.vy) * Math.min(1, steer * dt);
+      tp.x += tp.vx * dt; tp.y += tp.vy * dt;
+      tp.angle = Math.atan2(tp.vy, tp.vx);
+      // proximity beeping — interval shrinks as it closes in
+      var closeness = clamp(1 - dist / 420, 0, 1);
+      tp.beep -= dt;
+      if (tp.beep <= 0) { tp.beep = 0.5 - closeness * 0.42; if (window.AUDIO) AUDIO.torpedoBeep(closeness); }
+      // explode on the diver
+      if (dist < 26) { explodeTorpedo(tp, true); run.torpedoes.splice(i, 1); continue; }
+      // explode on the seabed / surface / world edge / timeout
+      if (tp.y > loc.maxDepth * PXPM - 6 || tp.y < 6 || tp.x < 4 || tp.x > loc.worldWidth - 4 || tp.life <= 0) {
+        explodeTorpedo(tp, false); run.torpedoes.splice(i, 1); continue;
+      }
+    }
+  }
+  function explodeTorpedo(tp, hitDiver) {
+    for (var b = 0; b < 10; b++) run.bubbles.push({ x: tp.x + (Math.random() - 0.5) * 30, y: tp.y + (Math.random() - 0.5) * 30, r: 3 + Math.random() * 4, vy: 40 + Math.random() * 60, life: 0.8 });
+    run.floaters.push({ x: tp.x, y: tp.y, text: "💥", color: "#ff8a3a", life: 0.7 });
+    if (window.AUDIO) AUDIO.rumble();
+    if (hitDiver) {
+      run.oxygen -= 16;                          // the blast tears your air away
+      run.diver.vx += (run.diver.x > tp.x ? 1 : -1) * 160; run.diver.vy -= 60; // knockback
+      toast("💥 The torpedo detonates on you — oxygen blown out!", "bad", 1800);
+    }
+  }
+  function drawTorpedoes() {
+    // a torpedo rising out of the Rig Titan's deploy hatch
+    for (var bi = 0; bi < run.fish.length; bi++) {
+      var bo = run.fish[bi];
+      if (!(bo.isBoss && bo.mode === "deploy" && bo.hatch > 0)) continue;
+      var bx = bo.x - cam.x, topy = bo.y - cam.y - 24 - bo.size * 2;
+      ctx.save();
+      // open hatch doors
+      ctx.fillStyle = "#2a2f36";
+      ctx.fillRect(bx - 16, topy + 6, 14, 5); ctx.fillRect(bx + 2, topy + 6, 14, 5);
+      // rising torpedo (clipped to emerge upward)
+      var rise = bo.hatch * 22;
+      drawGlow(bx, topy + 8 - rise, 12, "#ff3a1a", 0.4);
+      ctx.translate(bx, topy + 8 - rise); ctx.rotate(-Math.PI / 2);
+      SPRITES.draw(ctx, "torpedo", 0, 0, { color: "#c8c0a0", accent: "#ff3a1a", targetH: 20 });
+      ctx.restore();
+    }
+    for (var i = 0; i < run.torpedoes.length; i++) {
+      var tp = run.torpedoes[i], x = tp.x - cam.x, y = tp.y - cam.y;
+      if (x < -40 || x > W + 40 || y < -40 || y > H + 40) continue;
+      // warning glow that pulses with the beeps
+      var warn = 0.4 + 0.4 * Math.sin(tp.born * 18);
+      drawGlow(x, y, 16, "#ff3a1a", 0.3 + warn * 0.3);
+      ctx.save(); ctx.translate(x, y); ctx.rotate(tp.angle || 0);
+      SPRITES.draw(ctx, "torpedo", 0, 0, { color: "#c8c0a0", accent: "#ff3a1a", targetH: 22 });
+      ctx.restore();
+      // little bubble trail
+      if (Math.random() < 0.6) run.bubbles.push({ x: tp.x - Math.cos(tp.angle || 0) * 14, y: tp.y - Math.sin(tp.angle || 0) * 14, r: 2, vy: 30, life: 0.5 });
+    }
   }
   function startBreath(boss, diver) {
     boss.mode = "breath"; boss.modeT = 1.8; boss.face = diver.x < boss.x ? -1 : 1;
@@ -1646,6 +1733,7 @@
     state.money += pay;
     state.stats.earned += pay;
     if (def.reward === "serpenteye") state.items.serpenteye = true;
+    else if (def.reward === "kaijubreath") state.items.kaijubreath = true;
     var bi = run.fish.indexOf(boss); if (bi >= 0) run.fish.splice(bi, 1);
     saveGame();
     setTimeout(function () { showSecretBossEnding(def, pay); }, 700);
@@ -1802,6 +1890,7 @@
     drawBossBeam();
     drawNetFx();
     drawTrap();
+    drawTorpedoes();
     drawSmoke();
     drawGoblinDarkness();
     drawStormFlash();

@@ -372,5 +372,11 @@
       var midi = 64 + Math.round(Math.max(0, Math.min(1, closeness)) * 22); // cold→warm pitch
       blip(midi, t, 0.09, "sine", 0.05, 2600);
     },
+    // homing-torpedo proximity beep — higher & sharper the closer it is
+    torpedoBeep: function (closeness) {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime, c = Math.max(0, Math.min(1, closeness));
+      blip(72 + Math.round(c * 18), t, 0.05, "square", 0.05 + c * 0.05, 3200);
+    },
   };
 })();

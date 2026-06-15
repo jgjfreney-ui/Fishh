@@ -592,7 +592,11 @@
     { id: "drillshark", name: "Drill Shark",  area: "oilrig", rarity: "epic",     size: 6, value: 2400, minDepth: 250, color: "#5a5a62", accent: "#ff5b3a", shape: "shark" },
     { id: "mechsquid",  name: "Mecha Squid",  area: "oilrig", rarity: "rare",     size: 4, value: 680, minDepth: 200, color: "#52606a", accent: "#3ad0ff", shape: "squid" },
     { id: "boltcrab",   name: "Salvage Bot",  area: "oilrig", creature: true, rarity: "uncommon", size: 2, value: 340, color: "#7a7a82", accent: "#ffcf3a", shape: "crab" },
-    { id: "rigtitan",   name: "The Rig Titan", area: "oilrig", areaBoss: true, rarity: "mythic", size: 14, value: 32000, minDepth: 250, color: "#4a4a52", accent: "#ff7a3a", shape: "rigtitan", hp: 6, reward: "" },
+    { id: "rigtitan",   name: "The Rig Titan", area: "oilrig", areaBoss: true, rarity: "mythic", size: 14, value: 32000, minDepth: 250, color: "#3a4250", accent: "#ff8a2a", shape: "rigtitan", hp: 6, reward: "", torpedoes: true },
+    { id: "torpedofish", name: "Torpedo Fish", area: "oilrig", rarity: "mythic", size: 3, value: 8000, minDepth: 0, color: "#c8c0a0", accent: "#ff5b1a", shape: "torpedo", secret: true, skittish: true, fast: true,
+      hint: "A live torpedo with fins — it screams through the rig faster than anything alive. You'll have to run it down.", condition: {} },
+    { id: "mechakaiju", name: "Mecha-Kaiju", area: "japan", secretBoss: true, rarity: "mythic", size: 15, value: 60000, minDepth: 200, color: "#5a6470", accent: "#5bf0ff", trim: "#ff5b3a", shape: "mechakaiju", hp: 9, reward: "",
+      hint: "A war-machine in the shape of a god, sleeping off the Ornate coast. Only stirs for those who've toppled both the Kaiju and the Rig Titan." },
 
     // ======== Flooded Freighter (secret; shy fish that hide from divers) ========
     { id: "holdperch",  name: "Hold Perch",    area: "flooded", rarity: "common",   size: 1, value: 360,  minDepth: 0,   color: "#6a7a6a", accent: "#bfe0a0", shape: "perch",    shy: true },
