@@ -2107,6 +2107,9 @@
     // The Backrooms: damp yellow office walls behind the water
     if (loc.id === "backrooms") drawBackroomsAtmos(loc);
 
+    // Flooded Freighter: drifting silt + pairs of shy eyes peering from the dark
+    if (loc.id === "flooded") drawFloodedAtmos(loc);
+
     // Ornate Ocean: red torii gates in the haze + drifting cherry-blossom petals
     if (loc.id === "japan") drawJapanAtmos(loc);
 
@@ -2420,6 +2423,33 @@
       var sty = ((s * 233) % H);
       ctx.beginPath(); ctx.ellipse(stx, sty, 50, 28, 0, 0, 7); ctx.fill();
     }
+  }
+  // creepy-but-fun flooded-hold atmosphere: floating silt motes drifting in the
+  // gloom, and pairs of timid glowing eyes that blink at you from the dark
+  function drawFloodedAtmos(loc) {
+    // drifting silt / dust motes
+    ctx.save();
+    for (var m = 0; m < 36; m++) {
+      var mx = ((m * 173 - cam.x * 0.5) % (W + 40) + (W + 40)) % (W + 40) - 20;
+      var my = ((m * 211 + run.time * (6 + (m % 4) * 4) - cam.y * 0.5) % (H + 40) + (H + 40)) % (H + 40) - 20;
+      ctx.fillStyle = "rgba(180,200,180," + (0.05 + (m % 3) * 0.04).toFixed(2) + ")";
+      ctx.fillRect(mx | 0, my | 0, 2, 2);
+    }
+    // a few pairs of shy eyes that fade in and out in the murk
+    for (var e = 0; e < 5; e++) {
+      var sx = (e * 521 + 120) - cam.x * 0.6;
+      sx = ((sx % (W + 200)) + (W + 200)) % (W + 200) - 100;
+      var sy = ((e * 331 + 80 - cam.y * 0.5) % (H - 80)) + 40;
+      var blink = Math.sin(run.time * 0.7 + e * 1.3);
+      if (blink > 0.4) {
+        var a = (blink - 0.4) * 0.7;
+        ctx.fillStyle = "rgba(120,255,180," + a.toFixed(2) + ")";
+        ctx.fillRect(sx | 0, sy | 0, 3, 3); ctx.fillRect((sx + 9) | 0, sy | 0, 3, 3);
+        ctx.fillStyle = "rgba(255,255,255," + (a * 0.8).toFixed(2) + ")";
+        ctx.fillRect((sx + 1) | 0, sy | 0, 1, 1); ctx.fillRect((sx + 10) | 0, sy | 0, 1, 1);
+      }
+    }
+    ctx.restore();
   }
   function drawSky(loc) {
     var surfaceY = -cam.y;            // screen y of the waterline (world y = 0)

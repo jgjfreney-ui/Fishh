@@ -53,6 +53,9 @@
     ashen:     { tonic: 47, bpm: 100, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, heavyBass: true },
     mountain:  { tonic: 60, bpm: 96, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"] },
     olympus:   { tonic: 72, bpm: 100, density: 0.55, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
+    // Flooded Freighter — creepy but playful: low minor-pentatonic, off-kilter
+    // hook with lots of space, a hint of celesta sparkle for the "fun" edge.
+    flooded:   { tonic: 45, bpm: 90, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "vi", "IV", "V"], pent: PENTA_MIN, hook: [0, null, 3, null, 5, 3, 0, null, null, 7, 5, 3, 0, null, 3, null] },
     pirate:    { tonic: 52, bpm: 116, density: 0.6, lead: "square", bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
     // Cloud Reaches — high, airy, twinkly and uplifting (you're in the sky!)
     cloud:     { tonic: 72, bpm: 120, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
@@ -249,6 +252,7 @@
     pirate: { fn: ambWhale, min: 5000, max: 11000 },
     mountain: { fn: ambBubble, min: 3000, max: 7000 },
     olympus: { fn: ambShimmer, min: 2500, max: 6000 },
+    flooded: { fn: ambWhale, min: 3500, max: 8000 }, // groaning, creaking hull
   };
   function scheduleAmb() {
     var a = AMB[mode];
@@ -266,31 +270,42 @@
   function stepFn(s, t, spb, eighth) {
     if (muted) return;
     var cfg = cfgCur, per = 8, pos = s % per;
-    var deg = cfg.prog[Math.floor(s / per) % cfg.prog.length];
+    var bar = Math.floor(s / per);
+    var deg = cfg.prog[bar % cfg.prog.length];
     var tonic = cfg.tonic;
     var ch = cfg.power ? [tonic, tonic + 7, tonic + 12] : triad(tonic, deg); // power chords for boss
     var pent = cfg.pent || PENTA;
+    var isBoss = cfg.power || cfg.heavyBass;
+    // 8-bar form: phrases of 4 bars, alternating A/B "sections", with the LEAD
+    // resting on the last bar of each phrase so the tune breathes (call &
+    // response) instead of looping the same hook relentlessly = far less tiring.
+    var phraseBar = bar % 4;
+    var sectionB = (Math.floor(bar / 4) % 2) === 1;
+    var restBar = !isBoss && phraseBar === 3;
     // bass: pounding every eighth for the boss, else bouncy root/fifth
     if (cfg.heavyBass) bass(bassRoot(tonic, deg), t, eighth * 0.95, 0.18);
     else if (pos % 2 === 0) bass(bassRoot(tonic, deg), t, spb * 0.42, 0.14);
-    else bass(bassRoot(tonic, deg) + 7, t, spb * 0.3, 0.09);
-    // chord stabs on the offbeats (oom-PAH)
-    if (pos === 2 || pos === 6) ch.forEach(function (m) { blip(m + 12, t, eighth * 0.8, "triangle", cfg.power ? 0.05 : 0.04, cfg.power ? 2400 : 1800); });
-    // sparkle bells (gentle twinkle for icy / starlit areas)
-    if (cfg.bells) { blip(penta(tonic + 12, s, pent) + 12, t, eighth * 1.3, "triangle", 0.04, 3000); }
-    // lead melody — a repeating, hummable HOOK so each area has a real tune,
-    // with the odd grace note to keep it lively (not robotic).
-    var hook = cfg.hook || (cfg.power || cfg.heavyBass ? HOOK_BOSS : HOOK);
+    else if (!restBar || pos === 1) bass(bassRoot(tonic, deg) + 7, t, spb * 0.3, 0.09);
+    // chord stabs on the offbeats (oom-PAH) — thin them on rest bars for air
+    if ((pos === 2 || pos === 6) && !(restBar && pos === 6)) ch.forEach(function (m) { blip(m + 12, t, eighth * 0.8, "triangle", isBoss ? 0.05 : 0.038, isBoss ? 2400 : 1800); });
+    // sparkle bells — sparser (every other bar) so they don't tinkle constantly
+    if (cfg.bells && (bar % 2 === 0) && (pos === 0 || pos === 4)) blip(penta(tonic + 12, s, pent) + 12, t, eighth * 1.3, "triangle", 0.034, 3000);
+    // lead melody — a hummable HOOK, but with breathing space + an octave lift
+    // in the B section and gently humanised velocity so it never feels robotic.
+    var hook = cfg.hook || (isBoss ? HOOK_BOSS : HOOK);
     var hi = ((s % hook.length) + hook.length) % hook.length;
     var note = hook[hi];
-    var leadVol = cfg.bells ? 0.03 : 0.058;  // softer over twinkly areas
-    if (note != null) {
-      var m2 = penta(tonic + 12, note, pent);
+    var leadVol = (cfg.bells ? 0.028 : 0.05);  // a touch softer overall
+    var oct = (sectionB && !isBoss) ? 24 : 12;  // B section sings an octave higher
+    if (restBar) {
+      if (pos === 0 && note != null) blip(penta(tonic, note, pent) + 12, t, eighth * 1.5, cfg.lead, leadVol * 0.65, 2400); // lone tail note
+    } else if (note != null) {
       var longNote = (hi % 8 === 0);
-      blip(m2, t, eighth * (longNote ? 1.7 : 0.92), cfg.lead, leadVol, 2600);
-    } else if (Math.random() < cfg.density * 0.35) {
+      var vel = leadVol * (0.82 + Math.random() * 0.32); // humanised dynamics
+      blip(penta(tonic, note, pent) + oct, t, eighth * (longNote ? 1.7 : 0.92), cfg.lead, vel, 2600);
+    } else if (Math.random() < cfg.density * 0.22) {
       var nxt = hook[(hi + 1) % hook.length]; if (nxt == null) nxt = 2;
-      blip(penta(tonic + 12, nxt, pent), t, eighth * 0.55, cfg.lead, leadVol * 0.6, 2400);
+      blip(penta(tonic, nxt, pent) + oct, t, eighth * 0.55, cfg.lead, leadVol * 0.5, 2400);
     }
   }
 
