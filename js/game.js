@@ -24,7 +24,7 @@
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
-               prism: false, forest: false, swamp: false, boneyard: false, storm: false, pirate: false, backrooms: false, japan: false, secretcave: false,
+               prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, pirate: false, backrooms: false, japan: false, secretcave: false,
                oilrig: false, cave: false, cloud: false, sanctuary: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
       davyjonesCaught: false,
@@ -162,6 +162,7 @@
       bellUsed: false,
       grab: null, bossBeam: null,  // boss combat state
       playerBeam: null, breathCd: 0, // Kaiju Breath
+      smoke: [], smokeTimer: 0, wyrmTimer: 6, // ashen smoke + magma wyrm
     };
     placeWrecks(loc);
     placeCages(loc);
@@ -236,6 +237,7 @@
     oilrig:    { plants: ["vent", "rock", "rock"], plantColors: ["#caa14a", "#6a6258", "#3a3320"], rock: "#2a2418", floor: "#100c06" },
     prism:     { plants: ["coral", "coral", "anemone"], plantColors: ["#ff5b9f", "#ffcf3a", "#3ad0e0", "#9a3ad0", "#36d6a0", "#ff7a3a"], rock: "#3a4a8a", floor: "#2a4a8a" },
     storm:     { plants: ["kelp", "rock", "rock"], plantColors: ["#3a5a4a", "#46506a", "#2a3a4a"], rock: "#2a3340", floor: "#161e28" },
+    ashen:     { plants: ["vent", "vent", "rock"], plantColors: ["#ff5b1a", "#c0402a", "#5a2a1a"], rock: "#2a1810", floor: "#140804" },
     pirate:    { plants: ["rock", "coral", "rock"], plantColors: ["#caa14a", "#6a5a3a", "#3a4a4a"], rock: "#2a2620", floor: "#15110a" },
   };
 
@@ -259,7 +261,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -674,13 +676,18 @@
   // a one-off secret boss (e.g. Davy Jones' Serpent from the captain's chest)
   function spawnSecretBoss(id) {
     var def = D.FISH_BY_ID[id], loc = D.LOCATIONS[run.area];
+    // wyrm-style ambushers burst out next to you; others rise from the deep
+    var atx = def.fromSmoke ? run.diver.x + (Math.random() < 0.5 ? -1 : 1) * 60 : loc.worldWidth / 2;
+    var aty = def.fromSmoke ? run.diver.y : loc.maxDepth * PXPM - 60;
     run.fish.push({
-      uid: id, def: def, x: loc.worldWidth / 2, y: loc.maxDepth * PXPM - 60, baseY: loc.maxDepth * PXPM - 60,
-      vx: 20, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, secretBoss: true, hp: bossHP(def.hp || 5), hitFlash: 0,
+      uid: id, def: def, x: atx, y: aty, baseY: aty,
+      vx: 20, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, secretBoss: true,
+      hp: def.hp === 1 ? 1 : bossHP(def.hp || 5), hitFlash: 0,
     });
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
-    toast("☠️ The captain's chest bursts open — " + def.name + " RISES! Harpoon it! 🔱", "epic", 5000);
+    toast(def.fromSmoke ? "🔥 " + def.name + " ERUPTS from the smoke and seizes you — HARPOON IT! 🔱"
+                        : "☠️ The chest bursts open — " + def.name + " RISES! Harpoon it! 🔱", "epic", 5000);
   }
 
   // ---------------------------------------------------------------------
@@ -833,6 +840,7 @@
     // --- oxygen ---
     if (diver.y > 26) {
       var drain = (1 + depthFactor(diver.y, loc) * 0.6) * oxygenMul();
+      if (run.area === "arctic" && !state.items.coldsuit) drain *= 2; // freezing without a Cold Suit
       run.oxygen -= drain * dt;
       // manual venting: dump air fast (for low-oxygen secrets) but never below
       // a safe floor just under the "low oxygen" threshold so you can't drown
@@ -876,6 +884,29 @@
         toast("Something rare stirs nearby... ✦", "epic", 1600);
       }
     }
+
+    // --- Ashen smoke clouds (obscure the water) + the Magma Wyrm ambush ---
+    if (loc.smoke) {
+      run.smokeTimer -= dt;
+      if (run.smokeTimer <= 0 && run.smoke.length < 6) {
+        run.smokeTimer = 1.5 + Math.random() * 2;
+        run.smoke.push({ x: Math.random() * loc.worldWidth, y: 60 + Math.random() * (loc.maxDepth * PXPM - 80), r: 60 + Math.random() * 60, vx: (Math.random() - 0.5) * 20, vy: -6 - Math.random() * 8, life: 8 + Math.random() * 6, phase: Math.random() * 6 });
+      }
+      var inSmoke = false;
+      for (var smi = run.smoke.length - 1; smi >= 0; smi--) {
+        var sm = run.smoke[smi];
+        sm.x += sm.vx * dt; sm.y += sm.vy * dt; sm.life -= dt; sm.phase += dt;
+        if (sm.life <= 0) { run.smoke.splice(smi, 1); continue; }
+        if (Math.hypot(sm.x - diver.x, sm.y - diver.y) < sm.r) inSmoke = true;
+      }
+      // Magma Wyrm: lurk in the smoke (with its hint) and it ambushes you
+      var mw = D.FISH_BY_ID.magmawyrm;
+      if (mw && state.hints.magmawyrm && !state.magmawyrmCaught && !run.bossPresent && inSmoke) {
+        run.wyrmTimer -= dt;
+        if (run.wyrmTimer <= 0) { spawnSecretBoss("magmawyrm"); run.grab = { boss: run.fish[run.fish.length - 1], wig: 0 }; run.fish[run.fish.length - 1].mode = "grab"; run.fish[run.fish.length - 1].modeT = 6; }
+      } else { run.wyrmTimer = 2.5; }
+    }
+
     // boss summon: Trench has the blobfish/Kraken; other areas have area bosses
     if (!run.bossPresent && depthM > 200) {
       if (run.area === "pirate" && state.keyPieces >= 4 && !state.davyjonesCaught) {
@@ -1433,7 +1464,9 @@
 
   function catchSecretBoss(boss) {
     var def = boss.def;
-    state[def.id + "Caught"] = true;   // davyjonesCaught / leatherbackCaught / ...
+    state[def.id + "Caught"] = true;   // davyjonesCaught / leatherbackCaught / magmawyrmCaught
+    state.discovered[def.id] = true;   // show it in the Collection
+    run.grab = null;                   // release any grab it had on you
     state.money += def.value;
     state.stats.earned += def.value;
     if (def.reward === "serpenteye") state.items.serpenteye = true;
@@ -1587,6 +1620,7 @@
     drawBossBeam();
     drawNetFx();
     drawTrap();
+    drawSmoke();
 
     // --- volumetric lighting / depth darkness ---
     drawLighting(loc, darkness);
@@ -1973,6 +2007,25 @@
       var pb = run.pebbles[i], x = pb.x - cam.x, y = pb.y - cam.y;
       ctx.fillStyle = "#cbb89a"; ctx.fillRect((x - 2) | 0, (y - 2) | 0, 4, 4);
       ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillRect((x - 2) | 0, (y - 2) | 0, 2, 1);
+    }
+  }
+  // drifting ash/smoke puffs that obscure whatever's inside them
+  function drawSmoke() {
+    if (!run.smoke || !run.smoke.length) return;
+    for (var i = 0; i < run.smoke.length; i++) {
+      var sm = run.smoke[i], x = sm.x - cam.x, y = sm.y - cam.y;
+      if (x < -sm.r - 40 || x > W + sm.r + 40 || y < -sm.r - 40 || y > H + sm.r + 40) continue;
+      var fade = Math.min(1, sm.life / 2) * Math.min(1, (8 - sm.life > 0 ? 1 : sm.life));
+      var a = 0.5 * fade;
+      // a few overlapping blobs per puff for a billowing look
+      for (var b = 0; b < 4; b++) {
+        var ox = Math.sin(sm.phase + b * 1.7) * sm.r * 0.4, oy = Math.cos(sm.phase * 0.8 + b) * sm.r * 0.3;
+        var rr = sm.r * (0.6 + 0.2 * (b % 2));
+        var g = ctx.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, rr);
+        g.addColorStop(0, "rgba(40,34,30," + a.toFixed(3) + ")");
+        g.addColorStop(1, "rgba(40,34,30,0)");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x + ox, y + oy, rr, 0, 7); ctx.fill();
+      }
     }
   }
   function drawTrap() {
@@ -2848,6 +2901,8 @@
 
   function startDive(areaId) {
     if (!state.areas[areaId]) { toast("That area is locked.", "bad"); return; }
+    var L = D.LOCATIONS[areaId];
+    if (L.requireItem && !state.items[L.requireItem]) { toast("You need the " + (L.requireItem === "heatsuit" ? "Heat Suit" : L.requireItem) + " to survive here!", "bad"); return; }
     closeOverlay("modal");
     sellHud(true);
     scene = "dive";
@@ -2915,9 +2970,19 @@
     // GEAR (everything except the net, which lives under Tools)
     html += '<div class="tab-body' + bodyClass("gear") + '" data-body="gear">';
     for (var key in D.UPGRADES) {
-      if (key === "scoop" || key === "trap") continue; // these live in the Tools tab
+      if (key === "scoop" || key === "trap" || key === "hammer" || key === "shovel" || key === "sling") continue; // these live in the Tools tab
       html += upgradeRow(key);
     }
+    var hasHeat = !!state.items.heatsuit;
+    html += '<div class="shop-item"><div class="si-info"><b>🟥 Heat Suit</b>' + (hasHeat ? ' <span class="lvl">✓ Owned</span>' : '')
+      + '<p>A reflective lava-proof suit — required to dive the searing <b>Ashen Hollow</b> without cooking.</p></div>'
+      + '<div class="si-buy">' + (hasHeat ? '<span class="maxed">✓</span>'
+        : '<button data-buytool="heatsuit:60000" ' + (state.money < 60000 ? 'disabled' : '') + '>$60,000</button>') + '</div></div>';
+    var hasCold = !!state.items.coldsuit;
+    html += '<div class="shop-item"><div class="si-info"><b>🟦 Cold Suit</b>' + (hasCold ? ' <span class="lvl">✓ Owned</span>' : '')
+      + '<p>Insulated drysuit — stops the freezing <b>Arctic Shelf</b> burning through your oxygen twice as fast.</p></div>'
+      + '<div class="si-buy">' + (hasCold ? '<span class="maxed">✓</span>'
+        : '<button data-buytool="coldsuit:18000" ' + (state.money < 18000 ? 'disabled' : '') + '>$18,000</button>') + '</div></div>';
     html += '</div>';
 
     // TOOLS — Fishing Net + Deploy Net + Harpoons + special tools
@@ -3049,8 +3114,8 @@
         var p = b.getAttribute("data-buytool").split(":"), id = p[0], cost = +p[1];
         if (state.items[id] || state.money < cost) return;
         state.money -= cost; state.items[id] = true; saveGame();
-        var nm = id === "torch" ? "🔦 Torch" : id === "divingbell" ? "🛎️ Diving Bell" : "Tool";
-        toast(nm + " acquired!", "good", 1800); showShop();
+        var NM = { torch: "🔦 Torch", divingbell: "🛎️ Diving Bell", heatsuit: "🟥 Heat Suit", coldsuit: "🟦 Cold Suit" };
+        toast((NM[id] || "Tool") + " acquired!", "good", 1800); showShop();
       };
     });
     ov.querySelectorAll("[data-buystopwatch]").forEach(function (b) {
@@ -3588,6 +3653,9 @@
       }
       if (!unlocked && loc.requireBosses && !(state.krakenCaught && state.blobfishCaught)) {
         gate = "🔒 Defeat the Kraken (and the blobfish) to unlock";
+      }
+      if (!unlocked && loc.requireItem && !state.items[loc.requireItem]) {
+        gate = "🔒 Buy the " + (loc.requireItem === "heatsuit" ? "Heat Suit" : loc.requireItem) + " (Shop → Gear) first";
       }
       if (!unlocked && loc.requireAllBirds && !allBirdsFound()) {
         gate = "🔒 Discover every bird first";

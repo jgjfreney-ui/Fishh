@@ -101,6 +101,13 @@
       shinyBonus: 0.06, unlocked: false, cost: 330000,
       sky: { top: "#262a36", bottom: "#454c5e" },
     },
+    ashen: {
+      id: "ashen", name: "Ashen Hollow", tint: "#e0552a", requireItem: "heatsuit", smoke: true,
+      blurb: "A drowned volcanic vent — black water lit by lava, choked with drifting ash and smoke. You'll cook without a Heat Suit.",
+      maxDepth: 700, worldWidth: 2600, topColor: "#3a2218", deepColor: "#0a0402",
+      shinyBonus: 0.08, unlocked: false, cost: 200000,
+      sky: { top: "#3a2a20", bottom: "#1a0e08" },
+    },
     pirate: {
       id: "pirate", name: "Drowned Cove", tint: "#caa14a", secret: true,
       blurb: "A pirates' graveyard of sunken galleons and cursed gold — and things that should have stayed buried.",
@@ -462,6 +469,22 @@
     { id: "stormpetrel2", name: "Storm Albatross", area: "storm", bird: true, rarity: "rare", size: 3, value: 700, color: "#3a4452", accent: "#dfeaff", shape: "seabird", seedCost: 1200 },
     { id: "stormgull", name: "Squall Gull",   area: "storm", bird: true, night: true, rarity: "uncommon", size: 2, value: 360, color: "#5a6470", accent: "#cfe0ff", shape: "gull", seedCost: 700 },
     { id: "leviathanking", name: "The Leviathan King", area: "storm", areaBoss: true, rarity: "mythic", size: 14, value: 34000, minDepth: 250, color: "#2a3a5a", accent: "#9fd0ff", shape: "leviathanking", hp: 6, reward: "" },
+
+    // ======== Ashen Hollow (volcanic; needs a Heat Suit) ========
+    { id: "emberfish",  name: "Emberfish",    area: "ashen", rarity: "common",   size: 1, value: 180, minDepth: 0,   color: "#e0552a", accent: "#ffcf3a", shape: "fish" },
+    { id: "cinderfish", name: "Cinder Dace",  area: "ashen", rarity: "common",   size: 1, value: 160, minDepth: 0,   color: "#8a3a2a", accent: "#ff9a3a", shape: "longfish" },
+    { id: "lavadart",   name: "Lava Dart",    area: "ashen", rarity: "uncommon", size: 1, value: 280, minDepth: 0,   color: "#ff5b1a", accent: "#ffe14d", shape: "guppy" },
+    { id: "magmaeel",   name: "Magma Eel",    area: "ashen", rarity: "uncommon", size: 3, value: 360, minDepth: 40,  color: "#c0402a", accent: "#ffcf3a", shape: "eel" },
+    { id: "pyrejelly",  name: "Pyre Jelly",   area: "ashen", rarity: "uncommon", size: 2, value: 320, minDepth: 30,  color: "#e0552a", accent: "#ffe14d", shape: "glowjelly" },
+    { id: "obsidianray",name: "Obsidian Ray", area: "ashen", rarity: "rare",     size: 4, value: 620, minDepth: 120, color: "#2a2226", accent: "#ff5b1a", shape: "ray" },
+    { id: "moltentuna", name: "Molten Tuna",  area: "ashen", rarity: "rare",     size: 4, value: 680, minDepth: 150, color: "#a03a2a", accent: "#ffcf3a", shape: "tuna" },
+    { id: "ashshark",   name: "Ash Shark",    area: "ashen", rarity: "epic",     size: 6, value: 2600, minDepth: 250,color: "#3a2e2a", accent: "#ff7a3a", shape: "shark" },
+    { id: "cindercrab", name: "Cinder Crab",  area: "ashen", creature: true, rarity: "uncommon", size: 2, value: 320, color: "#8a3a2a", accent: "#ffcf3a", shape: "crab" },
+    { id: "ashsnail",   name: "Ash Snail",    area: "ashen", creature: true, rarity: "common", size: 1, value: 110, color: "#5a4a44", accent: "#ff9a3a", shape: "snail" },
+    { id: "emberhawk",  name: "Ember Hawk",   area: "ashen", bird: true, day: true, rarity: "rare", size: 2, value: 720, color: "#c0402a", accent: "#ffcf3a", shape: "raptor", seedCost: 1200 },
+    { id: "cinderboss", name: "Cinder Behemoth", area: "ashen", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 250, color: "#5a2a1a", accent: "#ff7a1a", shape: "cinderboss", hp: 6, reward: "" },
+    { id: "magmawyrm",  name: "Magma Wyrm",   area: "ashen", secretBoss: true, fromSmoke: true, rarity: "mythic", size: 9, value: 9000, minDepth: 0, color: "#e0401a", accent: "#ffe14d", shape: "magmawyrm", hp: 1, reward: "",
+      hint: "Something vast moves inside the ash clouds. Linger in the smoke and it will come for YOU — one harpoon is all it takes, if you're quick." },
 
     // ======== Drowned Cove (secret pirate location) ========
     { id: "cutlassfish", name: "Cutlassfish",  area: "pirate", rarity: "common",   size: 2, value: 200, minDepth: 0,   color: "#b0b6bc", accent: "#ffcf3a", shape: "longfish" },

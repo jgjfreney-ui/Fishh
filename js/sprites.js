@@ -1095,6 +1095,25 @@
       "..bBBBBb..........",
       "...FF.............",
     ],
+    cinderboss: [
+      "....A.A.A.A.A.........",
+      "...bBBBBBBBBBBb.......",
+      "..bBGBBGBBGBBGBBb.....",
+      "f.bBBBBBBBBBBBBBBBEPb.",
+      "fbBBGBBGBBGBBGBBBBBPMW",
+      "fbBBBBBBBBBBBBBBBBBBb.",
+      "f..AAbBBBbAA.AAbBBbAA.",
+      "....bb........bb......",
+    ],
+    magmawyrm: [
+      ".................bBBb..",
+      "..........bGBb..bBGBBEP",
+      "....bGBb.bBGBBbbBBGBBPMW",
+      "fbBGGBBGGBBGGBBGGBBGGb.",
+      "fbBBBBBBBBBBBBBBBBBBBb..",
+      "..bbBBBBbbb..bbBBBBbb...",
+      "....bbb........bbb......",
+    ],
     leatherback: [
       "......bbBBBBBBBBbb......",
       "....bBAABBAABBAABBBBb...",
@@ -1526,6 +1545,7 @@
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",
     koi: "koi", salmon: "salmon", leatherback: "leatherback", macaw: "macaw",
+    cinderboss: "cinderboss", magmawyrm: "magmawyrm",
     gull: "gull", duck: "duck", songbird: "songbird", raptor: "raptor", seabird: "seabird",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
