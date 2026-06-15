@@ -46,13 +46,13 @@
       shinyBonus: 0, unlocked: false, cost: 3000,
       sky: { top: "#bfe8c0", bottom: "#eafce0" },
     },
-    cave: {
-      id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
-      blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
-      maxDepth: 800, worldWidth: 2600, topColor: "#2a3340", deepColor: "#04050a",
-      shinyBonus: 0.12, unlocked: false, cost: 3800,
-      caveArea: true, creaturePool: true,
-      sky: { top: "#1a2230", bottom: "#0a0e16" },
+    secretcave: {
+      id: "secretcave", name: "Hollow Cave", tint: "#9a8ad0",
+      blurb: "A trickling limestone cave just past the grove, threaded with pale roots and glowing fungus — and home to the blind, ghost-white olm.",
+      maxDepth: 500, worldWidth: 2300, topColor: "#3a4a52", deepColor: "#0a0e16",
+      shinyBonus: 0, unlocked: false, cost: 3800,
+      caveArea: true,
+      sky: { top: "#9fb0b8", bottom: "#cdd8dc" },
     },
 
     kelp: {
@@ -161,13 +161,6 @@
       shinyBonus: 0, unlocked: false, cost: 0,
       sky: { top: "#ffd6e0", bottom: "#ffeef2" },
     },
-    secretcave: {
-      id: "secretcave", name: "Hollow Deep", tint: "#9a8ad0", secret: true,
-      blurb: "A still, lightless pocket of the cavern that only opens to those who arrive unarmed by boss relics.",
-      maxDepth: 700, worldWidth: 2200, topColor: "#26303a", deepColor: "#03040a",
-      shinyBonus: 0, unlocked: false, cost: 0,
-      sky: { top: "#1a2230", bottom: "#0a0e16" },
-    },
     oilrig: {
       id: "oilrig", name: "The Oil Rig", tint: "#caa14a", secret: true,
       blurb: "A black sea of crude beneath a derelict rig — where rusted machines and salvage-bots still swim.",
@@ -182,6 +175,15 @@
       shinyBonus: 0, unlocked: false, cost: 0,
       sky: { top: "#1a2622", bottom: "#0a120e" },
     },
+    cave: {
+      id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
+      blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
+      maxDepth: 800, worldWidth: 2600, topColor: "#2a3340", deepColor: "#04050a",
+      shinyBonus: 0.12, unlocked: false, cost: 360000,
+      caveArea: true, creaturePool: true, requireAllCreatures: true,
+      sky: { top: "#1a2230", bottom: "#0a0e16" },
+    },
+
     cloud: {
       id: "cloud", name: "Cloud Reaches", tint: "#bfe0ff",
       blurb: "Climb above the waves into a dreamlike sky and catch the birds themselves. Shinies bloom thick up here.",
@@ -361,7 +363,7 @@
     { id: "musselbed",  name: "Mussel",       area: "kelp",  creature: true, tool: "shovel", dropsPearl: true, rarity: "common",   size: 1, value: 120, color: "#5a5a6a", accent: "#cfd6e0", shape: "clam" },
     { id: "deepclam",   name: "Abyss Clam",   area: "trench",creature: true, tool: "shovel", dropsPearl: true, rarity: "rare",     size: 2, value: 520, color: "#7a6a8a", accent: "#e0d6ff", shape: "clam" },
     { id: "openclam",   name: "Pelagic Clam", area: "opensea",creature: true, tool: "shovel", dropsPearl: true, rarity: "common",  size: 2, value: 220, color: "#6a7a8a", accent: "#dfeaff", shape: "clam" },
-    // ---- Hollow Deep (the secret cave) — its own creatures + fish ----
+    // ---- Hollow Cave (early cave after the Grove) — its own creatures + fish ----
     // (Gloom Cavern itself now just gathers all the PRE-EXISTING creatures.)
     { id: "cavefish",   name: "Blind Cavefish", area: "secretcave", rarity: "common",   size: 1, value: 140,  minDepth: 0, color: "#e8dcd0", shape: "fish" },
     { id: "ghostshrimp",name: "Ghost Shrimp",   area: "secretcave", creature: true, rarity: "rare",      size: 1, value: 360,  color: "#cfe0e8", shape: "bug" },
@@ -586,9 +588,9 @@
     { id: "ornatestork",name: "Ornate Stork", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 880, color: "#f0f4f6", accent: "#e0556a", shape: "stork", seedCost: 1800 },
     { id: "kaiju",      name: "The Kaiju",    area: "japan", areaBoss: true, rarity: "mythic", size: 14, value: 30000, minDepth: 250, color: "#2f4a3a", accent: "#6affc0", shape: "kaiju", hp: 6, reward: "kaijubreath" },
 
-    // ======== Hollow Deep (secret cave) — Olm is its secret fish ========
+    // ======== Hollow Cave (early cave after the Grove) — Olm is its secret fish ========
     { id: "olm",        name: "Olm",          area: "secretcave", rarity: "epic", size: 1, value: 1200, minDepth: 0, color: "#f0d6cc", accent: "#ffc0cc", shape: "eel", secret: true,
-      hint: "A blind cave salamander — it only ventures out for a diver who sinks deep (below 250m) into the Hollow Deep and holds perfectly still.", condition: { still: true, minDepth: 250 } },
+      hint: "A blind cave salamander — it only ventures out for a diver who sinks to the bottom of the Hollow Cave (below 250m) and holds perfectly still.", condition: { still: true, minDepth: 250 } },
     { id: "cavelantern",name: "Cave Lantern", area: "secretcave", rarity: "rare", size: 2, value: 420, minDepth: 60, color: "#bcd0c0", accent: "#ffe98a", shape: "lantern" },
 
     // ======== The Oil Rig (secret) — metal / mechanical / robot catchables ========

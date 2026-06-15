@@ -813,8 +813,6 @@
       how: "Sink into the far-RIGHT corner of the <b>River Run</b> riverbed and swim down through the tunnel in the floor." },
     { area: "backrooms",  requires: "kelp",    price: 6000,  teaser: "Something is wrong beneath the <b>Kelp Forest</b> floor...",
       how: "Sink to the far-LEFT seabed of the <b>Kelp Forest</b> and slip through the crack in the floor." },
-    { area: "secretcave", requires: "cave",    price: 9000,  teaser: "A hollow pocket is said to hide deep in the <b>Gloom Cavern</b>.",
-      how: "Dive the <b>Gloom Cavern</b> with every boss relic toggled OFF (in your Items) to find it." },
     { area: "pirate",     requires: "storm",   price: 16000, teaser: "A cursed place sleeps somewhere under the <b>Stormy Seas</b>.",
       how: "Dive the wreck-strewn far-LEFT floor of the <b>Stormy Seas</b>." },
     { area: "oilrig",     requires: "opensea", price: 16000, teaser: "A derelict structure rusts somewhere out in the <b>Open Sea</b>.",
@@ -3092,7 +3090,7 @@
     // secret-area suits — hidden (no spoiler) until you find the place
     { name: "Backrooms", area: "backrooms", color: "#d8c84a", secret: true },
     { name: "Ornate",    area: "japan",     color: "#e0556a", secret: true },
-    { name: "Hollow",    area: "secretcave",color: "#9a8ad0", secret: true },
+    { name: "Hollow",    area: "secretcave",color: "#9a8ad0" },
     { name: "Oil Rig",   area: "oilrig",    color: "#caa14a", secret: true },
     { name: "Stormy",    area: "storm",     color: "#46506a" },
     { name: "Sunlit",    area: "mountain",  color: "#8a9aae" },
@@ -3784,10 +3782,6 @@
     state.lastArea = areaId;
     if (!state.visited) state.visited = {};
     state.visited[areaId] = true; // unlocks this area's wetsuit
-    // Hollow Deep opens to those who enter the Gloom Cavern with NO boss gear active
-    if (areaId === "cave" && !anyBossItemOn() && !state.areas.secretcave) {
-      unlockSecretArea("secretcave", "🕯️ Carrying no boss relics, you drift into a hidden pocket of the cavern — the HOLLOW DEEP opens. (Now in Change Area.)");
-    }
     if (window.AUDIO) AUDIO.playArea(areaId, run && run.night);
   }
 
