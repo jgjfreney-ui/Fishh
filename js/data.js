@@ -167,6 +167,13 @@
       shinyBonus: 0, unlocked: false, cost: 0,
       sky: { top: "#3a3320", bottom: "#1a160a" },
     },
+    flooded: {
+      id: "flooded", name: "Flooded Freighter", tint: "#3a8a6a", secret: true,
+      blurb: "The black, silt-choked hold of a sunken cargo ship. Skittish things dart between the containers, shying away from any diver's light — and something with reaching jaws stalks the dark.",
+      maxDepth: 800, worldWidth: 2600, topColor: "#1a2e2a", deepColor: "#03070a",
+      shinyBonus: 0, unlocked: false, cost: 0,
+      sky: { top: "#1a2622", bottom: "#0a120e" },
+    },
     cloud: {
       id: "cloud", name: "Cloud Reaches", tint: "#bfe0ff",
       blurb: "Climb above the waves into a dreamlike sky and catch the birds themselves. Shinies bloom thick up here.",
@@ -581,6 +588,20 @@
     { id: "boltcrab",   name: "Salvage Bot",  area: "oilrig", creature: true, rarity: "uncommon", size: 2, value: 340, color: "#7a7a82", accent: "#ffcf3a", shape: "crab" },
     { id: "rigtitan",   name: "The Rig Titan", area: "oilrig", areaBoss: true, rarity: "mythic", size: 14, value: 32000, minDepth: 250, color: "#4a4a52", accent: "#ff7a3a", shape: "rigtitan", hp: 6, reward: "" },
 
+    // ======== Flooded Freighter (secret; shy fish that hide from divers) ========
+    { id: "holdperch",  name: "Hold Perch",    area: "flooded", rarity: "common",   size: 1, value: 360,  minDepth: 0,   color: "#6a7a6a", accent: "#bfe0a0", shape: "perch",    shy: true },
+    { id: "silteel",    name: "Silt Eel",      area: "flooded", rarity: "uncommon", size: 3, value: 520,  minDepth: 40,  color: "#4a5a4a", accent: "#9fd0a0", shape: "eel",      shy: true },
+    { id: "rustcod",    name: "Rust Cod",      area: "flooded", rarity: "common",   size: 2, value: 400,  minDepth: 20,  color: "#7a6a52", accent: "#d8a05a", shape: "codfish",  shy: true },
+    { id: "bilgefish",  name: "Bilge Fish",    area: "flooded", rarity: "common",   size: 1, value: 340,  minDepth: 0,   color: "#5a6a72", accent: "#9fe0d0", shape: "fish",     shy: true },
+    { id: "containerray", name: "Container Ray", area: "flooded", rarity: "rare",   size: 4, value: 1500, minDepth: 140, color: "#52606a", accent: "#ffcf3a", shape: "ray",      shy: true },
+    { id: "paleflounder", name: "Pale Flounder", area: "flooded", rarity: "uncommon", size: 2, value: 560, minDepth: 80, color: "#8a8a7a", accent: "#e0e0c0", shape: "flatfish", shy: true },
+    { id: "shadowtang", name: "Shadow Tang",   area: "flooded", rarity: "uncommon", size: 2, value: 600,  minDepth: 60,  color: "#3a4a5a", accent: "#5bd0ff", shape: "tang",     shy: true },
+    { id: "murktrout",  name: "Murk Trout",    area: "flooded", rarity: "common",   size: 2, value: 380,  minDepth: 30,  color: "#5a6a5a", accent: "#caa15a", shape: "trout",    shy: true },
+    { id: "lanterngoby", name: "Lantern Goby", area: "flooded", rarity: "common",   size: 1, value: 320,  minDepth: 0,   color: "#6a6258", accent: "#ffd24a", shape: "goby",     shy: true, glow: true },
+    { id: "ironjelly",  name: "Iron Jelly",    area: "flooded", rarity: "rare",     size: 3, value: 1400, minDepth: 120, color: "#4a5a6a", accent: "#5bf0ff", shape: "glowjelly" },
+    { id: "cratecrab",  name: "Crate Crab",    area: "flooded", creature: true, rarity: "uncommon", size: 2, value: 420, color: "#6a5a4a", accent: "#caa15a", shape: "crab", shy: true },
+    { id: "goblinshark", name: "Goblin Shark", area: "flooded", areaBoss: true, rarity: "mythic", size: 13, value: 38000, minDepth: 200, color: "#caa0b0", accent: "#e25a7a", shape: "goblin", hp: 7, reward: "", jawLunge: true },
+
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
     { id: "pelican",   name: "Pelican",      area: "coral", bird: true, rarity: "uncommon", size: 2, value: 130, color: "#d8c2a0", shape: "duck", seedCost: 400 },
@@ -685,20 +706,27 @@
 
   // --- Treasures (from shipwrecks) --------------------------------------
   const TREASURES = [
-    { id: "coins",   name: "Gold Coins",     value: 60,   color: "#ffd34a", rarity: "common" },
-    { id: "bottle",  name: "Message Bottle", value: 90,   color: "#8fd6c0", rarity: "common" },
-    { id: "pearl",   name: "Lustrous Pearl", value: 220,  color: "#f3eaff", rarity: "uncommon" },
-    { id: "clampearl", name: "Clam Pearl",   value: 480,  color: "#fff0f6", rarity: "rare" },
-    { id: "coinchest", name: "Cursed Coin Chest", value: 500, color: "#ffcf3a", rarity: "rare" },
-    { id: "goblet",  name: "Silver Goblet",  value: 300,  color: "#cfd6de", rarity: "uncommon" },
-    { id: "ruby",    name: "Blood Ruby",     value: 700,  color: "#e23b5a", rarity: "rare" },
-    { id: "amulet",  name: "Ancient Amulet", value: 1200, color: "#49d6c0", rarity: "rare" },
-    { id: "crown",   name: "Sunken Crown",   value: 3200, color: "#ffcf3a", rarity: "epic" },
+    { id: "coins",   name: "Gold Coins",     value: 60,    color: "#ffd34a", rarity: "common" },
+    { id: "bottle",  name: "Message Bottle", value: 90,    color: "#8fd6c0", rarity: "common" },
+    { id: "pearl",   name: "Lustrous Pearl", value: 240,   color: "#f3eaff", rarity: "uncommon" },
+    { id: "goblet",  name: "Silver Goblet",  value: 340,   color: "#cfd6de", rarity: "uncommon" },
+    // rare+ treasures are now MUCH rarer and worth a lot more
+    { id: "clampearl", name: "Clam Pearl",   value: 1100,  color: "#fff0f6", rarity: "rare" },
+    { id: "coinchest", name: "Cursed Coin Chest", value: 1400, color: "#ffcf3a", rarity: "rare" },
+    { id: "ruby",    name: "Blood Ruby",     value: 2600,  color: "#e23b5a", rarity: "rare" },
+    { id: "amulet",  name: "Ancient Amulet", value: 3800,  color: "#49d6c0", rarity: "rare" },
+    { id: "crown",   name: "Sunken Crown",   value: 11000, color: "#ffcf3a", rarity: "epic" },
     // plane-wreck-only treasures (rarer & more valuable)
-    { id: "blackbox", name: "Black Box",      value: 1600, color: "#e8852a", rarity: "rare",  plane: true },
-    { id: "pilotwatch", name: "Pilot's Watch", value: 2400, color: "#cfd6de", rarity: "epic",  plane: true },
-    { id: "turbine", name: "Jet Turbine",    value: 4200, color: "#8aa0b0", rarity: "epic",  plane: true },
-    { id: "goldwings", name: "Golden Wings",  value: 6500, color: "#ffcf3a", rarity: "legendary", plane: true },
+    { id: "blackbox", name: "Black Box",      value: 4200,  color: "#e8852a", rarity: "rare",  plane: true },
+    { id: "pilotwatch", name: "Pilot's Watch", value: 7500,  color: "#cfd6de", rarity: "epic",  plane: true },
+    { id: "turbine", name: "Jet Turbine",    value: 11000, color: "#8aa0b0", rarity: "epic",  plane: true },
+    { id: "goldwings", name: "Golden Wings",  value: 26000, color: "#ffcf3a", rarity: "legendary", plane: true },
+    // yacht-wreck-only treasures (rare luxury — high spoils)
+    { id: "champagne", name: "Vintage Champagne", value: 6000,  color: "#bfe0a0", rarity: "rare",  yacht: true },
+    { id: "rolex",   name: "Gold Wristwatch", value: 14000, color: "#ffcf3a", rarity: "epic",  yacht: true },
+    { id: "tiara",   name: "Diamond Tiara",  value: 32000, color: "#bfeaff", rarity: "legendary", yacht: true },
+    // cargo-ship container (its own bulk loot)
+    { id: "container", name: "Cargo Container", value: 900, color: "#c46a3a", rarity: "uncommon", cargo: true },
   ];
 
   // --- Upgrade tracks ----------------------------------------------------

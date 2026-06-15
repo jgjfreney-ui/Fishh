@@ -25,11 +25,12 @@
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
-               oilrig: false, cave: false, cloud: false, sanctuary: false },
+               oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
       davyjonesCaught: false,
       openseaClams: 0,       // clams dug in the Open Sea (15 summons the Leatherback)
       leatherbackCaught: false,
+      cargoSearched: 0,      // cargo ships fully stripped (5 opens the Flooded Freighter)
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -247,6 +248,7 @@
     mountain:  { plants: ["crystal", "rock", "rock"], plantColors: ["#cfe0ee", "#8a9aae", "#4a5a6a"], rock: "#3a4654", floor: "#28323e" },
     olympus:   { plants: ["crystal", "coral", "crystal"], plantColors: ["#ffe07a", "#fff3b0", "#cfe0ff", "#ffd24a"], rock: "#c9b06a", floor: "#a8904a" },
     pirate:    { plants: ["rock", "coral", "rock"], plantColors: ["#caa14a", "#6a5a3a", "#3a4a4a"], rock: "#2a2620", floor: "#15110a" },
+    flooded:   { plants: ["rock", "kelp", "rock"], plantColors: ["#3a5a4a", "#4a4a40", "#2a3a32"], rock: "#1f2a26", floor: "#0a120e" },
   };
 
   function generateDecor(loc) {
@@ -269,7 +271,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire", mountain: "spire", olympus: "bigcrystal" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire", mountain: "spire", olympus: "bigcrystal", flooded: "spire" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -359,11 +361,17 @@
     var n = loc.maxDepth > 700 ? 3 : 2;
     var planeChance = loc.id === "trench" ? 0.45 : (loc.id === "river" ? 0.1 : 0.28);
     for (var i = 0; i < n; i++) {
+      var type, roll = Math.random();
+      if (roll < 0.06) type = "yacht";                 // a rare luxury yacht (high spoils)
+      else if (roll < 0.22) type = "cargo";            // a big cargo freighter (10 treasures)
+      else if (Math.random() < planeChance) type = "plane";
+      else type = "ship";
       run.wrecks.push({
-        type: Math.random() < planeChance ? "plane" : "ship",
+        type: type,
         x: 200 + Math.random() * (loc.worldWidth - 400),
         y: loc.maxDepth * (0.45 + 0.5 * (i / n)) + Math.random() * 40,
-        w: 180 + Math.random() * 120,
+        w: type === "cargo" ? 300 + Math.random() * 120 : type === "yacht" ? 200 + Math.random() * 80 : 180 + Math.random() * 120,
+        looted: 0,
       });
     }
   }
@@ -596,6 +604,7 @@
     { area: "pirate",     how: "Dive the wreck-strewn far-LEFT floor of the <b>Stormy Seas</b> into the Drowned Cove." },
     { area: "secretcave", how: "Dive the <b>Gloom Cavern</b> with every boss relic toggled OFF (in your Items) to find the Hollow Deep." },
     { area: "oilrig",     how: "Smash sea-floor cages with the <b>Sledgehammer</b> to pry out a Cage Key, then carry it to the sunken oil rig." },
+    { area: "flooded",    how: "Fully strip the loot from <b>5 cargo-ship wrecks</b>, then swim into another cargo wreck's hold." },
     { area: "ashen",      how: "Buy the <b>Heat Suit</b> (Shop → Gear); the Ashen Caldera then opens in Change Area." },
     { area: "olympus",    how: "Own the <b>Storm Summoner</b>, climb to the tallest peak of the <b>Sunlit Peaks</b>, line up with its tip and summon a storm." },
   ];
@@ -1020,6 +1029,14 @@
         f.baseY += (-dy / dist) * 90 * dt;  // and vertically
         f.baseY = clamp(f.baseY, 20, loc.maxDepth * PXPM - 10);
       }
+      // shy fish (Flooded Freighter) shy away from any diver, darting for cover —
+      // milder than skittish, so you can still corner them
+      if (f.def.shy && !f.isBoss && dist < 200) {
+        f.fleeing = 0.5;
+        f.vx = (dx < 0 ? 1 : -1) * Math.max(Math.abs(f.vx) || 0, 75);
+        f.baseY += (-dy / dist) * 55 * dt;
+        f.baseY = clamp(f.baseY, 20, loc.maxDepth * PXPM - 10);
+      }
       var grabbing = false;
       if (canGrab && dist < mRange) {
         // pull toward the diver (stronger when closer; big fish resist)
@@ -1240,6 +1257,20 @@
       }
     }
 
+    // --- Flooded Freighter: once 5 cargo ships are stripped, swim into a cargo
+    //     wreck's hold and you drop straight into the hidden freighter ---
+    if ((state.cargoSearched || 0) >= 5 && !state.areas.flooded && run.area !== "flooded") {
+      for (var cwi = 0; cwi < run.wrecks.length; cwi++) {
+        var cw = run.wrecks[cwi];
+        if (cw.type !== "cargo") continue;
+        if (Math.hypot(cw.x - diver.x, cw.y - diver.y) < 46) {
+          unlockSecretArea("flooded", "📦 You slip through a torn container into a vast FLOODED FREIGHTER — its hold teeming with skittish life!");
+          pendingSecretEnter = "flooded";
+          break;
+        }
+      }
+    }
+
     // --- Sonar Radar (orca drop): ping hot/cold toward the nearest wreck ---
     if (itemOn("sonar") && run.wrecks.length) {
       var nearest = Infinity;
@@ -1290,29 +1321,42 @@
     updateHud();
   }
 
-  var WRECK_LOOT_CAP = 4; // each wreck only yields this many treasures per dive (no infinite farming)
+  // per-dive loot budget by wreck type (cargo ships are huge — 10 treasures)
+  function wreckCap(w) { return w.type === "cargo" ? 10 : w.type === "yacht" ? 6 : 4; }
   function maybeSpawnTreasure() {
     if (run.wrecks.length === 0) return;
     // only wrecks that still have loot left this dive
-    var live = run.wrecks.filter(function (w) { return (w.looted || 0) < WRECK_LOOT_CAP; });
+    var live = run.wrecks.filter(function (w) { return (w.looted || 0) < wreckCap(w); });
     if (live.length === 0) return;
     var wreck = live[(Math.random() * live.length) | 0];
     var df = depthFactor(wreck.y, D.LOCATIONS[run.area]);
-    var isPlane = wreck.type === "plane";
-    // ship wrecks: regular loot only. plane wrecks: regular + a chance at the
-    // exclusive plane treasures (rarer & richer).
+    var isPlane = wreck.type === "plane", isYacht = wreck.type === "yacht", isCargo = wreck.type === "cargo";
+    // ship: regular loot. plane/yacht: regular + a chance at their exclusive
+    // (richer) treasures. rare+ loot is now genuinely rare.
     var pool = D.TREASURES.filter(function (tt) {
-      if (tt.plane && !isPlane) return false;            // plane loot only from planes
-      if (tt.plane) return Math.random() < 0.5;          // ~half of a plane's drops are exclusive
+      if (tt.plane) return isPlane && Math.random() < 0.5;   // plane-only loot
+      if (tt.yacht) return isYacht && Math.random() < 0.55;  // yacht-only luxury loot
+      if (tt.cargo) return isCargo && Math.random() < 0.6;   // cargo containers from cargo ships
       var ro = D.RARITY[tt.rarity].order;
-      return Math.random() < (0.3 + df * 0.9) || ro <= 1;
+      if (ro >= 3) return Math.random() < (0.04 + df * 0.18) * (isYacht ? 2.2 : isCargo ? 1.4 : 1); // rare+ much rarer
+      if (ro === 2) return Math.random() < (0.18 + df * 0.4);
+      return Math.random() < 0.9; // common/uncommon are the bread and butter
     });
-    if (pool.length === 0) pool = D.TREASURES.filter(function (tt) { return !tt.plane; });
+    if (pool.length === 0) pool = D.TREASURES.filter(function (tt) { return !tt.plane && !tt.yacht && !tt.cargo; });
     var def = pool[(Math.random() * pool.length) | 0];
     wreck.looted = (wreck.looted || 0) + 1; // count it toward this wreck's loot budget
+    if (isCargo && wreck.looted >= wreckCap(wreck) && !wreck.credited) { wreck.credited = true; markCargoSearched(); }
     run.treasures.push({
       def: def, x: wreck.x + (Math.random() - 0.5) * wreck.w, y: wreck.y - 10 - Math.random() * 30, phase: Math.random() * 6,
     });
+  }
+  // fully stripping a cargo ship builds toward the hidden Flooded Freighter
+  function markCargoSearched() {
+    state.cargoSearched = (state.cargoSearched || 0) + 1;
+    saveGame();
+    if (state.cargoSearched === 5 && !state.areas.flooded) {
+      toast("📦 You've stripped 5 cargo ships bare... a flooded freighter is said to lie deep below. Sink to a cargo wreck's hold to find it.", "epic", 4800);
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -1458,7 +1502,7 @@
     var ax = diver.x - boss.x, ay = diver.y - boss.y, l = Math.hypot(ax, ay) || 1;
     var spd = 380 + boss.size * 8 + totalBossesBeaten() * 12 + areaTier(boss.def.area) * 14; // bosses get faster deeper into the game
     boss.cvx = (ax / l) * spd; boss.cvy = (ay / l) * spd;
-    toast(boss.def.name + " charges! 💨", "bad", 1200);
+    toast(boss.def.jawLunge ? boss.def.name + "'s jaws SHOOT out at you! 😱" : boss.def.name + " charges! 💨", "bad", 1200);
   }
   function startGrab(boss) {
     run.grab = { boss: boss, wig: 0 }; boss.mode = "grab"; boss.modeT = 4.0;
@@ -2329,6 +2373,42 @@
       ctx.beginPath(); ctx.moveTo(-6, 18); ctx.lineTo(38, 50); ctx.lineTo(54, 46); ctx.lineTo(2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
       // tail fin
       ctx.beginPath(); ctx.moveTo(-hw + 4, 2); ctx.lineTo(-hw - 6, -34); ctx.lineTo(-hw + 16, -2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (wk.type === "yacht") {
+      // sleek capsized luxury yacht — white hull, gold trim, tilted
+      var yhw = wk.w / 2;
+      ctx.rotate(-0.12);
+      ctx.fillStyle = "rgba(228,232,238,0.95)"; ctx.strokeStyle = "rgba(150,160,172,0.9)";
+      ctx.beginPath();
+      ctx.moveTo(-yhw, 0); ctx.quadraticCurveTo(-yhw + 6, 26, 4, 30);
+      ctx.quadraticCurveTo(yhw + 22, 22, yhw, -4); ctx.lineTo(-yhw + 10, -4);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "rgba(255,207,58,0.9)"; ctx.fillRect(-yhw + 10, -4, yhw * 1.4, 3); // gold waterline stripe
+      // cabin + tinted windows
+      ctx.fillStyle = "rgba(210,216,224,0.95)"; ctx.fillRect(-yhw * 0.4, -22, yhw * 0.8, 18);
+      ctx.fillStyle = "rgba(90,150,200,0.55)"; for (var yw = -yhw * 0.3; yw < yhw * 0.4; yw += 12) ctx.fillRect(yw, -18, 8, 8);
+      ctx.fillStyle = "rgba(255,207,58,0.5)"; ctx.fillRect(-yhw * 0.4, -24, yhw * 0.8, 2);
+    } else if (wk.type === "cargo") {
+      // huge container freighter on its side, stacked with shipping containers
+      var chw = wk.w / 2;
+      ctx.fillStyle = "rgba(40,46,54,0.94)"; ctx.strokeStyle = "rgba(80,92,104,0.9)";
+      ctx.beginPath();
+      ctx.moveTo(-chw, 0); ctx.lineTo(chw, 0); ctx.quadraticCurveTo(chw + 26, 24, chw - 16, 40);
+      ctx.lineTo(-chw + 10, 40); ctx.quadraticCurveTo(-chw - 8, 22, -chw, 0);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      // rusty hull streaks
+      ctx.fillStyle = "rgba(120,70,40,0.4)"; for (var rs = -chw + 16; rs < chw - 10; rs += 30) ctx.fillRect(rs, 4, 4, 30);
+      // stacked containers across the deck (2 rows)
+      var cols2 = ["#b14a3a", "#3a72a0", "#caa14a", "#4a8a5a", "#8a5aa0"];
+      for (var cc = 0; cc < Math.floor(wk.w / 30); cc++) {
+        var cx0 = -chw + 8 + cc * 30;
+        ctx.fillStyle = cols2[cc % cols2.length]; ctx.fillRect(cx0, -16, 26, 14);
+        ctx.fillStyle = "rgba(0,0,0,0.25)"; ctx.fillRect(cx0, -16, 26, 2);
+        if (cc % 2 === 0) { ctx.fillStyle = cols2[(cc + 2) % cols2.length]; ctx.fillRect(cx0 + 2, -30, 22, 13); }
+      }
+      // crane gantry
+      ctx.strokeStyle = "rgba(150,160,170,0.8)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(chw - 40, -30); ctx.lineTo(chw - 40, -54); ctx.lineTo(chw - 80, -54); ctx.stroke();
+      ctx.lineWidth = 4;
     } else {
       ctx.fillStyle = "rgba(20,30,30,0.9)";
       ctx.strokeStyle = "rgba(60,90,80,0.9)";
@@ -2349,16 +2429,80 @@
   function drawTreasure(tr) {
     var x = (tr.x - cam.x) | 0, y = (tr.y - cam.y + Math.sin(tr.phase) * 3) | 0;
     var pulse = 0.5 + 0.5 * Math.sin(tr.phase * 2);
-    drawGlow(x, y, 14 + pulse * 8, tr.def.color, 0.55);
-    // chunky pixel gem
-    ctx.fillStyle = tr.def.color;
-    ctx.fillRect(x - 2, y - 6, 4, 2);
-    ctx.fillRect(x - 4, y - 4, 8, 2);
-    ctx.fillRect(x - 6, y - 2, 12, 4);
-    ctx.fillRect(x - 4, y + 2, 8, 2);
-    ctx.fillRect(x - 2, y + 4, 4, 2);
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillRect(x - 3, y - 2, 2, 2);
+    var rare = tr.def.rarity && D.RARITY[tr.def.rarity] && D.RARITY[tr.def.rarity].order >= 3;
+    drawGlow(x, y, 14 + pulse * 8, tr.def.color, rare ? 0.7 : 0.5);
+    if (rare) drawGlow(x, y, 22 + pulse * 10, "#fff7c0", 0.18); // rarer loot sparkles brighter
+    drawTreasureSprite(tr.def.id, x, y, tr.def.color);
+    // twinkle
+    if (Math.sin(tr.phase * 2.3) > 0.7) { ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fillRect(x + 5, y - 6, 2, 2); }
+  }
+  // hand-drawn pixel sprite for each treasure kind (centred on x,y)
+  function drawTreasureSprite(id, x, y, col) {
+    function R(ax, ay, aw, ah, c) { ctx.fillStyle = c; ctx.fillRect(x + ax, y + ay, aw, ah); }
+    var dk = mix(col, "#000000", 0.4), lt = mix(col, "#ffffff", 0.5), wht = "rgba(255,255,255,0.9)";
+    switch (id) {
+      case "coins": case "coinchest":
+        if (id === "coinchest") { // treasure chest brimming with gold
+          R(-9, -2, 18, 9, "#5a3a1c"); R(-9, -2, 18, 2, "#7a4f28"); R(-9, 5, 18, 2, "#3a2410");
+          R(-9, -7, 18, 5, "#6a4420"); R(-9, -7, 18, 2, "#8a5a2c"); // curved lid
+          R(-2, -5, 4, 8, "#ffcf3a"); R(-1, -5, 2, 8, "#fff0a0"); // lock band
+          R(-7, -9, 3, 3, col); R(0, -10, 3, 3, lt); R(5, -9, 3, 3, col); // spilling coins
+        } else { // coin stack
+          R(-6, 3, 12, 3, dk); R(-6, 0, 12, 3, col); R(-5, 0, 10, 1, lt);
+          R(-5, -3, 10, 3, col); R(-4, -3, 8, 1, lt); R(-4, -6, 8, 3, col); R(-3, -6, 6, 1, lt);
+        }
+        break;
+      case "bottle":
+        R(-2, -8, 4, 3, "#caa15a"); R(-1, -10, 2, 2, "#8a6a3a"); // cork
+        R(-4, -5, 8, 12, col); R(-3, -5, 2, 11, lt); R(2, -4, 1, 10, dk);
+        R(-3, -1, 6, 5, "#f3e6c8"); // rolled message
+        break;
+      case "pearl": case "clampearl":
+        if (id === "clampearl") { R(-8, 2, 16, 4, mix(col, "#c890b0", 0.5)); R(-8, 2, 16, 1, "#fff"); } // shell
+        R(-4, -4, 8, 8, "#fff0f6"); R(-5, -2, 1, 4, mix(col, "#d0a0c0", 0.5));
+        R(4, -2, 1, 4, mix(col, "#d0a0c0", 0.5)); R(-2, -2, 3, 3, wht);
+        break;
+      case "goblet":
+        R(-5, -7, 10, 4, lt); R(-5, -7, 10, 1, wht); R(-4, -3, 8, 2, col); // cup
+        R(-1, -1, 2, 6, lt); R(-4, 5, 8, 2, dk); R(-3, 5, 6, 1, col); // stem + base
+        break;
+      case "ruby": case "amulet":
+        if (id === "amulet") { R(-7, -7, 3, 2, "#caa15a"); R(4, -7, 3, 2, "#caa15a"); R(-1, -8, 2, 2, "#caa15a"); } // chain
+        R(-2, -5, 4, 1, lt); R(-5, -4, 10, 2, col); R(-6, -2, 12, 3, col); // faceted gem
+        R(-4, 1, 8, 2, col); R(-2, 3, 4, 2, dk); R(-3, -3, 2, 2, wht);
+        break;
+      case "crown":
+        R(-8, 1, 16, 4, col); R(-8, 1, 16, 1, lt); // band
+        R(-8, -5, 3, 6, col); R(-1, -7, 3, 8, col); R(6, -5, 3, 6, col); R(-4, -2, 2, 3, col); R(3, -2, 2, 3, col); // points
+        R(-7, -6, 2, 2, "#e23b5a"); R(0, -8, 2, 2, "#49d6c0"); R(6, -6, 2, 2, "#5b8aff"); // jewels
+        break;
+      case "blackbox":
+        R(-6, -4, 12, 9, "#e8852a"); R(-6, -4, 12, 2, "#ffae6a"); R(-6, 3, 12, 2, "#a85a18");
+        R(-4, -2, 3, 2, "#222"); R(2, -2, 2, 4, "#222"); break; // flight recorder
+      case "pilotwatch":
+        R(-5, -5, 10, 10, "#3a3f46"); R(-4, -4, 8, 8, lt); R(-3, -3, 6, 6, "#1a2028");
+        R(-1, -2, 1, 3, wht); R(0, -1, 2, 1, wht); R(-1, -7, 2, 2, "#caa15a"); R(-1, 5, 2, 2, "#caa15a"); break;
+      case "turbine":
+        R(-6, -6, 12, 12, "#3a4650"); R(-5, -5, 10, 10, mix(col, "#000", 0.2)); R(-2, -2, 4, 4, "#cfd6de");
+        R(-1, -7, 2, 5, lt); R(-7, -1, 5, 2, lt); R(2, -1, 5, 2, lt); R(-1, 2, 2, 5, lt); break; // engine + blades
+      case "goldwings":
+        R(-1, -5, 2, 9, dk); // body
+        R(-9, -3, 8, 2, col); R(-8, -1, 7, 2, lt); R(-7, 1, 6, 2, col); // left wing
+        R(1, -3, 8, 2, col); R(1, -1, 7, 2, lt); R(1, 1, 6, 2, col); // right wing
+        break;
+      case "champagne": // yacht-exclusive
+        R(-2, -9, 4, 3, "#3a2a14"); R(-3, -6, 6, 13, mix(col, "#1a6a3a", 0.4)); R(-2, -6, 1, 12, lt);
+        R(-3, 0, 6, 1, "#ffd24a"); R(-3, -3, 6, 1, "#ffd24a"); break; // bubbly bottle with gold labels
+      case "rolex": // yacht-exclusive luxury watch
+        R(-6, -4, 12, 8, "#ffcf3a"); R(-5, -3, 10, 6, "#fff0a0"); R(-3, -2, 6, 4, "#1a2028");
+        R(-7, -3, 2, 6, lt); R(5, -3, 2, 6, lt); R(0, 0, 1, 2, wht); break;
+      case "container": // cargo-ship container
+        R(-9, -4, 18, 9, col); R(-9, -4, 18, 1, lt); R(-9, 4, 18, 1, dk);
+        for (var c = -8; c < 9; c += 3) R(c, -3, 1, 7, dk); break; // corrugated sides
+      default: // generic gem fallback
+        R(-2, -6, 4, 2, col); R(-4, -4, 8, 2, col); R(-6, -2, 12, 4, col); R(-4, 2, 8, 2, col); R(-2, 4, 4, 2, col);
+        R(-3, -2, 2, 2, wht);
+    }
   }
 
   function drawReel() {

@@ -952,6 +952,17 @@
       "..bbBBBBbbb..bbBBBBbb...",
       "....bbb........bbb......",
     ],
+    // goblin shark — long pink rostrum on top, protruding fanged jaws below
+    goblin: [
+      "......................AAAA....",
+      ".F.................bbBAAAAA...",
+      ".FF.............bbBBBBBBb.....",
+      "FFFbBBBBBBBBBBBBBBBBBBBBEPb...",
+      "FFFbBBBBLLLLLLLLLLBBBBBBbMMMMM",
+      ".FFbBBBBBBBBBBBBBBBBBBBBbWWWWW",
+      ".F....bBBBBBBBBBBbbbb.........",
+      ".........FFF...FF.............",
+    ],
     // one grand serpentine wyrm, recoloured for every wyrm (magma/frost/cavern)
     wyrm: [
       "..........................A.A.A....",
@@ -1560,7 +1571,7 @@
     prismboss: "prismboss", greenlandshark: "greenlandshark", apexmega: "apexmega", youngkraken: "youngkraken",
     davyjones: "davyjones", rigtitan: "rigtitan", oarfish: "oarfish", deeplev: "deeplev",
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
-    wyrm: "wyrm", cavewyrm: "wyrm",
+    wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",
