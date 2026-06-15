@@ -102,8 +102,8 @@
       sky: { top: "#d8c860", bottom: "#b8a838" },
     },
     japan: {
-      id: "japan", name: "Hidden Coast", tint: "#e0556a", secret: true,
-      blurb: "A secret koi-filled coast beneath red torii gates — and something colossal sleeping offshore.",
+      id: "japan", name: "Ornate Ocean", tint: "#e0556a", secret: true,
+      blurb: "A hidden koi-filled coast beneath red torii gates, drifting with cherry blossom — and something colossal sleeping offshore.",
       maxDepth: 900, worldWidth: 2800, topColor: "#3a6fb0", deepColor: "#0a1a3a",
       shinyBonus: 0.1, unlocked: false, cost: 0,
       sky: { top: "#ffd6e0", bottom: "#ffeef2" },
@@ -364,7 +364,7 @@
     { id: "woodduck",   name: "Wood Duck",      area: "forest",  bird: true, day: true, rarity: "uncommon", size: 2, value: 320, color: "#3a6a5a", accent: "#e0533a", shape: "bird", seedCost: 700 },
     { id: "egret",      name: "Egret",          area: "swamp",   bird: true, rarity: "rare", size: 2, value: 420, color: "#f0f4f6", accent: "#ffcf3a", shape: "bird", seedCost: 800 },
     { id: "bonevulture",name: "Bone Vulture",   area: "boneyard",bird: true, night: true, rarity: "rare", size: 3, value: 760, color: "#cfc6b4", accent: "#5a5048", shape: "bird", seedCost: 1500 },
-    { id: "redcrane",   name: "Red-Crowned Crane", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 820, color: "#f0f4f6", accent: "#e0556a", shape: "bird", seedCost: 1600 },
+    { id: "redcrane",   name: "Red-Crowned Crane", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 820, color: "#f0f4f6", accent: "#e0556a", shape: "crane", seedCost: 1600 },
     { id: "oilgull",    name: "Slick Gull",     area: "oilrig",  bird: true, rarity: "uncommon", size: 2, value: 360, color: "#3a342a", accent: "#caa14a", shape: "bird", seedCost: 700 },
     { id: "cometdove",  name: "Comet Dove",     area: "sanctuary", bird: true, rarity: "epic", size: 1, value: 1400, color: "#cfe6ff", accent: "#ff8be0", shape: "bird", seedCost: 2400 },
     { id: "cowrie",     name: "Cowrie Snail",   area: "coral",   creature: true, day: true, rarity: "common", size: 1, value: 70, color: "#f0d8c0", accent: "#caa15a", shape: "snail" },
@@ -451,6 +451,7 @@
     { id: "ryukin",     name: "Ryukin",       area: "japan", rarity: "rare",     size: 2, value: 460, minDepth: 30,  color: "#ff5b3a", accent: "#ffe14d", shape: "round" },
     { id: "tairyu",     name: "Tatsu Dragon", area: "japan", rarity: "epic",     size: 6, value: 2200, minDepth: 200, color: "#c0423a", accent: "#ffd24a", shape: "eel" },
     { id: "japcrab",    name: "Heikegani Crab", area: "japan", creature: true, rarity: "uncommon", size: 2, value: 300, color: "#b0503a", shape: "crab" },
+    { id: "ornatestork",name: "Ornate Stork", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 880, color: "#f0f4f6", accent: "#e0556a", shape: "stork", seedCost: 1800 },
     { id: "kaiju",      name: "The Kaiju",    area: "japan", areaBoss: true, rarity: "mythic", size: 14, value: 30000, minDepth: 250, color: "#2f4a3a", accent: "#6affc0", shape: "kaiju", hp: 6, reward: "" },
 
     // ======== Hollow Deep (secret cave) — Olm is its secret fish ========
@@ -473,7 +474,7 @@
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
     { id: "pelican",   name: "Pelican",      area: "coral", bird: true, rarity: "uncommon", size: 2, value: 130, color: "#d8c2a0", shape: "bird", seedCost: 400 },
     { id: "kingfisher",name: "Kingfisher",   area: "river", bird: true, rarity: "uncommon", size: 1, value: 140, color: "#2a9fd0", shape: "bird", seedCost: 400 },
-    { id: "heron",     name: "Heron",        area: "river", bird: true, rarity: "rare",     size: 2, value: 300, color: "#90a6b6", shape: "bird", seedCost: 700 },
+    { id: "heron",     name: "Heron",        area: "river", bird: true, rarity: "rare",     size: 2, value: 300, color: "#90a6b6", shape: "heron", seedCost: 700 },
     { id: "cormorant", name: "Cormorant",    area: "kelp",  bird: true, rarity: "common",   size: 2, value: 95,  color: "#3a4048", shape: "bird", seedCost: 300 },
     { id: "osprey",    name: "Osprey",       area: "kelp",  bird: true, rarity: "rare",     size: 2, value: 340, color: "#7a6650", shape: "bird", seedCost: 700 },
     { id: "petrel",    name: "Storm Petrel", area: "trench", bird: true, rarity: "uncommon", size: 1, value: 170, color: "#4a4f57", shape: "bird", seedCost: 500 },

@@ -38,7 +38,7 @@
       krakenShiny: false,
       stats: { maxDepth: 0, totalCaught: 0, earned: 0, dives: 0 },
       lastArea: "coral",
-      settings: { muted: false },
+      settings: { muted: false, musicMuted: false, sfxMuted: false },
       diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", look: "short" },
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
@@ -1391,6 +1391,9 @@
       }
     }
 
+    // Ornate Ocean: red torii gates in the haze + drifting cherry-blossom petals
+    if (loc.id === "japan") drawJapanAtmos(loc);
+
     // nocturnal tint over the whole scene
     if (run.night) { ctx.fillStyle = "rgba(8,12,42,0.5)"; ctx.fillRect(0, 0, W, H); }
 
@@ -1446,6 +1449,33 @@
       var s = p % 5 === 0 ? 2 : 1;
       ctx.globalAlpha = 0.5 + 0.5 * Math.sin(run.time + p);
       ctx.fillRect(px | 0, py | 0, s, s);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  // red torii gates standing in the haze + falling pink petals (Ornate Ocean)
+  function drawJapanAtmos(loc) {
+    ctx.save();
+    // torii gates, parallax in the background
+    for (var g = 0; g < 5; g++) {
+      var gx = ((g * 620 - cam.x * 0.4) % (W + 300) + (W + 300)) % (W + 300) - 150;
+      var base = H * 0.78 - cam.y * 0.15, hgt = 150 + (g % 3) * 40, wid = 90 + (g % 2) * 30;
+      ctx.fillStyle = "rgba(150,30,40,0.30)";
+      ctx.fillRect(gx - wid / 2, base - hgt, 10, hgt);                 // left post
+      ctx.fillRect(gx + wid / 2 - 10, base - hgt, 10, hgt);            // right post
+      ctx.fillRect(gx - wid / 2 - 14, base - hgt - 8, wid + 28, 12);   // top lintel (kasagi)
+      ctx.fillRect(gx - wid / 2 - 6, base - hgt + 16, wid + 12, 8);    // second beam (nuki)
+    }
+    // falling cherry-blossom petals
+    for (var p = 0; p < 36; p++) {
+      var t = run.time * 0.5 + p;
+      var px = ((p * 173 + Math.sin(t) * 30 - cam.x * 0.5) % (W + 40) + (W + 40)) % (W + 40) - 20;
+      var py = ((p * 137 + run.time * (24 + (p % 4) * 8)) % (H + 40)) - 20;
+      ctx.globalAlpha = 0.55;
+      ctx.fillStyle = p % 3 === 0 ? "#ffd6e6" : "#ff9ec4";
+      ctx.fillRect(px | 0, py | 0, 3, 2);
+      ctx.fillRect((px + Math.sin(t) * 2) | 0, (py + 2) | 0, 2, 2);
     }
     ctx.globalAlpha = 1;
     ctx.restore();
@@ -2033,6 +2063,9 @@
     R(-2, -1 - flap, 5, 2, d);          // near wing (flaps)
     R(-2, -1 - flap, 5, 1, color);
   }
+  // distinctive birds (owls, cranes, herons, storks) use their own sprite;
+  // generic "bird"-shape ones keep the lively procedural flap
+  function birdUsesSprite(def) { return def.shape && def.shape !== "bird"; }
   function drawBirds() {
     for (var i = 0; i < run.birds.length; i++) {
       var b = run.birds[i];
@@ -2042,7 +2075,8 @@
       var SC = Math.max(2, Math.round(th / 7));
       var flip = run.diver.x < b.x;
       if (b.shiny) drawGlow(x, y, th * 1.1, "#fff0a0", 0.4);
-      drawBirdPixel(ctx, x, y, SC, b.def.color, b.phase, flip);
+      if (birdUsesSprite(b.def)) SPRITES.draw(ctx, SPRITES.archetypeForShape(b.def.shape), x, y, { color: b.def.color, accent: b.def.accent, shiny: b.shiny, flip: flip, targetH: th + 8 });
+      else drawBirdPixel(ctx, x, y, SC, b.def.color, b.phase, flip);
       if (b.shiny && Math.sin(run.time * 3 + b.phase) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2); }
       ctx.fillStyle = b.shiny ? "#ffe66d" : D.RARITY[b.def.rarity].color;
       ctx.font = "11px 'Segoe UI', sans-serif"; ctx.textAlign = "center";
@@ -2079,8 +2113,8 @@
     if (f.def.bird) {
       var bglow = fishGlow(f);
       if (bglow) drawGlow(x, y, th * 0.95, bglow.color, bglow.alpha);
-      var bSC = Math.max(2, Math.round((14 + f.def.size * 4) / 7));
-      drawBirdPixel(ctx, x, y, bSC, f.def.color, f.phase * 4, !flip);
+      if (birdUsesSprite(f.def)) SPRITES.draw(ctx, SPRITES.archetypeForShape(f.def.shape), x, y, { color: f.def.color, accent: f.def.accent, shiny: f.shiny, flip: !flip, targetH: th + 8 });
+      else { var bSC = Math.max(2, Math.round((14 + f.def.size * 4) / 7)); drawBirdPixel(ctx, x, y, bSC, f.def.color, f.phase * 4, !flip); }
       return; // labels handled by drawFishLabels()
     }
     var arch = SPRITES.archetypeForShape(f.def.shape);
@@ -2295,7 +2329,7 @@
   function enterBoat() {
     closeOverlay("modal");
     scene = "boat";
-    if (window.AUDIO) { AUDIO.setMuted(state.settings.muted); AUDIO.playMenu(state && state.nextNight); }
+    if (window.AUDIO) { AUDIO.setMuted(state.settings.muted); AUDIO.setMusicMuted(state.settings.musicMuted); AUDIO.setSfxMuted(state.settings.sfxMuted); AUDIO.playMenu(state && state.nextNight); }
     showBoat();
   }
 
@@ -2335,7 +2369,8 @@
     html += '<button id="btn-achievements" class="big">🏆 Achievements</button>';
     html += '<button id="btn-home" class="big">🏠 Diver\'s Hut</button>';
     html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
-    html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
+    html += '<button id="btn-music" class="big">' + (state.settings.musicMuted ? '🎵 Music: Off' : '🎵 Music: On') + '</button>';
+    html += '<button id="btn-sfx" class="big">' + (state.settings.sfxMuted ? '🔈 SFX: Off' : '🔊 SFX: On') + '</button>';
     html += '<button id="btn-menu" class="big">💾 Save &amp; Menu</button>';
     html += '</div>';
 
@@ -2374,11 +2409,15 @@
         state.username = name; saveGame(); showBoat();
       });
     });
-    bind("btn-sound", function () {
-      state.settings.muted = !state.settings.muted;
-      if (window.AUDIO) AUDIO.setMuted(state.settings.muted);
-      saveGame();
-      showBoat();
+    bind("btn-music", function () {
+      state.settings.musicMuted = !state.settings.musicMuted;
+      if (window.AUDIO) AUDIO.setMusicMuted(state.settings.musicMuted);
+      saveGame(); showBoat();
+    });
+    bind("btn-sfx", function () {
+      state.settings.sfxMuted = !state.settings.sfxMuted;
+      if (window.AUDIO) AUDIO.setSfxMuted(state.settings.sfxMuted);
+      saveGame(); showBoat();
     });
     bind("btn-menu", function () { saveGame(); toast("Game saved.", "good", 1200); showStart(); });
     if (state.items.stopwatch) bind("daynight", function () {
@@ -2812,7 +2851,8 @@
     var x = e.x, y = e.y, th = e.th;
     if (e.shiny) drawGlow(x, y, th * 0.9, "#fff0a0", 0.4);
     if (e.kind === "bird") {
-      drawBirdPixel(ctx, x, y, Math.max(2, Math.round(th / 7)), e.def.color, e.phase, e.vx < 0);
+      if (birdUsesSprite(e.def)) SPRITES.draw(ctx, SPRITES.archetypeForShape(e.def.shape), x, y, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, flip: e.vx < 0, targetH: th });
+      else drawBirdPixel(ctx, x, y, Math.max(2, Math.round(th / 7)), e.def.color, e.phase, e.vx < 0);
     } else {
       ctx.save(); ctx.translate(x, y);
       if (e.kind === "fish") ctx.rotate(Math.sin(e.phase * 1.6) * 0.1);
@@ -3749,7 +3789,7 @@
       AUDIO.init(false);
       var firstGesture = function () {
         AUDIO.resume();
-        if (state && state.settings) AUDIO.setMuted(state.settings.muted);
+        if (state && state.settings) { AUDIO.setMuted(state.settings.muted); AUDIO.setMusicMuted(state.settings.musicMuted); AUDIO.setSfxMuted(state.settings.sfxMuted); }
         if (scene === "dive" && run) AUDIO.playArea(run.area, run.night);
         else AUDIO.playMenu(state && state.nextNight);
         window.removeEventListener("pointerdown", firstGesture);

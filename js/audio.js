@@ -8,8 +8,8 @@
 (function () {
   "use strict";
 
-  var ctx = null, master = null, dryBus = null, reverbSend = null;
-  var muted = false;
+  var ctx = null, master = null, dryBus = null, reverbSend = null, musicBus = null, sfxBus = null;
+  var muted = false, musicMuted = false, sfxMuted = false;
   var voices = [];
   var schedTimer = null, gullTimer = null, ambTimer = null;
   var mode = null, nextTime = 0, step = 0, melIdx = 4, cfgCur = null;
@@ -42,7 +42,8 @@
     kelp:      { tonic: 57, bpm: 110, density: 0.5, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"] },
     trench:    { tonic: 48, bpm: 96,  density: 0.42, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "V", "I"] },
     sanctuary: { tonic: 67, bpm: 96,  density: 0.5, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
-    arctic:    { tonic: 67, bpm: 84,  density: 0.45, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
+    // Arctic — remade: slow, glassy and crystalline, with its own flowing hook
+    arctic:    { tonic: 69, bpm: 76,  density: 0.5, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "V", "IV"], hook: [0, 4, 7, 4, 2, null, 0, null, 4, 7, 9, 7, 4, 2, 0, null] },
     ancient:   { tonic: 50, bpm: 104, density: 0.55, lead: "square",   bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
     opensea:   { tonic: 60, bpm: 108, density: 0.55, lead: "triangle", bells: false, waves: false, prog: ["I", "V", "IV", "I"] },
     prism:     { tonic: 64, bpm: 124, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
@@ -54,7 +55,8 @@
     swamp:     { tonic: 55, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     boneyard:  { tonic: 50, bpm: 84, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     backrooms: { tonic: 58, bpm: 100, density: 0.5, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "IV"], heavyBass: true },
-    japan:     { tonic: 64, bpm: 104, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
+    // Ornate Ocean — koto-flavoured, with a graceful pentatonic hook & bells
+    japan:     { tonic: 66, bpm: 88, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"], hook: [0, 2, 4, null, 4, 2, 0, null, 4, 4, 7, 4, 2, 0, null, null] },
     secretcave:{ tonic: 55, bpm: 86, density: 0.38, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     oilrig:    { tonic: 48, bpm: 110, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], heavyBass: true },
     // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power
@@ -79,9 +81,12 @@
         comp.attack.value = 0.003; comp.release.value = 0.25;
       } catch (e) {}
       master.connect(comp); comp.connect(ctx.destination);
-      dryBus = ctx.createGain(); dryBus.gain.value = 0.85; dryBus.connect(master);
+      // separate sub-mixes so Music and SFX can be muted independently
+      musicBus = ctx.createGain(); musicBus.gain.value = musicMuted ? 0 : 1; musicBus.connect(master);
+      sfxBus = ctx.createGain(); sfxBus.gain.value = sfxMuted ? 0 : 1; sfxBus.connect(master);
+      dryBus = ctx.createGain(); dryBus.gain.value = 0.85; dryBus.connect(musicBus);
       var conv = ctx.createConvolver(); conv.buffer = impulse(0.55, 3.4);
-      var wet = ctx.createGain(); wet.gain.value = 0.16; conv.connect(wet); wet.connect(master);
+      var wet = ctx.createGain(); wet.gain.value = 0.16; conv.connect(wet); wet.connect(musicBus);
       reverbSend = ctx.createGain(); reverbSend.gain.value = 0.13; reverbSend.connect(conv);
       return true;
     } catch (e) { return false; }
@@ -134,7 +139,7 @@
     var g = ctx.createGain(); g.gain.value = 0.14;
     var lfo = ctx.createOscillator(), lg = ctx.createGain();
     lfo.frequency.value = 0.12; lg.gain.value = 0.1; lfo.connect(lg); lg.connect(g.gain);
-    src.connect(lp); lp.connect(g); g.connect(master); src.start(); lfo.start();
+    src.connect(lp); lp.connect(g); g.connect(sfxBus); src.start(); lfo.start();
     voices.push({ nodes: [src, lfo], gain: g });
   }
   function gull() {
@@ -150,7 +155,7 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(0.04, t + 0.02);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-      o.connect(bp); bp.connect(g); g.connect(master);
+      o.connect(bp); bp.connect(g); g.connect(sfxBus);
       o.start(t); o.stop(t + 0.3); t += 0.22 + Math.random() * 0.12;
     }
   }
@@ -163,7 +168,7 @@
       var o = ctx.createOscillator(), g = ctx.createGain(), f0 = 380 + Math.random() * 520;
       o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 1.8, t + 0.12);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.04, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.2); t += 0.08 + Math.random() * 0.1;
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.2); t += 0.08 + Math.random() * 0.1;
     }
   }
   function ambWhale() {
@@ -172,13 +177,13 @@
     o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * 1.7, t + 0.9); o.frequency.linearRampToValueAtTime(f0 * 1.2, t + 2.0);
     lp.type = "lowpass"; lp.frequency.value = 380;
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 0.6); g.gain.linearRampToValueAtTime(0.0001, t + 2.4);
-    o.connect(lp); lp.connect(g); g.connect(master); o.start(t); o.stop(t + 2.5);
+    o.connect(lp); lp.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 2.5);
   }
   function ambIce() {
     if (!ctx) return; var t = ctx.currentTime, src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
     src.buffer = noiseBuffer(); bp.type = "bandpass"; bp.frequency.setValueAtTime(320, t); bp.frequency.linearRampToValueAtTime(160, t + 0.7); bp.Q.value = 9;
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
-    src.connect(bp); bp.connect(g); g.connect(master); src.start(t); src.stop(t + 1.0);
+    src.connect(bp); bp.connect(g); g.connect(sfxBus); src.start(t); src.stop(t + 1.0);
   }
   function ambShimmer() {
     if (!ctx) return; var t = ctx.currentTime;
@@ -186,7 +191,7 @@
       var o = ctx.createOscillator(), g = ctx.createGain();
       o.type = "triangle"; o.frequency.value = 900 + Math.random() * 1300;
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.022, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
-      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.6); t += 0.12;
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.6); t += 0.12;
     }
   }
   // night-on-the-water ambience for the menu: chirping crickets + the odd owl
@@ -196,7 +201,7 @@
       var o = ctx.createOscillator(), g = ctx.createGain();
       o.type = "square"; o.frequency.value = 4200 + Math.random() * 600;
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.012, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
-      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.04); t += 0.06;
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.04); t += 0.06;
     }
   }
   function ambOwl() {
@@ -206,7 +211,7 @@
       o.type = "sine"; o.frequency.setValueAtTime(f0, tt); o.frequency.linearRampToValueAtTime(f0 * 0.92, tt + 0.3);
       lp.type = "lowpass"; lp.frequency.value = 700;
       g.gain.setValueAtTime(0.0001, tt); g.gain.linearRampToValueAtTime(0.06, tt + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.42);
-      o.connect(lp); lp.connect(g); g.connect(master); o.start(tt); o.stop(tt + 0.5);
+      o.connect(lp); lp.connect(g); g.connect(sfxBus); o.start(tt); o.stop(tt + 0.5);
     }
     var base = 300 + Math.random() * 60;
     hoot(t, base); hoot(t + 0.55, base * 0.96); // classic two-note "hoo... hoo"
@@ -316,6 +321,10 @@
     init: function (m) { muted = !!m; ensure(); },
     resume: function () { if (ensure() && ctx.state === "suspended") ctx.resume(); },
     setMuted: function (m) { muted = !!m; if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 0.22, (ctx ? ctx.currentTime : 0) + 0.2); },
+    setMusicMuted: function (m) { musicMuted = !!m; if (musicBus) musicBus.gain.linearRampToValueAtTime(musicMuted ? 0 : 1, (ctx ? ctx.currentTime : 0) + 0.2); },
+    setSfxMuted: function (m) { sfxMuted = !!m; if (sfxBus) sfxBus.gain.linearRampToValueAtTime(sfxMuted ? 0 : 1, (ctx ? ctx.currentTime : 0) + 0.2); },
+    isMusicMuted: function () { return musicMuted; },
+    isSfxMuted: function () { return sfxMuted; },
     toggleMute: function () { this.setMuted(!muted); return muted; },
     isMuted: function () { return muted; },
     playArea: function (a, night) { this.resume(); startTrack(a, night); },
@@ -330,12 +339,12 @@
       var o = ctx.createOscillator(), g = ctx.createGain();
       o.type = "sine"; o.frequency.setValueAtTime(85, t); o.frequency.exponentialRampToValueAtTime(26, t + 2);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55, t + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
-      o.connect(g); g.connect(master); o.start(t); o.stop(t + 2.5);
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 2.5);
       var src = ctx.createBufferSource(); src.buffer = noiseBuffer();
       var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 110;
       var ng = ctx.createGain();
       ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.4, t + 0.2); ng.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
-      src.connect(lp); lp.connect(ng); ng.connect(master); src.start(t); src.stop(t + 2.5);
+      src.connect(lp); lp.connect(ng); ng.connect(sfxBus); src.start(t); src.stop(t + 2.5);
     },
     ui: function (kind) {
       if (!ensure() || muted) return;
