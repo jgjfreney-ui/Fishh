@@ -130,6 +130,9 @@ html, body {
   font-weight: 700; font-size: 14px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
+.bg-icon { width: 44px; height: 44px; flex: 0 0 44px; background-size: contain; background-repeat: no-repeat; background-position: center; image-rendering: pixelated; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6)); }
+.bosstoggle.on { background: rgba(40, 150, 80, 0.85) !important; border-color: rgba(150, 255, 180, 0.7) !important; }
+.bosstoggle.off { background: rgba(90, 96, 110, 0.6) !important; }
 .guide-list { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.5; opacity: 0.92; }
 .guide-list li { margin-bottom: 5px; }
 #btn-enter-secret {

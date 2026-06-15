@@ -3205,6 +3205,7 @@
     html += '<button id="btn-stats" class="big">📊 Stats</button>';
     html += '<button id="btn-seedshop" class="big">🌾 Seed Shop</button>';
     html += '<button id="btn-items" class="big">🎒 Items</button>';
+    html += '<button id="btn-bossgear" class="big">⚔️ Boss Gear</button>';
     html += '<button id="btn-treasures" class="big">🏺 Treasures</button>';
     html += '<button id="btn-achievements" class="big">🏆 Achievements</button>';
     html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
@@ -3238,6 +3239,7 @@
     bind("btn-stats", showStats);
     bind("btn-seedshop", showSeedShop);
     bind("btn-items", showInventory);
+    bind("btn-bossgear", showBossGear);
     bind("btn-treasures", showTreasureGallery);
     bind("btn-achievements", showAchievements);
     bind("btn-trade", function () { lastGiftCode = null; showTrade(); });
@@ -4442,6 +4444,59 @@
         toast("Bought 3 " + (seen ? d.name : "mystery bird") + " seeds!", "good", 1400);
         showSeedShop();
         var o = document.getElementById("shop"); if (o) o.scrollTop = 0; // back to the top
+      };
+    });
+  }
+
+  // ----- Boss Gear viewer (toggle each boss-drop on/off) -----
+  // metadata: item id -> { name, effect, toggle (can switch off), boss reward key }
+  var BOSS_GEAR = [
+    { id: "necklace",     name: "Multiplier Necklace", effect: "Every treasure you recover is worth DOUBLE.", reward: "necklace", toggle: true },
+    { id: "jellystinger", name: "Jelly Stinger",       effect: "Nearby fish are shocked still — they stop fleeing your magnet.", reward: "stinger", toggle: true },
+    { id: "megtooth",     name: "Meg Tooth",           effect: "Every boss takes ONE fewer harpoon to defeat.", reward: "megtooth", toggle: true },
+    { id: "sonar",        name: "Sonar Radar",         effect: "Pings hot & cold as you near a sunken wreck.", reward: "sonar", toggle: true },
+    { id: "rocfeather",   name: "Roc Feather",         effect: "Leap out of the water in any area to snatch birds — no seeds needed.", reward: "rocfeather", toggle: true },
+    { id: "crabcrown",    name: "Spider Crab Crown",   effect: "Every sea creature you catch is worth DOUBLE.", reward: "crabcrown", toggle: true },
+    { id: "kaijubreath",  name: "Kaiju Breath",        effect: "Tap 🔵 in a dive to fire a beam that vacuums up fish.", reward: "kaijubreath", toggle: false },
+    { id: "serpenteye",   name: "Eye of the Serpent",  effect: "Golden coin chests wash up in every dive site.", reward: "serpenteye", toggle: false },
+  ];
+  function bossForReward(rk) {
+    for (var i = 0; i < D.FISH.length; i++) if (D.FISH[i].reward === rk && (D.FISH[i].areaBoss || D.FISH[i].secretBoss)) return D.FISH[i];
+    return null;
+  }
+  function showBossGear() {
+    var ov = overlay("shop");
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>⚔️ Boss Gear</h2>'
+      + '<button class="close" data-close="shop">✕</button></div>';
+    html += '<p class="tiny">Relics dropped by the bosses you\'ve defeated. Toggle each one ON or OFF — some hidden sites only open when your boss gear is switched OFF.</p>';
+    var owned = 0;
+    BOSS_GEAR.forEach(function (g) {
+      if (!state.items[g.id]) return;
+      owned++;
+      var on = itemOn(g.id);
+      var boss = bossForReward(g.reward);
+      var img = boss ? SPRITES.dataURL(SPRITES.archetypeForShape(boss.shape), { color: boss.color, accent: boss.accent, scale: 3 }) : null;
+      html += '<div class="shop-item">'
+        + '<div class="si-info" style="display:flex;align-items:center;gap:10px;">'
+        + (img ? '<span class="bg-icon" style="background-image:url(' + img + ')"></span>' : '')
+        + '<span><b>' + g.name + '</b>' + (boss ? ' <span class="tiny">— from ' + boss.name + '</span>' : '')
+        + '<p>' + g.effect + '</p></span></div>'
+        + '<div class="si-buy">'
+        + (g.toggle
+            ? '<button class="bosstoggle ' + (on ? 'on' : 'off') + '" data-toggleitem="' + g.id + '">' + (on ? '✅ ON' : '⬜ OFF') + '</button>'
+            : '<span class="lvl">Always on</span>')
+        + '</div></div>';
+    });
+    if (!owned) html += '<div class="shop-item"><div class="si-info"><b>No boss gear yet</b><p>Defeat area bosses and secret bosses to claim their relics — they\'ll appear here to toggle on and off.</p></div></div>';
+    html += '</div>';
+    ov.innerHTML = html; ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
+    ov.querySelectorAll("[data-toggleitem]").forEach(function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute("data-toggleitem");
+        if (!state.itemsOff) state.itemsOff = {};
+        state.itemsOff[id] = !state.itemsOff[id];
+        saveGame(); showBossGear();
       };
     });
   }
