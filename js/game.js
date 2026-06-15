@@ -48,6 +48,7 @@
       nextNight: false, // is the NEXT dive at night? (alternates each dive)
       achievements: {}, // achievementId -> timestamp earned
       home: { wallpaper: "plain", music: "menu", musicOwned: { menu: 1 }, decor: {}, displayFish: null },
+      visited: { coral: true }, // areas you've actually dived (unlocks location suits)
     };
   }
 
@@ -1902,11 +1903,22 @@
     { name: "Coral",     area: "coral",     color: "#2bb3c9", always: true },
     { name: "River",     area: "river",     color: "#4a9e6a", always: true },
     { name: "Kelp",      area: "kelp",      color: "#2f9e8f" },
+    { name: "Prism",     area: "prism",     color: "#ff7ad0" },
+    { name: "Arctic",    area: "arctic",    color: "#bfe6ff" },
+    { name: "Open Sea",  area: "opensea",   color: "#1f7fc4" },
+    { name: "Fossil",    area: "ancient",   color: "#a8843e" },
+    { name: "Grove",     area: "forest",    color: "#5fae4a" },
+    { name: "Swamp",     area: "swamp",     color: "#7a8a3a" },
+    { name: "Boneyard",  area: "boneyard",  color: "#cfc6b4" },
+    { name: "Gloom",     area: "cave",      color: "#8a7ad0" },
+    { name: "Cloud",     area: "cloud",     color: "#bfe0ff" },
     { name: "Trench",    area: "trench",    color: "#1a5fa0" },
     { name: "Starlight", area: "sanctuary", color: "#7a5cff" },
-    { name: "Arctic",    area: "arctic",    color: "#bfe6ff" },
-    { name: "Fossil",    area: "ancient",   color: "#a8843e" },
-    { name: "Open Sea",  area: "opensea",   color: "#1f7fc4" },
+    // secret-area suits — hidden (no spoiler) until you find the place
+    { name: "Backrooms", area: "backrooms", color: "#d8c84a", secret: true },
+    { name: "Ornate",    area: "japan",     color: "#e0556a", secret: true },
+    { name: "Hollow",    area: "secretcave",color: "#9a8ad0", secret: true },
+    { name: "Oil Rig",   area: "oilrig",    color: "#caa14a", secret: true },
   ];
   // ... and one per secret fish (unlock by catching that secret)
   var SECRET_SUITS = D.FISH.filter(function (f) { return f.secret; })
@@ -2521,6 +2533,8 @@
     scene = "dive";
     newRun(areaId);
     state.lastArea = areaId;
+    if (!state.visited) state.visited = {};
+    state.visited[areaId] = true; // unlocks this area's wetsuit
     // Hollow Deep opens to those who enter the Gloom Cavern with NO boss gear active
     if (areaId === "cave" && !anyBossItemOn() && !state.areas.secretcave) {
       unlockSecretArea("secretcave", "🕯️ Carrying no boss relics, you drift into a hidden pocket of the cavern — the HOLLOW DEEP opens. (Now in Change Area.)");
@@ -3264,9 +3278,15 @@
         buy: (!owned && s.cost > 0) ? { id: s.id, cost: s.cost } : null, group: "Wetsuits" });
     });
     LOCATION_SUITS.forEach(function (s) {
-      var unlocked = s.always || state.areas[s.area];
-      list.push({ key: "l_" + s.area, name: s.name, color: s.color, accent: suitAccentFor(s.color), owned: unlocked,
-        previewColor: s.color, lockReason: unlocked ? null : ("Reach " + (D.LOCATIONS[s.area] ? D.LOCATIONS[s.area].name : s.name)), group: "Location suits" });
+      var visited = s.always || (state.visited && state.visited[s.area]);
+      // a suit for an as-yet-undiscovered SECRET site stays a "???" mystery
+      if (s.secret && !state.areas[s.area]) {
+        list.push({ key: "l_" + s.area, name: "???", color: "#16242f", accent: suitAccentFor(s.color), owned: false,
+          lockReason: "Discover a hidden dive site", group: "Location suits" });
+        return;
+      }
+      list.push({ key: "l_" + s.area, name: s.name, color: s.color, accent: suitAccentFor(s.color), owned: !!visited,
+        previewColor: s.color, lockReason: visited ? null : ("Dive the " + (D.LOCATIONS[s.area] ? D.LOCATIONS[s.area].name : s.name)), group: "Location suits" });
     });
     SECRET_SUITS.forEach(function (s) {
       var unlocked = !!state.discovered[s.id];

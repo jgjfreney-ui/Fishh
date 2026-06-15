@@ -759,6 +759,27 @@
       "..bbBbBBBb....",
       ".b.b.b.b......",
     ],
+    dragon: [
+      ".................AA.....",
+      ".....A.....A...bBBbEPb.",
+      "f...bBb...bBBb.bBBBBPMW",
+      "fbBBBBBbbBBBBBbBBLLBBb.",
+      "fbBLLBBBBBBLLBBBBBBBb..",
+      "fbBBBBBBBBBBBBBBBBb....",
+      "..AbBbA..AbBbA..A......",
+      "...A......A............",
+    ],
+    seadragon: [
+      "...........F..bBbEP.",
+      "..F.....F..FbBBBBBPM",
+      "F.FbBb.F.bBBLLBBb...",
+      ".FbBBBBbFbBBBBBb.F..",
+      "F.FbBBBBbBBBBb.F.F..",
+      ".F..bBBBBBBb.F..F...",
+      "..F..bBBBb.F...F....",
+      "...F..bBb.F.........",
+      ".....F.b.F.........",
+    ],
     crane: [
       "........bBbGGG",
       "........bEPb..",
@@ -990,6 +1011,7 @@
     clownfish: "clownfish", codfish: "codfish", puffer: "puffer", perch: "perch",
     mackerel: "mackerel", sardine: "sardine", guppy: "guppy", trout: "trout", goby: "goby", snail: "snail",
     hermitcrab: "hermitcrab", crane: "crane", heron: "heron", stork: "stork",
+    dragon: "dragon", seadragon: "seadragon",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
