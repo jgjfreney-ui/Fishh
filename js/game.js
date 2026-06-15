@@ -24,7 +24,7 @@
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
-               prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, pirate: false, backrooms: false, japan: false, secretcave: false,
+               prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
                oilrig: false, cave: false, cloud: false, sanctuary: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
       davyjonesCaught: false,
@@ -163,6 +163,7 @@
       grab: null, bossBeam: null,  // boss combat state
       playerBeam: null, breathCd: 0, // Kaiju Breath
       smoke: [], smokeTimer: 0, wyrmTimer: 6, // ashen smoke + magma wyrm
+      stormCd: 0, peakX: loc.peaks ? loc.worldWidth * 0.5 : null, // storm summoner + mountain peak
     };
     placeWrecks(loc);
     placeCages(loc);
@@ -238,6 +239,8 @@
     prism:     { plants: ["coral", "coral", "anemone"], plantColors: ["#ff5b9f", "#ffcf3a", "#3ad0e0", "#9a3ad0", "#36d6a0", "#ff7a3a"], rock: "#3a4a8a", floor: "#2a4a8a" },
     storm:     { plants: ["kelp", "rock", "rock"], plantColors: ["#3a5a4a", "#46506a", "#2a3a4a"], rock: "#2a3340", floor: "#161e28" },
     ashen:     { plants: ["vent", "vent", "rock"], plantColors: ["#ff5b1a", "#c0402a", "#5a2a1a"], rock: "#2a1810", floor: "#140804" },
+    mountain:  { plants: ["crystal", "rock", "rock"], plantColors: ["#cfe0ee", "#8a9aae", "#4a5a6a"], rock: "#3a4654", floor: "#28323e" },
+    olympus:   { plants: ["crystal", "coral", "crystal"], plantColors: ["#ffe07a", "#fff3b0", "#cfe0ff", "#ffd24a"], rock: "#c9b06a", floor: "#a8904a" },
     pirate:    { plants: ["rock", "coral", "rock"], plantColors: ["#caa14a", "#6a5a3a", "#3a4a4a"], rock: "#2a2620", floor: "#15110a" },
   };
 
@@ -261,7 +264,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire", mountain: "spire", olympus: "bigcrystal" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -1070,6 +1073,7 @@
       }
     }
 
+    if (run.stormCd > 0) run.stormCd -= dt;
     // --- Kaiju Breath beam (vacuum up fish it touches) ---
     if (run.breathCd > 0) run.breathCd -= dt;
     if (run.playerBeam) {
@@ -1621,6 +1625,7 @@
     drawNetFx();
     drawTrap();
     drawSmoke();
+    drawStormFlash();
 
     // --- volumetric lighting / depth darkness ---
     drawLighting(loc, darkness);
@@ -1680,6 +1685,7 @@
 
     // Storm: forks of lightning + screen flashes (reusable wherever loc.storm)
     if (loc.storm) drawStorm(loc);
+    if (loc.peaks) drawPeaks(loc);
 
     // nocturnal tint over the whole scene
     if (run.night) { ctx.fillStyle = "rgba(8,12,42,0.5)"; ctx.fillRect(0, 0, W, H); }
@@ -1748,25 +1754,67 @@
     return pts;
   }
   function drawStorm(loc) {
+    // weather areas trigger their own periodic strikes
     if (run.stormNext == null) run.stormNext = run.time + 1.5 + Math.random() * 4;
     if (run.time > run.stormNext) {
       run.stormFlash = 1; run.stormBolt = makeBolt();
       run.stormNext = run.time + 2.5 + Math.random() * 6;
       if (window.AUDIO) AUDIO.rumble();
     }
-    if (run.stormFlash > 0) {
-      ctx.fillStyle = "rgba(214,226,255," + (run.stormFlash * 0.45).toFixed(3) + ")";
-      ctx.fillRect(0, 0, W, H);
-      if (run.stormBolt && run.stormFlash > 0.4) {
-        ctx.save();
-        ctx.strokeStyle = "rgba(245,250,255,0.95)"; ctx.lineWidth = 3; ctx.lineJoin = "round";
-        ctx.shadowColor = "#bcd6ff"; ctx.shadowBlur = 12;
-        ctx.beginPath();
-        for (var i = 0; i < run.stormBolt.length; i++) { var p = run.stormBolt[i]; if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
-        ctx.stroke(); ctx.restore();
-      }
-      run.stormFlash -= 0.05;
+  }
+  // renders the lightning flash + bolt (storm areas AND the Storm Summoner)
+  function drawStormFlash() {
+    if (!(run.stormFlash > 0)) return;
+    ctx.fillStyle = "rgba(214,226,255," + (run.stormFlash * 0.45).toFixed(3) + ")";
+    ctx.fillRect(0, 0, W, H);
+    if (run.stormBolt && run.stormFlash > 0.4) {
+      ctx.save();
+      ctx.strokeStyle = "rgba(245,250,255,0.95)"; ctx.lineWidth = 3; ctx.lineJoin = "round";
+      ctx.shadowColor = "#bcd6ff"; ctx.shadowBlur = 12;
+      ctx.beginPath();
+      for (var i = 0; i < run.stormBolt.length; i++) { var p = run.stormBolt[i]; if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
+      ctx.stroke(); ctx.restore();
     }
+    run.stormFlash -= 0.05;
+  }
+  // ⚡ Storm Summoner: strike fish near the surface — or open Olympus at the peak
+  function summonStorm() {
+    if (!run || !state.items.stormsummoner) return;
+    var loc = D.LOCATIONS[run.area];
+    if (loc.peaks && !state.areas.olympus && run.peakX != null && Math.hypot(run.diver.x - run.peakX, run.diver.y - 24) < 110) {
+      unlockSecretArea("olympus", "⚡ You raise the Storm Summoner at the peak — the clouds split open onto OLYMPUS AERIE! (Now in Change Area.)");
+      return;
+    }
+    if (run.stormCd > 0) { toast("The summoner is still recharging...", "bad", 1200); return; }
+    run.stormCd = 5; run.stormFlash = 1; run.stormBolt = makeBolt();
+    if (window.AUDIO) AUDIO.rumble();
+    var got = 0;
+    for (var i = run.fish.length - 1; i >= 0; i--) {
+      var f = run.fish[i];
+      if (f.isBoss) continue;
+      if (f.y < 150) { catchFish(f, true); got++; }   // anything near the surface is struck & bagged
+    }
+    toast(got ? "⚡ Lightning strikes the surface — " + got + " fish bagged!" : "⚡ Lightning splits the surface! (lure fish up high first)", got ? "good" : "bad", 1800);
+  }
+
+  // towering submerged mountains; the tallest (at run.peakX) reaches the surface
+  function drawPeaks(loc) {
+    var fy = run.floorY - cam.y;
+    // two parallax background ridges
+    [[0.22, 0.55, "#2a3a4a"], [0.8, 0.55, "#2e3e4e"]].forEach(function (m) {
+      var sx = m[0] * loc.worldWidth - cam.x * m[1], topY = fy - 360;
+      ctx.fillStyle = m[2];
+      ctx.beginPath(); ctx.moveTo(sx - 180, fy); ctx.lineTo(sx, topY); ctx.lineTo(sx + 180, fy); ctx.closePath(); ctx.fill();
+    });
+    // the tallest peak — drawn at the true world x so you can align with its tip
+    var px = run.peakX - cam.x, tipY = 18 - cam.y;
+    ctx.fillStyle = "#46586a";
+    ctx.beginPath(); ctx.moveTo(px - 220, fy); ctx.lineTo(px, tipY); ctx.lineTo(px + 220, fy); ctx.closePath(); ctx.fill();
+    // snowy cap
+    ctx.fillStyle = "#dfeaf2";
+    ctx.beginPath(); ctx.moveTo(px - 34, tipY + 70); ctx.lineTo(px, tipY); ctx.lineTo(px + 34, tipY + 70); ctx.lineTo(px + 16, tipY + 60); ctx.lineTo(px, tipY + 72); ctx.lineTo(px - 16, tipY + 60); ctx.closePath(); ctx.fill();
+    // glinting marker at the tip if you carry the Storm Summoner
+    if (state.items.stormsummoner && !state.areas.olympus && Math.sin(run.time * 4) > 0) drawGlow(px, tipY + 8, 22, "#cfe0ff", 0.6);
   }
 
   // red torii gates standing in the haze + falling pink petals (Ornate Ocean)
@@ -2665,6 +2713,11 @@
       slb.style.display = (slingShotsMax() > 0 && run.slingShots > 0) ? "block" : "none";
       slb.textContent = "🪃 Sling (" + run.slingShots + ")";
     }
+    var stb = document.getElementById("btn-storm");
+    if (stb) {
+      stb.style.display = state.items.stormsummoner ? "block" : "none";
+      stb.textContent = run.stormCd > 0 ? "⚡ (" + Math.ceil(run.stormCd) + ")" : "⚡ Storm";
+    }
     var hb = document.getElementById("btn-harpoon");
     hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
     if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
@@ -2941,6 +2994,8 @@
     if (tb) tb.style.display = "none";
     var slb = document.getElementById("btn-sling");
     if (slb) slb.style.display = "none";
+    var stb = document.getElementById("btn-storm");
+    if (stb) stb.style.display = "none";
     var brb = document.getElementById("btn-breath");
     if (brb) brb.style.display = "none";
     if (run) run.venting = false;
@@ -3008,6 +3063,11 @@
       + '<p>An emergency air reserve — <b>once per dive</b>, if you run out of oxygen it refills you instead of sending you home.</p></div>'
       + '<div class="si-buy">' + (hasBell ? '<span class="maxed">✓</span>'
         : '<button data-buytool="divingbell:14000" ' + (state.money < 14000 ? 'disabled' : '') + '>$14,000</button>') + '</div></div>';
+    var hasStorm = !!state.items.stormsummoner;
+    html += '<div class="shop-item"><div class="si-info"><b>⚡ Storm Summoner</b>' + (hasStorm ? ' <span class="lvl">✓ Owned</span>' : '')
+      + '<p>A relic that calls down lightning — tap ⚡ near the surface to <b>strike fish</b> dead and bag them. Raise it at the very tip of the tallest peak to find something divine...</p></div>'
+      + '<div class="si-buy">' + (hasStorm ? '<span class="maxed">✓</span>'
+        : '<button data-buytool="stormsummoner:150000" ' + (state.money < 150000 ? 'disabled' : '') + '>$150,000</button>') + '</div></div>';
     var hasWatch = !!state.items.stopwatch;
     html += '<div class="shop-item"><div class="si-info"><b>Tide Stopwatch</b>' + (hasWatch ? ' <span class="lvl">✓ Owned</span>' : '')
       + '<p>Choose whether each dive is <b>day or night</b> — tap the ☀️/🌙 on the boat to set it. Without it, day &amp; night just take turns.</p></div>'
@@ -3114,7 +3174,7 @@
         var p = b.getAttribute("data-buytool").split(":"), id = p[0], cost = +p[1];
         if (state.items[id] || state.money < cost) return;
         state.money -= cost; state.items[id] = true; saveGame();
-        var NM = { torch: "🔦 Torch", divingbell: "🛎️ Diving Bell", heatsuit: "🟥 Heat Suit", coldsuit: "🟦 Cold Suit" };
+        var NM = { torch: "🔦 Torch", divingbell: "🛎️ Diving Bell", heatsuit: "🟥 Heat Suit", coldsuit: "🟦 Cold Suit", stormsummoner: "⚡ Storm Summoner" };
         toast((NM[id] || "Tool") + " acquired!", "good", 1800); showShop();
       };
     });
@@ -4179,6 +4239,9 @@
     // kaiju-breath button (beam that vacuums up fish)
     var brb = document.getElementById("btn-breath");
     if (brb) brb.addEventListener("click", function () { if (scene === "dive" && run) fireBreath(); });
+    // storm-summoner button (lightning strike / open Olympus at the peak)
+    var stb = document.getElementById("btn-storm");
+    if (stb) stb.addEventListener("click", function () { if (scene === "dive" && run) summonStorm(); });
     // vent-air button (press & hold to drain oxygen)
     var vb = document.getElementById("btn-vent");
     if (vb) {

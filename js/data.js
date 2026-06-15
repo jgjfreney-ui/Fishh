@@ -101,6 +101,20 @@
       shinyBonus: 0.06, unlocked: false, cost: 330000,
       sky: { top: "#262a36", bottom: "#454c5e" },
     },
+    mountain: {
+      id: "mountain", name: "Sunlit Peaks", tint: "#8a9aae", peaks: true,
+      blurb: "Submerged mountain crags climbing toward the light — high ridges, deep ravines and crystal-clear water.",
+      maxDepth: 900, worldWidth: 3000, topColor: "#6a8aa8", deepColor: "#16202a",
+      shinyBonus: 0.05, unlocked: false, cost: 260000,
+      sky: { top: "#bcd6ee", bottom: "#e8f2fa" },
+    },
+    olympus: {
+      id: "olympus", name: "Olympus Aerie", tint: "#ffe07a", secret: true,
+      blurb: "Above the clouds atop the highest peak — a golden realm of the gods, where Poseidon's own steed swims the sky-sea.",
+      maxDepth: 600, worldWidth: 2800, topColor: "#bfe0ff", deepColor: "#7a8ad0",
+      shinyBonus: 0.22, unlocked: false, cost: 0,
+      sky: { top: "#fff6d8", bottom: "#cfe0ff" },
+    },
     ashen: {
       id: "ashen", name: "Ashen Hollow", tint: "#e0552a", requireItem: "heatsuit", smoke: true,
       blurb: "A drowned volcanic vent — black water lit by lava, choked with drifting ash and smoke. You'll cook without a Heat Suit.",
@@ -469,6 +483,34 @@
     { id: "stormpetrel2", name: "Storm Albatross", area: "storm", bird: true, rarity: "rare", size: 3, value: 700, color: "#3a4452", accent: "#dfeaff", shape: "seabird", seedCost: 1200 },
     { id: "stormgull", name: "Squall Gull",   area: "storm", bird: true, night: true, rarity: "uncommon", size: 2, value: 360, color: "#5a6470", accent: "#cfe0ff", shape: "gull", seedCost: 700 },
     { id: "leviathanking", name: "The Leviathan King", area: "storm", areaBoss: true, rarity: "mythic", size: 14, value: 34000, minDepth: 250, color: "#2a3a5a", accent: "#9fd0ff", shape: "leviathanking", hp: 6, reward: "" },
+
+    // ======== Sunlit Peaks (rocky mountain) ========
+    { id: "ridgeperch", name: "Ridge Perch",  area: "mountain", rarity: "common",   size: 1, value: 170, minDepth: 0,   color: "#6a7a8a", accent: "#cfe0ee", shape: "perch" },
+    { id: "craggoby",   name: "Crag Goby",    area: "mountain", rarity: "common",   size: 1, value: 150, minDepth: 0,   color: "#7a6a5a", accent: "#dfeaf2", shape: "goby" },
+    { id: "alpinechar", name: "Alpine Char",  area: "mountain", rarity: "uncommon", size: 2, value: 280, minDepth: 20,  color: "#9a6a7a", accent: "#ffd6e0", shape: "trout" },
+    { id: "ravineeel",  name: "Ravine Eel",   area: "mountain", rarity: "uncommon", size: 3, value: 340, minDepth: 60,  color: "#4a5a4a", accent: "#bcd6c0", shape: "eel" },
+    { id: "peaktang",   name: "Peak Tang",    area: "mountain", rarity: "uncommon", size: 1, value: 260, minDepth: 30,  color: "#5a8ac0", accent: "#ffe14d", shape: "tang" },
+    { id: "graniteray", name: "Granite Ray",  area: "mountain", rarity: "rare",     size: 4, value: 560, minDepth: 120, color: "#6a7280", accent: "#cfe0ee", shape: "ghostray" },
+    { id: "cragshark",  name: "Crag Shark",   area: "mountain", rarity: "epic",     size: 6, value: 2400, minDepth: 250,color: "#5a6470", accent: "#dfeaf2", shape: "shark" },
+    { id: "summitwhale",name: "Summit Whale", area: "mountain", rarity: "legendary",size: 9, value: 6600, minDepth: 450,color: "#5a6a7a", accent: "#cfe0ee", shape: "whale" },
+    { id: "screebug",   name: "Scree Bug",    area: "mountain", creature: true, rarity: "common", size: 1, value: 90, color: "#7a6a5a", accent: "#bcd6c0", shape: "bug" },
+    { id: "ridgecrab",  name: "Ridge Crab",   area: "mountain", creature: true, rarity: "uncommon", size: 2, value: 300, color: "#6a7280", accent: "#cfe0ee", shape: "crab" },
+    { id: "crageagle",  name: "Crag Eagle",   area: "mountain", bird: true, day: true, rarity: "rare", size: 3, value: 760, color: "#5a4a3a", accent: "#e0c0a0", shape: "raptor", seedCost: 1400 },
+    { id: "alpinetern", name: "Alpine Tern",  area: "mountain", bird: true, rarity: "uncommon", size: 1, value: 220, color: "#eef3f7", accent: "#5a8ac0", shape: "gull", seedCost: 500 },
+    { id: "stonetitan", name: "Stone Titan",  area: "mountain", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 250, color: "#5a6470", accent: "#cfe0ee", shape: "stonetitan", hp: 6, reward: "" },
+
+    // ======== Olympus Aerie (secret, reached from the mountain peak) ========
+    { id: "auruscarp",  name: "Aureus Carp",  area: "olympus", rarity: "common",   size: 2, value: 400, minDepth: 0,   color: "#ffd24a", accent: "#fff3b0", shape: "koi" },
+    { id: "zephyrfish", name: "Zephyr Fish",  area: "olympus", rarity: "common",   size: 1, value: 360, minDepth: 0,   color: "#cfe0ff", accent: "#ffffff", shape: "fish" },
+    { id: "ambrosray",  name: "Ambrosia Ray", area: "olympus", rarity: "uncommon", size: 4, value: 720, minDepth: 60,  color: "#ffe07a", accent: "#fff6d8", shape: "manta" },
+    { id: "nectartang", name: "Nectar Tang",  area: "olympus", rarity: "uncommon", size: 1, value: 560, minDepth: 30,  color: "#ffb24a", accent: "#fff3b0", shape: "tang" },
+    { id: "aetherjelly",name: "Aether Jelly", area: "olympus", rarity: "uncommon", size: 2, value: 600, minDepth: 20,  color: "#bfe0ff", accent: "#fff6d8", shape: "glowjelly" },
+    { id: "goldeneel",  name: "Golden Eel",   area: "olympus", rarity: "rare",     size: 3, value: 980, minDepth: 80,  color: "#e0b24a", accent: "#fff3b0", shape: "eel" },
+    { id: "thunderpike",name: "Thunder Pike", area: "olympus", rarity: "rare",     size: 3, value: 1100, minDepth: 120,color: "#cfd6ff", accent: "#ffe14d", shape: "pike" },
+    { id: "empyrshark", name: "Empyrean Shark",area: "olympus",rarity: "epic",     size: 6, value: 3200, minDepth: 250,color: "#e0cf8a", accent: "#fff6d8", shape: "shark" },
+    { id: "celestcrab", name: "Celestial Crab",area: "olympus",creature: true, rarity: "uncommon", size: 2, value: 520, color: "#ffd24a", accent: "#fff3b0", shape: "crab" },
+    { id: "ichordove",  name: "Ichor Dove",   area: "olympus", bird: true, rarity: "rare", size: 2, value: 900, color: "#fff6d8", accent: "#ffd24a", shape: "songbird", seedCost: 2000 },
+    { id: "poseidonsteed", name: "Poseidon's Steed", area: "olympus", areaBoss: true, rarity: "mythic", size: 13, value: 40000, minDepth: 200, color: "#2a8ac0", accent: "#ffe07a", shape: "steed", hp: 7, reward: "" },
 
     // ======== Ashen Hollow (volcanic; needs a Heat Suit) ========
     { id: "emberfish",  name: "Emberfish",    area: "ashen", rarity: "common",   size: 1, value: 180, minDepth: 0,   color: "#e0552a", accent: "#ffcf3a", shape: "fish" },

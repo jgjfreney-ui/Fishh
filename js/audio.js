@@ -49,6 +49,8 @@
     prism:     { tonic: 64, bpm: 124, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
     storm:     { tonic: 50, bpm: 120, density: 0.6, lead: "square", bells: false, waves: true, prog: ["I", "IV", "V", "V"], heavyBass: true },
     ashen:     { tonic: 47, bpm: 100, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, heavyBass: true },
+    mountain:  { tonic: 60, bpm: 96, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"] },
+    olympus:   { tonic: 72, bpm: 100, density: 0.55, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
     pirate:    { tonic: 52, bpm: 116, density: 0.6, lead: "square", bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
     // Cloud Reaches — high, airy, twinkly and uplifting (you're in the sky!)
     cloud:     { tonic: 72, bpm: 120, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
@@ -243,6 +245,8 @@
     storm:  { fn: ambWhale, min: 4000, max: 9000 },
     ashen:  { fn: ambBubble, min: 2000, max: 5000 },
     pirate: { fn: ambWhale, min: 5000, max: 11000 },
+    mountain: { fn: ambBubble, min: 3000, max: 7000 },
+    olympus: { fn: ambShimmer, min: 2500, max: 6000 },
   };
   function scheduleAmb() {
     var a = AMB[mode];
