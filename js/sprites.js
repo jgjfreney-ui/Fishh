@@ -952,13 +952,16 @@
       "..bbBBBBbbb..bbBBBBbb...",
       "....bbb........bbb......",
     ],
-    frostwyrm: [
-      "...A...A...A...A..bBb..",
-      "..A.A.A.A.A.A.A.AbBBEP.",
-      "fbBBBBBBBBBBBBBBBBBBBPMW",
-      "fbBLLLLLLLLLLLLLLLLBBb.",
-      "fbBBBBBBBBBBBBBBBBBBb..",
-      "...A...A...A...A......",
+    // one grand serpentine wyrm, recoloured for every wyrm (magma/frost/cavern)
+    wyrm: [
+      "..........................A.A.A....",
+      "fb...........A...A...A...bAAGAAb....",
+      "f.bb.......bAb.bAb.bAb..bBBGGBBb....",
+      "..bBBbb..bBBBBbBBBBbBBBbBBBBBBBBEPb.",
+      "fFbBLLLLLLLLLLLLLLLLLLLBBBLLLBBBMWWW",
+      "f.bBBBBBBBBBBBBBBBBBBBBBBBBBBBBBMWW.",
+      "FFb..bBGBb...bBGBb...bBGBb.bBBBBb...",
+      ".......A.......A.......A............",
     ],
     ancientlev: [
       "..W.W.W.W.W.W.W...bBb..",
@@ -1129,15 +1132,6 @@
       "fbBBBBBBBBBBBBBBBBBBb.",
       "f..AAbBBBbAA.AAbBBbAA.",
       "....bb........bb......",
-    ],
-    magmawyrm: [
-      ".................bBBb..",
-      "..........bGBb..bBGBBEP",
-      "....bGBb.bBGBBbbBBGBBPMW",
-      "fbBGGBBGGBBGGBBGGBBGGb.",
-      "fbBBBBBBBBBBBBBBBBBBBb..",
-      "..bbBBBBbbb..bbBBBBbb...",
-      "....bbb........bbb......",
     ],
     leatherback: [
       "......bbBBBBBBBBbb......",
@@ -1565,12 +1559,13 @@
     stormwhale: "stormwhale", ghostwhale: "ghostwhale", whitesquid: "whitesquid", cuttlefish: "cuttlefish",
     prismboss: "prismboss", greenlandshark: "greenlandshark", apexmega: "apexmega", youngkraken: "youngkraken",
     davyjones: "davyjones", rigtitan: "rigtitan", oarfish: "oarfish", deeplev: "deeplev",
-    celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "frostwyrm", ancientlev: "ancientlev",
+    celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
+    wyrm: "wyrm", cavewyrm: "wyrm",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",
     koi: "koi", salmon: "salmon", leatherback: "leatherback", macaw: "macaw",
-    cinderboss: "cinderboss", magmawyrm: "magmawyrm", stonetitan: "stonetitan", steed: "steed",
+    cinderboss: "cinderboss", magmawyrm: "wyrm", stonetitan: "stonetitan", steed: "steed",
     gull: "gull", duck: "duck", songbird: "songbird", raptor: "raptor", seabird: "seabird",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }

@@ -650,6 +650,8 @@
     { id: "spidercrab", name: "Colossal Spider Crab", area: "cave", areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 250, color: "#8a3a2a", accent: "#e0a060", shape: "spidercrab", hp: 3, reward: "crabcrown" },
     { id: "celestboss", name: "Celestial Serpent", area: "sanctuary", areaBoss: true, rarity: "mythic", size: 13, value: 40000, minDepth: 200, color: "#9f7bff", accent: "#fff3b0", shape: "glowworm", hp: 5, reward: "" },
     { id: "gloomlurker", name: "The Gloom Lurker", area: "cave", areaBoss: true, trigger: "allcreatures", rarity: "mythic", size: 13, value: 26000, minDepth: 300, color: "#2a2438", accent: "#9f8ad0", shape: "angler", hp: 5, reward: "" },
+    { id: "cavernwyrm", name: "Cavern Wyrm", area: "cave", secretBoss: true, rarity: "mythic", size: 16, value: 38000, minDepth: 0, color: "#3a2f5e", accent: "#7affd0", trim: "#ffd24a", shape: "cavewyrm", hp: 8, reward: "",
+      hint: "A colossal coil shifts in the deepest black of the cavern — wake it from the very bottom." },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });

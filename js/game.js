@@ -691,6 +691,7 @@
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
     toast(def.fromSmoke ? "🔥 " + def.name + " ERUPTS from the smoke and seizes you — HARPOON IT! 🔱"
+                        : id === "cavernwyrm" ? "🐉 " + def.name + " UNCOILS from the abyss — HARPOON IT! 🔱"
                         : "☠️ The chest bursts open — " + def.name + " RISES! Harpoon it! 🔱", "epic", 5000);
   }
 
@@ -919,6 +920,9 @@
         var boss = bossToSummon();
         if (boss === "kraken") spawnBoss("kraken", false);
         else if (boss === "blobfish") spawnBoss("blobfish", true);
+      } else if (run.area === "cave" && state.hints.cavernwyrm && !state.cavernwyrmCaught
+                 && depthM > loc.maxDepth * 0.82) {
+        spawnSecretBoss("cavernwyrm");          // the giant wyrm wakes at the very bottom
       } else {
         var ab = areaBossForArea(run.area);
         if (ab) spawnAreaBoss(ab);
@@ -3118,7 +3122,7 @@
     html += '<div class="tab-body' + bodyClass("hints") + '" data-body="hints">';
     html += '<p class="tiny">Every area hides a <b>secret fish</b>. Buy its hint here, then meet the condition while diving.</p>';
     D.FISH.filter(function (f) {
-      if (!f.secret || !D.LOCATIONS[f.area]) return false;
+      if ((!f.secret && !(f.secretBoss && f.hint)) || !D.LOCATIONS[f.area]) return false;
       if (D.LOCATIONS[f.area].secret && !state.areas[f.area]) return false; // don't spoil undiscovered secret areas
       return true;
     }).forEach(function (f) {
