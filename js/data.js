@@ -209,7 +209,7 @@
     { id: "gulpereel",   name: "Gulper Eel",   area: "trench", rarity: "rare",     size: 3, value: 460,  minDepth: 500, color: "#241f33", shape: "eel" },
     { id: "frilledshark",name: "Frilled Shark",area: "trench", rarity: "epic",     size: 5, value: 1500, minDepth: 600, color: "#4a3f4f", shape: "shark" },
     { id: "colossalsquid",name:"Colossal Squid",area:"trench", rarity: "legendary",size: 7, value: 4200, minDepth: 800, color: "#b03c5a", shape: "squid" },
-    { id: "spermwhale",  name: "Sperm Whale",  area: "trench", rarity: "legendary",size: 8, value: 5200, minDepth: 700, color: "#5a5f6b", shape: "whale" },
+    { id: "spermwhale",  name: "Sperm Whale",  area: "trench", rarity: "legendary",size: 8, value: 5200, minDepth: 700, color: "#5a5f6b", shape: "spermwhale" },
     { id: "greatwhite",  name: "Great White Shark", area: "trench", rarity: "legendary", size: 8, value: 6800, minDepth: 850, color: "#8a97a0", shape: "shark" },
 
     // ---- Starlight Sanctuary ----
@@ -218,7 +218,7 @@
     { id: "cosmicray",   name: "Cosmic Ray",      area: "sanctuary", rarity: "rare",     size: 4, value: 520,  minDepth: 150, color: "#7a5cff", shape: "ray" },
     { id: "nebulaeel",   name: "Nebula Eel",      area: "sanctuary", rarity: "rare",     size: 3, value: 560,  minDepth: 220, color: "#c46bff", shape: "eel" },
     { id: "prismtang",   name: "Prismatic Tang",  area: "sanctuary", rarity: "epic",     size: 2, value: 1400, minDepth: 300, color: "#ff8be0", shape: "tang" },
-    { id: "galaxywhale", name: "Galaxy Whale",    area: "sanctuary", rarity: "legendary",size: 8, value: 6000, minDepth: 500, color: "#3a2c78", shape: "whale" },
+    { id: "galaxywhale", name: "Galaxy Whale",    area: "sanctuary", rarity: "legendary",size: 8, value: 6000, minDepth: 500, color: "#3a2c78", shape: "galaxywhale" },
 
     // ======== Wave 2 content: +5 per area ========
     // ---- Coral Coast ----
@@ -240,14 +240,14 @@
     { id: "blackdragon",name: "Black Dragonfish", area: "trench", rarity: "rare",  size: 2, value: 400, minDepth: 450, color: "#241f33", shape: "eel", glow: true },
     { id: "dumbo",      name: "Dumbo Octopus", area: "trench", rarity: "rare",     size: 3, value: 480, minDepth: 520, color: "#c06a8a", shape: "octopus" },
     { id: "fangtooth",  name: "Fangtooth",     area: "trench", rarity: "rare",     size: 1, value: 360, minDepth: 600, color: "#3a3a44", shape: "fangtooth" },
-    { id: "oarfish",    name: "Giant Oarfish", area: "trench", rarity: "legendary",size: 8, value: 5600, minDepth: 700, color: "#cfd6e0", shape: "eel" },
+    { id: "oarfish",    name: "Giant Oarfish", area: "trench", rarity: "legendary",size: 8, value: 5600, minDepth: 700, color: "#cfd6e0", shape: "oarfish" },
 
     // ---- Starlight Sanctuary ----
     { id: "moonfish",   name: "Moonfish",      area: "sanctuary", rarity: "common",   size: 1, value: 64,  minDepth: 0,   color: "#cfe6ff", shape: "round" },
     { id: "cometfish",  name: "Comet Fish",    area: "sanctuary", rarity: "uncommon", size: 2, value: 160, minDepth: 60,  color: "#9fd8ff", shape: "guppy" },
     { id: "astraljelly",name: "Astral Jelly",  area: "sanctuary", rarity: "rare",     size: 1, value: 540, minDepth: 140, color: "#c46bff", shape: "jelly" },
     { id: "solarray",   name: "Solar Ray",     area: "sanctuary", rarity: "epic",     size: 5, value: 1500, minDepth: 320, color: "#ffd86b", shape: "ray" },
-    { id: "voidwhale",  name: "Void Whale",    area: "sanctuary", rarity: "legendary",size: 8, value: 6400, minDepth: 520, color: "#2a2350", shape: "whale" },
+    { id: "voidwhale",  name: "Void Whale",    area: "sanctuary", rarity: "legendary",size: 8, value: 6400, minDepth: 520, color: "#2a2350", shape: "voidwhale" },
 
     // ======== River Run (zone built later — fish data is ready) ========
     { id: "rivertrout", name: "River Trout",   area: "river", rarity: "common",   size: 1, value: 26,  minDepth: 0,   color: "#8a9a5a", shape: "fish" },
@@ -264,7 +264,7 @@
     { id: "dolphin",    name: "Spinner Dolphin", area: "coral", rarity: "mythic", size: 4, value: 5200, minDepth: 0, color: "#8fb0c4", accent: "#ffffff", shape: "dolphin", secret: true,
       hint: "A playful spinner — it only leaps out to copy you. Swim in tight CIRCLES to call it!",
       condition: { circle: true } },
-    { id: "whitesquid", name: "White Squid",   area: "coral", night: true, rarity: "mythic", size: 3, value: 6000, minDepth: 0, color: "#eef2f7", accent: "#bfe9ff", shape: "squid", secret: true, skittish: true,
+    { id: "whitesquid", name: "White Squid",   area: "coral", night: true, rarity: "mythic", size: 3, value: 6000, minDepth: 0, color: "#eef2f7", accent: "#bfe9ff", shape: "whitesquid", secret: true, skittish: true,
       hint: "A ghostly pale squid that only drifts out on the darkest nights — and BOLTS the instant you near it. You'll have to chase it down.",
       condition: {} },
     { id: "seaangel",   name: "Sea Angel",     area: "arctic", rarity: "mythic", size: 1, value: 6500, minDepth: 60, color: "#cfe8ff", accent: "#ffd24a", shape: "clione", secret: true,
@@ -282,16 +282,16 @@
     { id: "leafydragon",name: "Leafy Seadragon",area: "kelp",      rarity: "mythic", size: 2, value: 3000, minDepth: 100,color: "#7fc36b", shape: "seadragon", secret: true,
       hint: "Camouflaged among deep kelp (below 100m). You must be patient and still.",
       condition: { minDepth: 100 } },
-    { id: "deeplev",    name: "Deep Leviathan", area: "trench",    rarity: "mythic", size: 9, value: 9000, minDepth: 900,color: "#3a4e6a", shape: "eel", secret: true,
+    { id: "deeplev",    name: "Deep Leviathan", area: "trench",    rarity: "mythic", size: 9, value: 9000, minDepth: 900,color: "#3a4e6a", shape: "deeplev", secret: true,
       hint: "A colossal sea-serpent coils through the very bottom of the Trench (below 900m). Only the brave reach it.",
       condition: { minDepth: 900 } },
-    { id: "celestserp", name: "Astral Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#c9b3ff", shape: "eel", secret: true,
+    { id: "celestserp", name: "Astral Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#c9b3ff", shape: "celestserp", secret: true,
       hint: "Coils through the deepest starlight (below 400m), woven from the night sky itself.",
       condition: { minDepth: 400 } },
     { id: "rainbowtrout", name: "Rainbow Trout", area: "river", rarity: "mythic", size: 2, value: 3400, minDepth: 0, color: "#ff4d6d", accent: "#7afcff", rainbow: true, shape: "trout", secret: true,
       hint: "A dazzling trout that glints with every colour, darting through bright river shallows (above 40m).",
       condition: { maxDepth: 40 } },
-    { id: "rivergiant", name: "River Leviathan", area: "river", rarity: "mythic", size: 8, value: 11000, minDepth: 90, color: "#3a5a4a", shape: "eel", secret: true,
+    { id: "rivergiant", name: "River Leviathan", area: "river", rarity: "mythic", size: 8, value: 11000, minDepth: 90, color: "#3a5a4a", shape: "rivergiant", secret: true,
       hint: "An enormous serpent said to lurk in the deepest river pools (below 90m).",
       condition: { minDepth: 90 } },
 
@@ -416,9 +416,9 @@
     { id: "colossalclam", name: "Colossal Clam", area: "prism", creature: true, tool: "shovel", dropsPearl: true, rarity: "epic", size: 3, value: 1600, color: "#2fd0c0", accent: "#fff0f6", shape: "clam" },
     { id: "reefsnail",  name: "Turban Snail", area: "prism", creature: true, rarity: "common", size: 1, value: 120, color: "#caa15a", accent: "#fff0e0", shape: "snail" },
     // the secret camouflaged cuttlefish
-    { id: "cuttlefish", name: "Mimic Cuttlefish", area: "prism", rarity: "mythic", size: 2, value: 6500, minDepth: 0, color: "#9a8a7a", accent: "#caa15a", shape: "squid", secret: true, camo: true,
+    { id: "cuttlefish", name: "Mimic Cuttlefish", area: "prism", rarity: "mythic", size: 2, value: 6500, minDepth: 0, color: "#9a8a7a", accent: "#caa15a", shape: "cuttlefish", secret: true, camo: true,
       hint: "A master of disguise that melts into the reef — watch for the faint shimmer that doesn't match the coral.", condition: {} },
-    { id: "prismboss",  name: "Kaleidos",     area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 24000, minDepth: 150, color: "#7a3ad0", accent: "#ff7ad0", rainbow: true, shape: "squid", hp: 5, reward: "" },
+    { id: "prismboss",  name: "Kaleidos",     area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 24000, minDepth: 150, color: "#7a3ad0", accent: "#ff7ad0", rainbow: true, shape: "prismboss", hp: 5, reward: "" },
 
     // ======== Sunken Grove (forest) ========
     { id: "grovefish",  name: "Grovefish",    area: "forest", rarity: "common",   size: 1, value: 60,  minDepth: 0,   color: "#6cae4a", shape: "goby" },
@@ -446,7 +446,7 @@
     { id: "fossilray",  name: "Fossil Ray",   area: "boneyard", rarity: "rare",     size: 4, value: 620, minDepth: 200, color: "#c8c0aa", shape: "ray" },
     { id: "skullsquid", name: "Skull Squid",  area: "boneyard", rarity: "rare",     size: 4, value: 700, minDepth: 300, color: "#e0d8c4", shape: "squid" },
     { id: "marrowshark",name: "Marrow Shark", area: "boneyard", rarity: "epic",     size: 6, value: 2200, minDepth: 400, color: "#d0c8b4", shape: "shark" },
-    { id: "wraithwhale",name: "Wraith Whale", area: "boneyard", rarity: "legendary",size: 9, value: 6500, minDepth: 600, color: "#cfd6dc", shape: "whale" },
+    { id: "wraithwhale",name: "Wraith Whale", area: "boneyard", rarity: "legendary",size: 9, value: 6500, minDepth: 600, color: "#cfd6dc", shape: "wraithwhale" },
     { id: "bonecrab",   name: "Bone Crab",    area: "boneyard", creature: true, rarity: "uncommon", size: 2, value: 280, color: "#ded6c2", shape: "crab" },
     { id: "skeletonshark", name: "Skeleton Shark", area: "boneyard", areaBoss: true, rarity: "mythic", size: 13, value: 22000, minDepth: 300, color: "#f2eede", accent: "#cfc6b0", shape: "skeletonshark", hp: 5, reward: "" },
 
@@ -457,7 +457,7 @@
     { id: "galeray",   name: "Gale Ray",      area: "storm", rarity: "rare",     size: 4, value: 620, minDepth: 100, color: "#46506a", accent: "#9fd0ff", shape: "ray" },
     { id: "tempesteel",name: "Tempest Eel",   area: "storm", rarity: "rare",     size: 3, value: 560, minDepth: 150, color: "#2a3a5a", accent: "#7afcff", shape: "eel" },
     { id: "maelshark", name: "Maelstrom Shark", area: "storm", rarity: "epic",   size: 6, value: 2400, minDepth: 250, color: "#3a4452", accent: "#bcd6ff", shape: "shark" },
-    { id: "stormwhale",name: "Storm Whale",   area: "storm", rarity: "legendary",size: 9, value: 6800, minDepth: 400, color: "#2e3848", accent: "#9fd0ff", shape: "whale" },
+    { id: "stormwhale",name: "Storm Whale",   area: "storm", rarity: "legendary",size: 9, value: 6800, minDepth: 400, color: "#2e3848", accent: "#9fd0ff", shape: "stormwhale" },
     { id: "stormcrab", name: "Storm Crab",    area: "storm", creature: true, rarity: "uncommon", size: 2, value: 280, color: "#4a5566", accent: "#9fd0ff", shape: "crab" },
     { id: "stormpetrel2", name: "Storm Albatross", area: "storm", bird: true, rarity: "rare", size: 3, value: 700, color: "#3a4452", accent: "#dfeaff", shape: "bird", seedCost: 1200 },
     { id: "stormgull", name: "Squall Gull",   area: "storm", bird: true, night: true, rarity: "uncommon", size: 2, value: 360, color: "#5a6470", accent: "#cfe0ff", shape: "bird", seedCost: 700 },
@@ -469,11 +469,11 @@
     { id: "ghostfish",   name: "Ghostfish",     area: "pirate", rarity: "uncommon", size: 2, value: 380, minDepth: 40,  color: "#9fd0c8", accent: "#ffffff", shape: "guppy" },
     { id: "corsaireel",  name: "Corsair Eel",   area: "pirate", rarity: "rare",     size: 3, value: 620, minDepth: 120, color: "#3a4a3a", accent: "#caa15a", shape: "eel" },
     { id: "pirateshark", name: "Plunderer Shark", area: "pirate", rarity: "epic",   size: 6, value: 2600, minDepth: 250, color: "#3a3a42", accent: "#ffcf3a", shape: "shark" },
-    { id: "ghostwhale",  name: "Wraith Galleon Whale", area: "pirate", rarity: "legendary", size: 9, value: 7200, minDepth: 450, color: "#5a6470", accent: "#cfe0c8", shape: "whale" },
+    { id: "ghostwhale",  name: "Wraith Galleon Whale", area: "pirate", rarity: "legendary", size: 9, value: 7200, minDepth: 450, color: "#5a6470", accent: "#cfe0c8", shape: "ghostwhale" },
     { id: "peglegcrab",  name: "Peg-Leg Crab",  area: "pirate", creature: true, rarity: "uncommon", size: 2, value: 320, color: "#8a5a3a", accent: "#ffcf3a", shape: "crab" },
     { id: "pirateparrot", name: "Pirate Parrot", area: "pirate", bird: true, day: true, rarity: "rare", size: 2, value: 700, color: "#c0423a", accent: "#ffcf3a", shape: "bird", seedCost: 1400 },
-    { id: "youngkraken", name: "Young Kraken",  area: "pirate", areaBoss: true, rarity: "mythic", size: 12, value: 28000, minDepth: 250, color: "#5a2f5d", accent: "#9affd0", shape: "kraken", hp: 5, reward: "" },
-    { id: "davyjones",   name: "Davy Jones' Serpent", area: "pirate", secretBoss: true, rarity: "mythic", size: 14, value: 80000, minDepth: 200, color: "#2f4a3a", accent: "#9fffc0", shape: "leviathanking", hp: 7, reward: "serpenteye" },
+    { id: "youngkraken", name: "Young Kraken",  area: "pirate", areaBoss: true, rarity: "mythic", size: 12, value: 28000, minDepth: 250, color: "#5a2f5d", accent: "#9affd0", shape: "youngkraken", hp: 5, reward: "" },
+    { id: "davyjones",   name: "Davy Jones' Serpent", area: "pirate", secretBoss: true, rarity: "mythic", size: 14, value: 80000, minDepth: 200, color: "#2f4a3a", accent: "#9fffc0", shape: "davyjones", hp: 7, reward: "serpenteye" },
 
     // ======== The Backrooms (secret) ========
     { id: "wallpaperfish", name: "Wallpaper Fish", area: "backrooms", rarity: "common", size: 2, value: 200, minDepth: 0, color: "#d8c468", accent: "#b8a038", shape: "wallpaperfish" },
@@ -510,7 +510,7 @@
     { id: "drillshark", name: "Drill Shark",  area: "oilrig", rarity: "epic",     size: 6, value: 2400, minDepth: 250, color: "#5a5a62", accent: "#ff5b3a", shape: "shark" },
     { id: "mechsquid",  name: "Mecha Squid",  area: "oilrig", rarity: "rare",     size: 4, value: 680, minDepth: 200, color: "#52606a", accent: "#3ad0ff", shape: "squid" },
     { id: "boltcrab",   name: "Salvage Bot",  area: "oilrig", creature: true, rarity: "uncommon", size: 2, value: 340, color: "#7a7a82", accent: "#ffcf3a", shape: "crab" },
-    { id: "rigtitan",   name: "The Rig Titan", area: "oilrig", areaBoss: true, rarity: "mythic", size: 14, value: 32000, minDepth: 250, color: "#4a4a52", accent: "#ff7a3a", shape: "kaiju", hp: 6, reward: "" },
+    { id: "rigtitan",   name: "The Rig Titan", area: "oilrig", areaBoss: true, rarity: "mythic", size: 14, value: 32000, minDepth: 250, color: "#4a4a52", accent: "#ff7a3a", shape: "rigtitan", hp: 6, reward: "" },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
@@ -533,12 +533,12 @@
     { id: "beluga",     name: "Beluga",       area: "arctic", rarity: "rare",     size: 6, value: 900,  minDepth: 150, color: "#eef4f8", shape: "whale" },
     { id: "narwhal",    name: "Narwhal",      area: "arctic", rarity: "epic",     size: 6, value: 1700, minDepth: 250, color: "#bcd0dc", shape: "narwhal" },
     { id: "orca",       name: "Orca",         area: "arctic", rarity: "epic",     size: 8, value: 2200, minDepth: 300, color: "#22262c", shape: "whale" },
-    { id: "greenlandshark", name: "Greenland Shark", area: "arctic", rarity: "legendary", size: 8, value: 5200, minDepth: 450, color: "#5a6470", shape: "shark" },
+    { id: "greenlandshark", name: "Greenland Shark", area: "arctic", rarity: "legendary", size: 8, value: 5200, minDepth: 450, color: "#5a6470", shape: "greenlandshark" },
     { id: "icecrab",    name: "Ice Crab",     area: "arctic", creature: true, rarity: "common",   size: 1, value: 70,  color: "#a9c6d6", shape: "crab" },
     { id: "brittlestar",name: "Brittle Star", area: "arctic", creature: true, rarity: "uncommon", size: 1, value: 160, color: "#c98a9a", shape: "starfish" },
     { id: "puffin",     name: "Puffin",       area: "arctic", bird: true, rarity: "common",   size: 1, value: 120, color: "#2a2e34", shape: "bird", seedCost: 300 },
     { id: "arctictern", name: "Arctic Tern",  area: "arctic", bird: true, rarity: "uncommon", size: 1, value: 220, color: "#e8eef2", shape: "bird", seedCost: 500 },
-    { id: "frostwyrm",  name: "Frost Wyrm",   area: "arctic", rarity: "mythic", size: 9, value: 13000, minDepth: 550, color: "#9fe6ff", shape: "eel", secret: true,
+    { id: "frostwyrm",  name: "Frost Wyrm",   area: "arctic", rarity: "mythic", size: 9, value: 13000, minDepth: 550, color: "#9fe6ff", shape: "frostwyrm", secret: true,
       hint: "An ancient ice-serpent said to coil through the coldest deep (below 550m).", condition: { minDepth: 550 } },
 
     // ======== Fossil Abyss (prehistoric) ========
@@ -549,12 +549,12 @@
     { id: "ichthyosaur",name: "Ichthyosaur",  area: "ancient", rarity: "rare",     size: 5, value: 700,  minDepth: 280, color: "#5a6a5a", shape: "shark" },
     { id: "leedsichthys",name: "Leedsichthys",area: "ancient", rarity: "epic",     size: 9, value: 2600, minDepth: 400, color: "#8a7a5a", shape: "whale" },
     { id: "mosasaur",   name: "Mosasaur",     area: "ancient", rarity: "epic",     size: 8, value: 3000, minDepth: 500, color: "#3a4a3a", shape: "mosasaur" },
-    { id: "megalodon",  name: "Megalodon",    area: "ancient", rarity: "legendary", size: 10, value: 7800, minDepth: 700, color: "#4a5560", shape: "shark" },
+    { id: "megalodon",  name: "Megalodon",    area: "ancient", rarity: "legendary", size: 10, value: 7800, minDepth: 700, color: "#4a5560", shape: "megalodon" },
     { id: "trilobite",  name: "Trilobite",    area: "ancient", creature: true, rarity: "common",   size: 1, value: 90,   color: "#7a5a3a", shape: "trilobite" },
     { id: "ammonite",   name: "Ammonite",     area: "ancient", creature: true, rarity: "uncommon", size: 2, value: 240,  color: "#a08a5a", shape: "ammonite" },
     { id: "archaeopteryx", name: "Archaeopteryx", area: "ancient", bird: true, rarity: "uncommon", size: 1, value: 260, color: "#6a5a3a", shape: "bird", seedCost: 600 },
     { id: "pteranodon", name: "Pteranodon",   area: "ancient", bird: true, rarity: "rare", size: 3, value: 700, color: "#8a6a4a", shape: "bird", seedCost: 1500 },
-    { id: "ancientlev", name: "Ancient Leviathan", area: "ancient", rarity: "mythic", size: 10, value: 16000, minDepth: 800, color: "#5a4a2a", shape: "eel", secret: true,
+    { id: "ancientlev", name: "Ancient Leviathan", area: "ancient", rarity: "mythic", size: 10, value: 16000, minDepth: 800, color: "#5a4a2a", shape: "ancientlev", secret: true,
       hint: "The first and largest serpent, fossilised legends say it still hunts the abyss floor (below 800m).", condition: { minDepth: 800 } },
 
     // ======== Open Sea ========
@@ -576,7 +576,7 @@
     // ======== Area bosses (rise once you've caught every fish in their area) ========
     { id: "manowar",   name: "Man o' War",   area: "coral",   areaBoss: true, rarity: "mythic", size: 7,  value: 3000, minDepth: 120, color: "#b06bd0", accent: "#ffd6f2", shape: "manowar", hp: 3, reward: "stinger" },
     { id: "siphonophore", name: "Siphonophore", area: "opensea", areaBoss: true, rarity: "mythic", size: 10, value: 6000, minDepth: 200, color: "#ff6f91", shape: "siphonophore", hp: 3, reward: "necklace" },
-    { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "megalodon", hp: 3, reward: "megtooth" },
+    { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "apexmega", hp: 3, reward: "megtooth" },
     { id: "rogueorca", name: "Rogue Orca",    area: "arctic",  areaBoss: true, trigger: "creatures", rarity: "mythic", size: 11, value: 5000, minDepth: 250, color: "#16181d", accent: "#f2f6fa", shape: "orca", hp: 3, reward: "sonar" },
     { id: "roc",       name: "The Roc",       area: "cloud",   areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 200, color: "#6a4a2a", accent: "#d8c0a0", shape: "roc", hp: 3, reward: "rocfeather" },
     { id: "spidercrab", name: "Colossal Spider Crab", area: "cave", areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 250, color: "#8a3a2a", accent: "#e0a060", shape: "spidercrab", hp: 3, reward: "crabcrown" },
