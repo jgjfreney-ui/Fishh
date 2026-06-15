@@ -51,6 +51,7 @@
     prism:     { tonic: 64, bpm: 124, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
     storm:     { tonic: 50, bpm: 120, density: 0.6, lead: "square", bells: false, waves: true, prog: ["I", "IV", "V", "V"], heavyBass: true },
     ashen:     { tonic: 47, bpm: 100, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, heavyBass: true },
+    desert:    { tonic: 58, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "V", "IV"], hook: [0, null, 2, 2, null, 4, 2, 0, null, 4, 4, 2, 0, null, null, null] }, // sparse, sun-baked
     mountain:  { tonic: 60, bpm: 96, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"] },
     olympus:   { tonic: 72, bpm: 100, density: 0.55, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
     // Flooded Freighter — creepy but playful: low minor-pentatonic, off-kilter
@@ -253,6 +254,7 @@
     mountain: { fn: ambBubble, min: 3000, max: 7000 },
     olympus: { fn: ambShimmer, min: 2500, max: 6000 },
     flooded: { fn: ambWhale, min: 3500, max: 8000 }, // groaning, creaking hull
+    desert: { fn: ambBubble, min: 3000, max: 7000 },
   };
   function scheduleAmb() {
     var a = AMB[mode];

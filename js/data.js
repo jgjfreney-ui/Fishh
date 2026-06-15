@@ -70,6 +70,13 @@
       shinyBonus: 0, unlocked: false, cost: 20000, smoke: true, fog: true, cold: true,
       sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
     },
+    desert: {
+      id: "desert", name: "Buried Dunes", tint: "#e0c068",
+      blurb: "A drowned desert of rippling sand dunes and half-buried ruins — rays glide low over the seabed while sand-lurkers wait below.",
+      maxDepth: 650, worldWidth: 2700, topColor: "#3aa6c4", deepColor: "#3a2e14",
+      shinyBonus: 0, unlocked: false, cost: 34000,
+      sky: { top: "#ffe9b0", bottom: "#fff6e0" },
+    },
     opensea: {
       id: "opensea", name: "Open Sea", tint: "#2f8fe0",
       blurb: "Endless blue with no land in sight — giant pelagic wanderers cruise the open water.",
@@ -669,6 +676,23 @@
     // ---- ashen: extra catchables (parity / more content) ----
     { id: "cinderperch", name: "Cinder Perch", area: "ashen", rarity: "common", size: 1, value: 413, minDepth: 0, color: "#dc4236", accent: "#f39444", shape: "perch" },
     { id: "ashgoby", name: "Ash Goby", area: "ashen", rarity: "common", size: 1, value: 413, minDepth: 0, color: "#db5715", accent: "#eab43d", shape: "goby" },
+    // ======== Buried Dunes (desert; sand-lurkers & gliding rays) ========
+    { id: "dunegoby",  name: "Dune Goby",     area: "desert", rarity: "common",   size: 1, value: 130, minDepth: 0,   color: "#d8c068", accent: "#fff0b0", shape: "goby" },
+    { id: "sandperch", name: "Sand Perch",    area: "desert", rarity: "common",   size: 2, value: 170, minDepth: 20,  color: "#caa860", accent: "#e8d090", shape: "perch" },
+    { id: "ribbonsole", name: "Ribbon Sole",  area: "desert", rarity: "uncommon", size: 2, value: 280, minDepth: 40,  color: "#bfa86a", accent: "#6a5a3a", shape: "flatfish" },
+    { id: "sidewinder", name: "Sidewinder Eel", area: "desert", rarity: "uncommon", size: 3, value: 360, minDepth: 80, color: "#c8a85a", accent: "#8a6a3a", shape: "eel" },
+    { id: "dustray",   name: "Dust Ray",      area: "desert", rarity: "rare",     size: 4, value: 760, minDepth: 140, color: "#d8c078", accent: "#9a7a3a", shape: "ray" },
+    { id: "glasskilli", name: "Glass Killifish", area: "desert", rarity: "common", size: 1, value: 150, minDepth: 0,  color: "#cfe0c0", accent: "#ffffff", shape: "fish" },
+    { id: "coppermin", name: "Copper Minnow", area: "desert", rarity: "common",   size: 1, value: 140, minDepth: 0,   color: "#c87a3a", accent: "#ffcf8a", shape: "guppy" },
+    { id: "sanddart",  name: "Sand Dart",     area: "desert", rarity: "uncommon", size: 1, value: 240, minDepth: 30,  color: "#d8b860", accent: "#a88030", shape: "sardine" },
+    { id: "relictcod", name: "Relict Cod",    area: "desert", rarity: "uncommon", size: 2, value: 340, minDepth: 100, color: "#a88a5a", accent: "#d8c090", shape: "codfish" },
+    { id: "duneshark", name: "Dune Shark",    area: "desert", rarity: "epic",     size: 6, value: 2400, minDepth: 250, color: "#caa868", accent: "#5a4a2a", shape: "shark" },
+    { id: "ghostcrab", name: "Ghost Crab",    area: "desert", creature: true, rarity: "common", size: 1, value: 130, color: "#e0d0a0", accent: "#caa15a", shape: "crab" },
+    { id: "dunesnail", name: "Dune Snail",    area: "desert", creature: true, rarity: "common", size: 1, value: 110, color: "#c8a860", accent: "#8a6a3a", shape: "snail" },
+    { id: "seavulture", name: "Sea Vulture",  area: "desert", bird: true, rarity: "uncommon", size: 2, value: 420, color: "#7a6a52", accent: "#caa15a", shape: "raptor", seedCost: 700 },
+    { id: "sandlark",  name: "Sand Lark",     area: "desert", bird: true, rarity: "common", size: 1, value: 200, color: "#d8c890", accent: "#fff0b0", shape: "finch", seedCost: 400 },
+    { id: "dunetitan", name: "The Dune Titan", area: "desert", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 200, color: "#b8985a", accent: "#5a4a2a", shape: "dunkle", hp: 6, reward: "" },
+
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
     { id: "pelican",   name: "Pelican",      area: "coral", bird: true, rarity: "uncommon", size: 2, value: 130, color: "#d8c2a0", shape: "duck", seedCost: 400 },

@@ -963,6 +963,28 @@
       "..bbBBBBbbb..bbBBBBbb...",
       "....bbb........bbb......",
     ],
+    // Dunkleosteus-style armoured desert titan — bony head plates + shear jaws
+    dunkle: [
+      "..............AAAAAA..",
+      "f..........bBBBBBBBBb.",
+      "f........bBBBBBBBBBBBEPb",
+      "fFbBBBBBBBBBBBBBBBBAAMMW",
+      "fFbBBBLLLLLLLLLBBBBAAMWW",
+      "fFbBBBBBBBBBBBBBBBBBBb..",
+      ".FFbBBBBBBBBBBBBBbb....",
+      "...FF.....FF..........",
+    ],
+    // bony-eared assfish — pale, flabby, big-headed, tapering tail
+    assfish: [
+      ".........bbBBBBBb...",
+      "......bBBBBBBBBBBBb.",
+      "...bBBBBBBBBBBBBBBBb",
+      "fbBBBBBBBBLLLLLBBBEPb",
+      "fbBBBBBBBBLLLLLBBBBMW",
+      "...bBBBBBBBBBBBBBBBb",
+      "......bBBBBBBBBBBBb.",
+      ".........bbBBBBBb...",
+    ],
     // sleek torpedo-fish: warhead nose, fins, hazard stripes
     torpedo: [
       "..F............A..",
@@ -1654,6 +1676,7 @@
     davyjones: "davyjones", rigtitan: "rigtitan", oarfish: "oarfish", deeplev: "deeplev",
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
+    dunkle: "dunkle", assfish: "assfish",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",

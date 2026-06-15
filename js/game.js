@@ -23,7 +23,7 @@
       money: 0,
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0, knife: 0 },
       charms: { rarity: 0, shiny: 0 },
-      areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
+      areas: { coral: true, river: false, kelp: false, arctic: false, desert: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
                oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
@@ -252,6 +252,7 @@
     olympus:   { plants: ["crystal", "coral", "crystal"], plantColors: ["#ffe07a", "#fff3b0", "#cfe0ff", "#ffd24a"], rock: "#c9b06a", floor: "#a8904a" },
     pirate:    { plants: ["rock", "coral", "rock"], plantColors: ["#caa14a", "#6a5a3a", "#3a4a4a"], rock: "#2a2620", floor: "#15110a" },
     flooded:   { plants: ["rock", "kelp", "rock"], plantColors: ["#3a5a4a", "#4a4a40", "#2a3a32"], rock: "#1f2a26", floor: "#0a120e" },
+    desert:    { plants: ["rock", "coral", "rock"], plantColors: ["#d8c078", "#c8a85a", "#a8884a", "#8a6a3a"], rock: "#a8884a", floor: "#c8a860" },
   };
 
   function generateDecor(loc) {
@@ -274,7 +275,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -429,6 +430,20 @@
         for (var a2 = 0; a2 < 18; a2++) { var ang = a2 * 0.5, rr = R0 * (1 - a2 / 22); var pxc = fcx + Math.cos(ang) * rr, pyc = fcy + Math.sin(ang) * rr; if (a2 === 0) ctx.moveTo(pxc, pyc); else ctx.lineTo(pxc, pyc); }
         ctx.stroke();
         ctx.lineWidth = 1.5; for (var rib = 0; rib < 10; rib++) { var ang2 = rib * 0.6, rr2 = R0 * (1 - rib / 14); ctx.beginPath(); ctx.moveTo(fcx + Math.cos(ang2) * rr2 * 0.6, fcy + Math.sin(ang2) * rr2 * 0.6); ctx.lineTo(fcx + Math.cos(ang2) * rr2, fcy + Math.sin(ang2) * rr2); ctx.stroke(); }
+      } else if (fl.type === "dune") {
+        // a rolling sand dune ridge with a wind-blown crest
+        ctx.globalAlpha = 0.6; ctx.fillStyle = fl.color;
+        var dw = 60 * fl.w;
+        ctx.beginPath();
+        ctx.moveTo(x - dw, floorScreenY);
+        ctx.quadraticCurveTo(x - dw * 0.3, floorScreenY - fl.h, x + dw * 0.2, floorScreenY - fl.h);
+        ctx.quadraticCurveTo(x + dw * 0.7, floorScreenY - fl.h * 0.9, x + dw, floorScreenY);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = mix(fl.color, "#fff", 0.18); // sunlit crest
+        ctx.beginPath();
+        ctx.moveTo(x - dw * 0.3, floorScreenY - fl.h);
+        ctx.quadraticCurveTo(x + dw * 0.2, floorScreenY - fl.h - 3, x + dw * 0.5, floorScreenY - fl.h * 0.86);
+        ctx.lineTo(x + dw * 0.2, floorScreenY - fl.h); ctx.closePath(); ctx.fill();
       } else if (fl.type === "blossom") {
         // cherry-blossom tree — dark trunk, drifting pink canopy
         ctx.globalAlpha = 0.55; var bty = floorScreenY - fl.h, bsw = Math.sin(run.time * 0.5 + fl.sway) * 6;
