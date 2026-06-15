@@ -129,6 +129,7 @@
     var carryUsed = (run && run.bagUsed) ? run.bagUsed : 0;
     run = {
       area: areaId,
+      loc: loc,
       diver: { x: loc.worldWidth / 2, y: 14, vx: 0, vy: 0, face: 1 },
       oxygen: maxOxygen(),
       maxO: maxOxygen(),
@@ -902,9 +903,9 @@
         if (sm.life <= 0) { run.smoke.splice(smi, 1); continue; }
         if (Math.hypot(sm.x - diver.x, sm.y - diver.y) < sm.r) inSmoke = true;
       }
-      // Magma Wyrm: lurk in the smoke (with its hint) and it ambushes you
+      // Magma Wyrm: lurk in the smoke (with its hint) and it ambushes you (Ashen only)
       var mw = D.FISH_BY_ID.magmawyrm;
-      if (mw && state.hints.magmawyrm && !state.magmawyrmCaught && !run.bossPresent && inSmoke) {
+      if (run.area === "ashen" && mw && state.hints.magmawyrm && !state.magmawyrmCaught && !run.bossPresent && inSmoke) {
         run.wyrmTimer -= dt;
         if (run.wyrmTimer <= 0) { spawnSecretBoss("magmawyrm"); run.grab = { boss: run.fish[run.fish.length - 1], wig: 0 }; run.fish[run.fish.length - 1].mode = "grab"; run.fish[run.fish.length - 1].modeT = 6; }
       } else { run.wyrmTimer = 2.5; }
@@ -2057,21 +2058,24 @@
       ctx.fillStyle = "rgba(255,255,255,0.5)"; ctx.fillRect((x - 2) | 0, (y - 2) | 0, 2, 1);
     }
   }
-  // drifting ash/smoke puffs that obscure whatever's inside them
+  // drifting puffs that obscure whatever's inside them
+  // dark ash for Ashen Hollow; pale icy fog for the Arctic
   function drawSmoke() {
     if (!run.smoke || !run.smoke.length) return;
+    var fog = run.loc && run.loc.fog;
+    var col = fog ? "224,238,247" : "40,34,30";
     for (var i = 0; i < run.smoke.length; i++) {
       var sm = run.smoke[i], x = sm.x - cam.x, y = sm.y - cam.y;
       if (x < -sm.r - 40 || x > W + sm.r + 40 || y < -sm.r - 40 || y > H + sm.r + 40) continue;
       var fade = Math.min(1, sm.life / 2) * Math.min(1, (8 - sm.life > 0 ? 1 : sm.life));
-      var a = 0.5 * fade;
+      var a = (fog ? 0.42 : 0.5) * fade;
       // a few overlapping blobs per puff for a billowing look
       for (var b = 0; b < 4; b++) {
         var ox = Math.sin(sm.phase + b * 1.7) * sm.r * 0.4, oy = Math.cos(sm.phase * 0.8 + b) * sm.r * 0.3;
         var rr = sm.r * (0.6 + 0.2 * (b % 2));
         var g = ctx.createRadialGradient(x + ox, y + oy, 0, x + ox, y + oy, rr);
-        g.addColorStop(0, "rgba(40,34,30," + a.toFixed(3) + ")");
-        g.addColorStop(1, "rgba(40,34,30,0)");
+        g.addColorStop(0, "rgba(" + col + "," + a.toFixed(3) + ")");
+        g.addColorStop(1, "rgba(" + col + ",0)");
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x + ox, y + oy, rr, 0, 7); ctx.fill();
       }
     }

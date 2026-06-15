@@ -49,7 +49,7 @@
       id: "arctic", name: "Arctic Shelf", tint: "#8fd0f0",
       blurb: "Frigid water beneath the ice. Belugas, narwhals and pale giants drift through the cold.",
       maxDepth: 700, worldWidth: 2600, topColor: "#6fb0d0", deepColor: "#08243a",
-      shinyBonus: 0, unlocked: false, cost: 20000,
+      shinyBonus: 0, unlocked: false, cost: 20000, smoke: true, fog: true,
       sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
     },
     opensea: {
