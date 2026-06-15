@@ -579,9 +579,9 @@
   // time it simply happens (you're swept straight in); every visit AFTER, an
   // "Enter Secret Location" button lets you dive in from that spot.
   var SECRET_PASSAGES = [
-    { from: "river", to: "japan", msg: "⛩️ The river mouth opens onto a HIDDEN COAST — the Ornate Ocean!",
-      at: function (d, loc) { return d.x > loc.worldWidth - 24; },
-      guide: "Swim all the way RIGHT in River Run until the current sweeps you out to sea." },
+    { from: "river", to: "japan", msg: "⛩️ A tunnel in the riverbed opens onto a HIDDEN COAST — the Ornate Ocean!",
+      at: function (d, loc) { return d.x > loc.worldWidth - 70 && d.y > loc.maxDepth * PXPM - 70; },
+      guide: "Sink into the far-RIGHT corner of the riverbed and swim down through the tunnel in the floor." },
     { from: "kelp", to: "backrooms", msg: "🚪 You squeeze through a crack in the sea floor... and fall into THE BACKROOMS!",
       at: function (d, loc) { return d.x < 30 && d.y > loc.maxDepth * PXPM - 50; },
       guide: "Sink to the far-LEFT seabed of the Kelp Forest and slip through the crack." },
@@ -591,7 +591,7 @@
   ];
   // How to reach every hidden dive site (revealed by the $35k guide)
   var SECRET_SITE_GUIDE = [
-    { area: "japan",      how: "Swim to the far RIGHT of <b>River Run</b> — the current sweeps you out to the Ornate Ocean." },
+    { area: "japan",      how: "Sink into the far-RIGHT corner of the <b>River Run</b> riverbed and swim down through the tunnel in the floor." },
     { area: "backrooms",  how: "Sink to the far-LEFT seabed of the <b>Kelp Forest</b> and slip through the crack in the floor." },
     { area: "pirate",     how: "Dive the wreck-strewn far-LEFT floor of the <b>Stormy Seas</b> into the Drowned Cove." },
     { area: "secretcave", how: "Dive the <b>Gloom Cavern</b> with every boss relic toggled OFF (in your Items) to find the Hollow Deep." },
@@ -904,7 +904,8 @@
     // --- oxygen ---
     if (diver.y > 26) {
       var drain = (1 + depthFactor(diver.y, loc) * 0.6) * oxygenMul();
-      if (run.area === "arctic" && !state.items.coldsuit) drain *= 2; // freezing without a Cold Suit
+      if (loc.cold && !state.items.coldsuit) drain *= 2;   // freezing without a Cold Suit
+      if (loc.hot && !state.items.heatsuit) drain *= 1.9;  // searing without a Heat Suit
       run.oxygen -= drain * dt;
       // manual venting: dump air fast (for low-oxygen secrets) but never below
       // a safe floor just under the "low oxygen" threshold so you can't drown
@@ -2150,33 +2151,41 @@
       }
     }
   }
-  // a swirling current/portal cue luring you toward a hidden passage out of
-  // this area (subtle when undiscovered; a clear glowing portal once known)
+  // a dark tunnel-mouth dug into the seabed (or the right wall) that you swim
+  // THROUGH to reach a hidden site — no portal, just a hole in the floor.
   function drawSecretPassageCue(loc) {
     for (var i = 0; i < SECRET_PASSAGES.length; i++) {
       var p = SECRET_PASSAGES[i];
       if (p.from !== run.area) continue;
       var known = !!state.areas[p.to];
-      // anchor the cue at the trigger zone
-      var wx = /worldWidth/.test(p.at.toString()) ? loc.worldWidth - 12 : 14;
-      var wy = /maxDepth/.test(p.at.toString()) ? loc.maxDepth * PXPM - 24 : run.diver.y;
-      if (!/maxDepth/.test(p.at.toString())) wy = Math.max(40, Math.min(loc.maxDepth * PXPM - 40, run.diver.y));
+      var rightEdge = /worldWidth/.test(p.at.toString());
+      // anchor the hole on the seabed floor (or the bottom-right corner)
+      var wx = rightEdge ? loc.worldWidth - 34 : 30;
+      var wy = loc.maxDepth * PXPM - 10;
       var x = wx - cam.x, y = wy - cam.y;
-      if (x < -80 || x > W + 80) continue;
-      var t = run.time * (known ? 2.4 : 1.2);
-      var baseR = known ? 26 : 16, a = known ? 0.5 : 0.22;
-      drawGlow(x, y, baseR + Math.sin(t) * 6, known ? "#c79aff" : "#9fd0ff", a);
-      // little swirl arms
-      ctx.save(); ctx.globalAlpha = known ? 0.7 : 0.3;
-      ctx.strokeStyle = known ? "#e6c8ff" : "#bfe0ff"; ctx.lineWidth = 2;
-      for (var s = 0; s < 3; s++) {
-        ctx.beginPath();
-        for (var k = 0; k <= 10; k++) {
-          var ang = t + s * 2.1 + k * 0.4, rr = (k / 10) * baseR;
-          var px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr;
-          if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        }
-        ctx.stroke();
+      if (x < -90 || x > W + 90 || y < -60 || y > H + 90) continue;
+      var rx = 40, ry = 22;
+      // rocky rim around the opening
+      ctx.save();
+      ctx.fillStyle = "#0a0c10";
+      ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 7); ctx.fill();
+      // a darker throat that fades to black (the tunnel going down)
+      var g = ctx.createRadialGradient(x, y - 2, 2, x, y, rx);
+      g.addColorStop(0, "#000000"); g.addColorStop(0.7, "#05060a"); g.addColorStop(1, "rgba(5,6,10,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, 7); ctx.fill();
+      // chunky rock lip
+      ctx.strokeStyle = "rgba(40,44,52,0.9)"; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, Math.PI * 0.92, Math.PI * 2.08); ctx.stroke();
+      // a faint hint of light from the far side once you've been through it
+      if (known) {
+        var pulse = 0.18 + Math.sin(run.time * 2) * 0.06;
+        drawGlow(x, y, 16 + Math.sin(run.time * 2) * 3, "#bfe0ff", pulse);
+      }
+      // a couple of bubbles drifting up out of the hole
+      for (var b = 0; b < 3; b++) {
+        var bt = (run.time * 0.6 + b * 0.4) % 1;
+        ctx.fillStyle = "rgba(200,230,255," + (0.3 * (1 - bt)).toFixed(2) + ")";
+        ctx.beginPath(); ctx.arc(x + Math.sin(b * 2 + run.time) * 10, y - bt * 34, 2, 0, 7); ctx.fill();
       }
       ctx.restore();
     }
@@ -3177,12 +3186,12 @@
     }
     var hasHeat = !!state.items.heatsuit;
     html += '<div class="shop-item"><div class="si-info"><b>🟥 Heat Suit</b>' + (hasHeat ? ' <span class="lvl">✓ Owned</span>' : '')
-      + '<p>A reflective lava-proof suit — required to dive the searing <b>Ashen Caldera</b> without cooking.</p></div>'
+      + '<p>A reflective lava-proof suit — recommended for hot dive sites (the <b>Magma Vents</b> &amp; <b>Drowned Cove</b>). Without it the heat burns your oxygen ~2x faster.</p></div>'
       + '<div class="si-buy">' + (hasHeat ? '<span class="maxed">✓</span>'
         : '<button data-buytool="heatsuit:60000" ' + (state.money < 60000 ? 'disabled' : '') + '>$60,000</button>') + '</div></div>';
     var hasCold = !!state.items.coldsuit;
     html += '<div class="shop-item"><div class="si-info"><b>🟦 Cold Suit</b>' + (hasCold ? ' <span class="lvl">✓ Owned</span>' : '')
-      + '<p>Insulated drysuit — stops the freezing <b>Arctic Shelf</b> burning through your oxygen twice as fast.</p></div>'
+      + '<p>Insulated drysuit — recommended for cold dive sites (the <b>Arctic Shelf</b> &amp; <b>Boneyard</b>). Without it the cold burns your oxygen twice as fast.</p></div>'
       + '<div class="si-buy">' + (hasCold ? '<span class="maxed">✓</span>'
         : '<button data-buytool="coldsuit:18000" ' + (state.money < 18000 ? 'disabled' : '') + '>$18,000</button>') + '</div></div>';
     html += '</div>';
@@ -3922,7 +3931,8 @@
       html += '<div class="area-card ' + (unlocked ? '' : 'locked') + (id === "sanctuary" ? ' sanctuary' : '') + '"' + cardStyle + '>'
         + '<div class="area-info"><b style="color:' + tint + ';">' + loc.name + '</b>'
         + '<p>' + loc.blurb + '</p>'
-        + '<small>Max depth ' + loc.maxDepth + 'm' + (loc.shinyBonus ? ' · ✦ Shiny haven' : '') + '</small></div>'
+        + '<small>Max depth ' + loc.maxDepth + 'm' + (loc.shinyBonus ? ' · ✦ Shiny haven' : '')
+        + (loc.cold ? ' · 🧊 Cold Suit recommended' : '') + (loc.hot ? ' · 🔥 Heat Suit recommended' : '') + '</small></div>'
         + '<div class="area-act">'
         + (unlocked
             ? '<button data-go="' + id + '"' + goStyle + '>Dive Here</button>'
