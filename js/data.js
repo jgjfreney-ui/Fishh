@@ -101,6 +101,13 @@
       shinyBonus: 0.06, unlocked: false, cost: 330000,
       sky: { top: "#262a36", bottom: "#454c5e" },
     },
+    pirate: {
+      id: "pirate", name: "Drowned Cove", tint: "#caa14a", secret: true,
+      blurb: "A pirates' graveyard of sunken galleons and cursed gold — and things that should have stayed buried.",
+      maxDepth: 800, worldWidth: 2800, topColor: "#1a2a3a", deepColor: "#04060a",
+      shinyBonus: 0.1, unlocked: false, cost: 0,
+      sky: { top: "#2a2e3a", bottom: "#454c5e" },
+    },
     backrooms: {
       id: "backrooms", name: "The Backrooms", tint: "#d8c84a", secret: true,
       blurb: "You weren't supposed to find this. Endless damp yellow rooms, humming lights, water that shouldn't be here.",
@@ -453,6 +460,18 @@
     { id: "stormgull", name: "Squall Gull",   area: "storm", bird: true, night: true, rarity: "uncommon", size: 2, value: 360, color: "#5a6470", accent: "#cfe0ff", shape: "bird", seedCost: 700 },
     { id: "leviathanking", name: "The Leviathan King", area: "storm", areaBoss: true, rarity: "mythic", size: 14, value: 34000, minDepth: 250, color: "#2a3a5a", accent: "#9fd0ff", shape: "leviathanking", hp: 6, reward: "" },
 
+    // ======== Drowned Cove (secret pirate location) ========
+    { id: "cutlassfish", name: "Cutlassfish",  area: "pirate", rarity: "common",   size: 2, value: 200, minDepth: 0,   color: "#b0b6bc", accent: "#ffcf3a", shape: "longfish" },
+    { id: "doubloonfish", name: "Doubloon Fish", area: "pirate", rarity: "common",  size: 1, value: 220, minDepth: 0,   color: "#e0b24a", accent: "#fff3b0", shape: "round" },
+    { id: "ghostfish",   name: "Ghostfish",     area: "pirate", rarity: "uncommon", size: 2, value: 380, minDepth: 40,  color: "#9fd0c8", accent: "#ffffff", shape: "fish" },
+    { id: "corsaireel",  name: "Corsair Eel",   area: "pirate", rarity: "rare",     size: 3, value: 620, minDepth: 120, color: "#3a4a3a", accent: "#caa15a", shape: "eel" },
+    { id: "pirateshark", name: "Plunderer Shark", area: "pirate", rarity: "epic",   size: 6, value: 2600, minDepth: 250, color: "#3a3a42", accent: "#ffcf3a", shape: "shark" },
+    { id: "ghostwhale",  name: "Wraith Galleon Whale", area: "pirate", rarity: "legendary", size: 9, value: 7200, minDepth: 450, color: "#5a6470", accent: "#cfe0c8", shape: "whale" },
+    { id: "peglegcrab",  name: "Peg-Leg Crab",  area: "pirate", creature: true, rarity: "uncommon", size: 2, value: 320, color: "#8a5a3a", accent: "#ffcf3a", shape: "crab" },
+    { id: "pirateparrot", name: "Pirate Parrot", area: "pirate", bird: true, day: true, rarity: "rare", size: 2, value: 700, color: "#c0423a", accent: "#ffcf3a", shape: "bird", seedCost: 1400 },
+    { id: "youngkraken", name: "Young Kraken",  area: "pirate", areaBoss: true, rarity: "mythic", size: 12, value: 28000, minDepth: 250, color: "#5a2f5d", accent: "#9affd0", shape: "kraken", hp: 5, reward: "" },
+    { id: "davyjones",   name: "Davy Jones' Serpent", area: "pirate", secretBoss: true, rarity: "mythic", size: 14, value: 80000, minDepth: 200, color: "#2f4a3a", accent: "#9fffc0", shape: "leviathanking", hp: 7, reward: "serpenteye" },
+
     // ======== The Backrooms (secret) ========
     { id: "wallpaperfish", name: "Wallpaper Fish", area: "backrooms", rarity: "common", size: 2, value: 200, minDepth: 0, color: "#d8c468", accent: "#b8a038", shape: "wallpaperfish" },
     { id: "weircorejelly", name: "Weirdcore Jelly", area: "backrooms", rarity: "uncommon", size: 3, value: 360, minDepth: 20, color: "#c8b84a", accent: "#fff6a0", shape: "glowjelly" },
@@ -586,7 +605,7 @@
   // areas that actually exist yet — so not-yet-built zones like the River
   // don't make completion impossible.)
   const COMPLETION_FISH = FISH.filter(function (f) {
-    return !f.isKraken && !f.isBlob && !f.areaBoss && !f.secret && LOCATIONS[f.area];
+    return !f.isKraken && !f.isBlob && !f.areaBoss && !f.secretBoss && !f.secret && LOCATIONS[f.area];
   }).map(function (f) { return f.id; });
 
   // --- Treasures (from shipwrecks) --------------------------------------
@@ -595,6 +614,7 @@
     { id: "bottle",  name: "Message Bottle", value: 90,   color: "#8fd6c0", rarity: "common" },
     { id: "pearl",   name: "Lustrous Pearl", value: 220,  color: "#f3eaff", rarity: "uncommon" },
     { id: "clampearl", name: "Clam Pearl",   value: 480,  color: "#fff0f6", rarity: "rare" },
+    { id: "coinchest", name: "Cursed Coin Chest", value: 500, color: "#ffcf3a", rarity: "rare" },
     { id: "goblet",  name: "Silver Goblet",  value: 300,  color: "#cfd6de", rarity: "uncommon" },
     { id: "ruby",    name: "Blood Ruby",     value: 700,  color: "#e23b5a", rarity: "rare" },
     { id: "amulet",  name: "Ancient Amulet", value: 1200, color: "#49d6c0", rarity: "rare" },

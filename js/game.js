@@ -24,8 +24,10 @@
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
-               prism: false, forest: false, swamp: false, boneyard: false, storm: false, backrooms: false, japan: false, secretcave: false,
+               prism: false, forest: false, swamp: false, boneyard: false, storm: false, pirate: false, backrooms: false, japan: false, secretcave: false,
                oilrig: false, cave: false, cloud: false, sanctuary: false },
+      keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
+      davyjonesCaught: false,
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -232,6 +234,7 @@
     oilrig:    { plants: ["vent", "rock", "rock"], plantColors: ["#caa14a", "#6a6258", "#3a3320"], rock: "#2a2418", floor: "#100c06" },
     prism:     { plants: ["coral", "coral", "anemone"], plantColors: ["#ff5b9f", "#ffcf3a", "#3ad0e0", "#9a3ad0", "#36d6a0", "#ff7a3a"], rock: "#3a4a8a", floor: "#2a4a8a" },
     storm:     { plants: ["kelp", "rock", "rock"], plantColors: ["#3a5a4a", "#46506a", "#2a3a4a"], rock: "#2a3340", floor: "#161e28" },
+    pirate:    { plants: ["rock", "coral", "rock"], plantColors: ["#caa14a", "#6a5a3a", "#3a4a4a"], rock: "#2a2620", floor: "#15110a" },
   };
 
   function generateDecor(loc) {
@@ -254,7 +257,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -404,7 +407,7 @@
       }
       if (!allContent && f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
-      if (f.isKraken || f.isBlob || f.areaBoss || f.creature || f.bird) continue;
+      if (f.isKraken || f.isBlob || f.areaBoss || f.secretBoss || f.creature || f.bird) continue;
       if (depthM < f.minDepth) continue;
       if (f.secret) {
         // secrets need a purchased hint + meeting their depth condition
@@ -571,6 +574,10 @@
     if (run.area === "river" && !state.areas.japan && d.x > loc.worldWidth - 18 && areaFishComplete("river")) {
       unlockSecretArea("japan", "⛩️ The river mouth opens onto a HIDDEN COAST! (Now in Change Area.)");
     }
+    // Drowned Cove: dive into the wreck-strewn far-left floor of the Stormy Seas
+    if (run.area === "storm" && !state.areas.pirate && d.x < 26 && d.y > loc.maxDepth * PXPM - 46) {
+      unlockSecretArea("pirate", "☠️ You're dragged through a galleon's hull into a DROWNED COVE of pirates. (Now in Change Area.)");
+    }
   }
   // gating helpers for the Cloud Reaches (all birds) & Gloom Cavern (all
   // creatures — excluding the cave's own, to avoid a chicken-and-egg lock).
@@ -660,6 +667,18 @@
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
     toast("A monstrous " + def.name + " rises! Harpoon it! 🔱", "epic", 5000);
+  }
+
+  // a one-off secret boss (e.g. Davy Jones' Serpent from the captain's chest)
+  function spawnSecretBoss(id) {
+    var def = D.FISH_BY_ID[id], loc = D.LOCATIONS[run.area];
+    run.fish.push({
+      uid: id, def: def, x: loc.worldWidth / 2, y: loc.maxDepth * PXPM - 60, baseY: loc.maxDepth * PXPM - 60,
+      vx: 20, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, secretBoss: true, hp: bossHP(def.hp || 5), hitFlash: 0,
+    });
+    run.bossPresent = true;
+    if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
+    toast("☠️ The captain's chest bursts open — " + def.name + " RISES! Harpoon it! 🔱", "epic", 5000);
   }
 
   // ---------------------------------------------------------------------
@@ -860,7 +879,9 @@
     }
     // boss summon: Trench has the blobfish/Kraken; other areas have area bosses
     if (!run.bossPresent && depthM > 200) {
-      if (run.area === "trench") {
+      if (run.area === "pirate" && state.keyPieces >= 4 && !state.davyjonesCaught) {
+        spawnSecretBoss("davyjones");           // the captain's chest rises
+      } else if (run.area === "trench") {
         var boss = bossToSummon();
         if (boss === "kraken") spawnBoss("kraken", false);
         else if (boss === "blobfish") spawnBoss("blobfish", true);
@@ -1075,6 +1096,10 @@
               state.items.cagekey = true; saveGame();
               run.floaters.push({ x: cg.x, y: cg.y - 24, text: "🔑 Cage Key!", color: "#ffe14d", life: 2.4 });
               toast("🔑 You pried a strange KEY from the cage. What does it open?", "epic", 4000);
+            } else if (run.area === "pirate" && state.keyPieces < 4 && Math.random() < 0.6) {
+              state.keyPieces++; saveGame();
+              run.floaters.push({ x: cg.x, y: cg.y - 24, text: "☠️ Key Piece " + state.keyPieces + "/4", color: "#ffe14d", life: 2.6 });
+              toast(state.keyPieces >= 4 ? "☠️ The Captain's Key is complete! Dive deep — the chest stirs..." : "☠️ A piece of the Captain's Key! (" + state.keyPieces + "/4)", "epic", 3200);
             } else {
               toast("🔨 Cage smashed — treasure spills out!", "good", 1600);
             }
@@ -1114,6 +1139,16 @@
           if (window.AUDIO && AUDIO.sonar) AUDIO.sonar(close);
         }
       } else { run.sonarTimer = 0; }
+    }
+
+    // --- Eye of the Serpent: cursed coin chests wash up in any dive ---
+    if (state.items.serpenteye) {
+      run.coinTimer = (run.coinTimer == null ? 8 + Math.random() * 8 : run.coinTimer) - dt;
+      if (run.coinTimer <= 0 && run.treasures.length < 6) {
+        run.coinTimer = 12 + Math.random() * 12;
+        if (!COIN_CHEST) { for (var i = 0; i < D.TREASURES.length; i++) if (D.TREASURES[i].id === "coinchest") COIN_CHEST = D.TREASURES[i]; }
+        if (COIN_CHEST) run.treasures.push({ def: COIN_CHEST, x: clamp(diver.x + (Math.random() - 0.5) * 500, 30, loc.worldWidth - 30), y: clamp(diver.y + (Math.random() - 0.5) * 300, 40, loc.maxDepth * PXPM - 20), phase: Math.random() * 6 });
+      }
     }
 
     // --- particles ---
@@ -1355,7 +1390,8 @@
   function harpoonHit(boss) {
     boss.hp--; boss.hitFlash = 0.4; boss.fleeing = 0.5;
     if (boss.hp <= 0) {
-      if (boss.areaBoss) catchAreaBoss(boss);
+      if (boss.secretBoss) catchSecretBoss(boss);
+      else if (boss.areaBoss) catchAreaBoss(boss);
       else if (boss.isBlob) catchBlobfish(boss.shiny);
       else catchKraken(boss.shiny);
       run.bossPresent = false;
@@ -1365,7 +1401,7 @@
     }
   }
 
-  var CLAM_PEARL = null;
+  var CLAM_PEARL = null, COIN_CHEST = null;
   function dropPearl(c) {
     if (!CLAM_PEARL) { for (var i = 0; i < D.TREASURES.length; i++) if (D.TREASURES[i].id === "clampearl") CLAM_PEARL = D.TREASURES[i]; }
     if (!CLAM_PEARL) return;
@@ -1374,6 +1410,32 @@
     state.treasures[CLAM_PEARL.id] = (state.treasures[CLAM_PEARL.id] || 0) + 1;
     run.floaters.push({ x: c.x, y: c.y - 16, text: "✦ Pearl!", color: "#fff0f6", life: 1.8 });
     toast("A pearl inside! 🦪✨", "shiny", 1800);
+    saveGame();
+  }
+
+  function catchSecretBoss(boss) {
+    var def = boss.def;
+    state.davyjonesCaught = true;
+    state.money += def.value;
+    state.stats.earned += def.value;
+    if (def.reward === "serpenteye") state.items.serpenteye = true;
+    var bi = run.fish.indexOf(boss); if (bi >= 0) run.fish.splice(bi, 1);
+    saveGame();
+    setTimeout(function () { showSecretBossEnding(def); }, 700);
+  }
+  function showSecretBossEnding(def) {
+    scene = "ending"; sellHud(false);
+    var ov = overlay("modal");
+    var img = SPRITES.dataURL(SPRITES.archetypeForShape(def.shape), { color: def.color, accent: def.accent, scale: 5 });
+    var html = '<div class="panel ending-panel"><h1>☠️ ' + def.name + ' defeated! ☠️</h1>';
+    html += '<div class="blob-reveal" style="background-image:url(' + img + ')"></div>';
+    html += '<p>The captain\'s curse breaks. A flood of plunder is yours — <b>+$' + fmt(def.value) + '</b>.</p>';
+    if (def.reward === "serpenteye") html += '<p class="prize">You take the <b>Eye of the Serpent</b> 👁️ — golden <b>coin chests</b> now wash up in <b>every</b> dive site.</p>';
+    html += '<button id="btn-resume" class="big primary">🤿 Keep Diving</button>';
+    html += '<button id="btn-continue" class="big">⬆ Back to Boat</button></div>';
+    ov.innerHTML = html; ov.classList.add("open");
+    bind("btn-resume", function () { resumeDive(); });
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(state && state.nextNight); showBoat(); });
     saveGame();
   }
 
@@ -2142,6 +2204,8 @@
     { name: "Ornate",    area: "japan",     color: "#e0556a", secret: true },
     { name: "Hollow",    area: "secretcave",color: "#9a8ad0", secret: true },
     { name: "Oil Rig",   area: "oilrig",    color: "#caa14a", secret: true },
+    { name: "Stormy",    area: "storm",     color: "#46506a" },
+    { name: "Pirate",    area: "pirate",    color: "#8a6a3a", secret: true },
   ];
   // ... and one per secret fish (unlock by catching that secret)
   var SECRET_SUITS = D.FISH.filter(function (f) { return f.secret; })
@@ -4020,6 +4084,8 @@
     if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
     if (state.items.torch) html += row("🔦 Torch", "beam of light");
     if (state.items.kaijubreath) html += row("🔵 Kaiju Breath", "beam vacuums fish");
+    if (state.items.serpenteye) html += row("👁️ Eye of the Serpent", "coin chests everywhere");
+    if (state.areas.pirate && !state.davyjonesCaught) html += row("☠️ Captain's Key", state.keyPieces + " / 4 pieces");
     if (state.items.divingbell) html += row("🛎️ Diving Bell", "1 air save / dive");
     if (hammerLevel() > 0) html += row("🔨 Sledgehammer", "Lv " + hammerLevel());
     if (shovelLevel() > 0) html += row("⛏️ Shovel", "Lv " + shovelLevel());
