@@ -588,7 +588,7 @@
 
     // ======== Hollow Deep (secret cave) — Olm is its secret fish ========
     { id: "olm",        name: "Olm",          area: "secretcave", rarity: "epic", size: 1, value: 1200, minDepth: 0, color: "#f0d6cc", accent: "#ffc0cc", shape: "eel", secret: true,
-      hint: "A ghostly blind salamander of the lightless deep — it surfaces only in the Hollow Deep.", condition: {} },
+      hint: "A blind cave salamander — it only ventures out for a diver who sinks deep (below 250m) into the Hollow Deep and holds perfectly still.", condition: { still: true, minDepth: 250 } },
     { id: "cavelantern",name: "Cave Lantern", area: "secretcave", rarity: "rare", size: 2, value: 420, minDepth: 60, color: "#bcd0c0", accent: "#ffe98a", shape: "lantern" },
 
     // ======== The Oil Rig (secret) — metal / mechanical / robot catchables ========
@@ -766,6 +766,7 @@
     { id: "gloomlurker", name: "The Gloom Lurker", area: "cave", areaBoss: true, trigger: "allcreatures", rarity: "mythic", size: 13, value: 26000, minDepth: 300, color: "#2a2438", accent: "#9f8ad0", shape: "angler", hp: 5, reward: "" },
     { id: "cavernwyrm", name: "Cavern Wyrm", area: "cave", secretBoss: true, rarity: "mythic", size: 16, value: 38000, minDepth: 0, color: "#3a2f5e", accent: "#7affd0", trim: "#ffd24a", shape: "cavewyrm", hp: 8, reward: "",
       hint: "A colossal coil shifts in the deepest black of the cavern — wake it from the very bottom." },
+    { id: "assfish",    name: "Bony-eared Assfish", area: "cave", secretBoss: true, rarity: "mythic", size: 11, value: 28000, minDepth: 0, color: "#b8a8c8", accent: "#8a7aa8", trim: "#e0d8f0", shape: "assfish", hp: 5, reward: "" },
   ];
 
   const CREATURES = FISH.filter(function (f) { return f.creature; }).map(function (f) { return f.id; });

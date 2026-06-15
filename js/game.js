@@ -176,6 +176,7 @@
     };
     placeWrecks(loc);
     placeCages(loc);
+    placeLanterns(loc);
     generateDecor(loc);
     // initial population
     for (var i = 0; i < 17; i++) spawnFish(true);
@@ -201,6 +202,18 @@
       if (!state.items.cagekey) run.cages.push({ x: loc.worldWidth - 120, y: floor - 22, opened: false, hasKey: true });
       // the derelict oil rig rises from the sea floor
       run.oilrig = { x: loc.worldWidth * 0.5, y: floor - 30 };
+    }
+  }
+
+  // Four eerie lanterns hang in the Gloom Cavern. Swim into each to snuff it
+  // out; douse all four and the Bony-eared Assfish rises from the dark.
+  function placeLanterns(loc) {
+    run.lanterns = [];
+    if (loc.id !== "cave" || state.assfishCaught) return;
+    var floor = loc.maxDepth * PXPM;
+    for (var i = 0; i < 4; i++) {
+      run.lanterns.push({ x: loc.worldWidth * (0.16 + i * 0.22) + (Math.random() - 0.5) * 120,
+        y: 120 + Math.random() * (floor - 260), lit: true, bob: Math.random() * 6 });
     }
   }
 
@@ -306,7 +319,8 @@
     run.rockColor = d.rock;
   }
 
-  function drawBgFlora() {
+  function drawBgFlora(loc) {
+    loc = loc || D.LOCATIONS[run.area];
     var floorScreenY = run.floorY - cam.y;
     for (var i = 0; i < run.bgFlora.length; i++) {
       var fl = run.bgFlora[i];
@@ -879,7 +893,7 @@
     for (var k in state.areaBossCaught) if (state.areaBossCaught[k]) n++;
     if (state.blobfishCaught) n++;
     if (state.krakenCaught) n++;
-    var secret = ["magmawyrm", "cavernwyrm", "leatherback", "davyjones"];
+    var secret = ["magmawyrm", "cavernwyrm", "assfish", "leatherback", "davyjones", "mechakaiju"];
     for (var i = 0; i < secret.length; i++) if (state[secret[i] + "Caught"]) n++;
     return n;
   }
@@ -976,6 +990,7 @@
     if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
     toast(def.fromSmoke ? "🔥 " + def.name + " ERUPTS from the smoke and seizes you — HARPOON IT! 🔱"
                         : id === "cavernwyrm" ? "🐉 " + def.name + " UNCOILS from the abyss — HARPOON IT! 🔱"
+                        : id === "assfish" ? "🐡 In the pitch dark, the " + def.name + " drifts up — HARPOON IT! 🔱"
                         : "☠️ The chest bursts open — " + def.name + " RISES! Harpoon it! 🔱", "epic", 5000);
   }
 
@@ -1193,7 +1208,7 @@
     // --- secret fish: pop in the INSTANT you satisfy their condition ---
     for (var sx2 = 0; sx2 < D.FISH.length; sx2++) {
       var sf = D.FISH[sx2];
-      if (!sf.secret || run.secretShown[sf.id]) continue;
+      if (!sf.secret || sf.bird || run.secretShown[sf.id]) continue; // secret birds spawn via the bird system
       if (sf.area !== run.area && !loc.allContent) continue;
       if (!state.hints[sf.id]) continue;            // still need the hint bought
       if (sf.night && !run.night) continue;
@@ -1494,6 +1509,26 @@
         }
       }
     }
+    // --- Gloom Cavern lanterns: snuff all four to wake the Bony-eared Assfish ---
+    if (run.lanterns && run.lanterns.length && !state.assfishCaught) {
+      var lit = 0;
+      for (var li = 0; li < run.lanterns.length; li++) {
+        var ln = run.lanterns[li];
+        if (ln.lit) {
+          if (Math.hypot(ln.x - diver.x, ln.y - diver.y) < 34) {
+            ln.lit = false;
+            if (window.AUDIO) AUDIO.ui("back");
+            var left = run.lanterns.filter(function (q) { return q.lit; }).length;
+            toast(left > 0 ? "🕯️ A lantern gutters out... " + left + " still burning." : "🕯️ The last lantern dies — the dark stirs...", left > 0 ? "good" : "epic", 2200);
+          } else lit++;
+        }
+      }
+      if (lit === 0 && !run.bossPresent && !run.assfishSpawned) {
+        run.assfishSpawned = true;
+        spawnSecretBoss("assfish");
+      }
+    }
+
     // --- The Oil Rig (Open Sea): approach with the Cage Key to open the way ---
     if (run.oilrig && !state.areas.oilrig) {
       if (Math.hypot(run.oilrig.x - diver.x, run.oilrig.y - diver.y) < 90) {
@@ -1810,6 +1845,31 @@
       toast("💥 The torpedo detonates on you — oxygen blown out!", "bad", 1800);
     }
   }
+  function drawLanterns() {
+    if (!run.lanterns || !run.lanterns.length) return;
+    for (var i = 0; i < run.lanterns.length; i++) {
+      var ln = run.lanterns[i], x = ln.x - cam.x, y = ln.y - cam.y + Math.sin(run.time + ln.bob) * 3;
+      if (x < -40 || x > W + 40 || y < -40 || y > H + 40) continue;
+      // chain + iron frame
+      ctx.strokeStyle = "rgba(60,55,45,0.8)"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y - 18); ctx.lineTo(x, y - 8); ctx.stroke();
+      ctx.fillStyle = ln.lit ? "#5a4a2a" : "#2a2620";
+      ctx.fillRect(x - 7, y - 8, 14, 16);
+      if (ln.lit) {
+        var fl = 0.7 + 0.3 * Math.sin(run.time * 8 + ln.bob);
+        drawGlow(x, y, 40 * fl, "#ffd27a", 0.5 * fl);
+        ctx.fillStyle = "rgba(255,220,130," + (0.7 * fl).toFixed(2) + ")";
+        ctx.fillRect(x - 4, y - 5, 8, 10);
+        ctx.fillStyle = "#fff6c0"; ctx.fillRect(x - 2, y - 3, 4, 6);
+      } else {
+        ctx.fillStyle = "rgba(30,28,24,0.9)"; ctx.fillRect(x - 4, y - 5, 8, 10);
+        // a thread of smoke
+        ctx.fillStyle = "rgba(120,120,120,0.18)"; ctx.fillRect(x - 1, y - 16, 2, 8);
+      }
+      // iron cap
+      ctx.fillStyle = "rgba(50,45,38,0.9)"; ctx.fillRect(x - 8, y - 9, 16, 3);
+    }
+  }
   function drawTorpedoes() {
     // a torpedo rising out of the Rig Titan's deploy hatch
     for (var bi = 0; bi < run.fish.length; bi++) {
@@ -2054,7 +2114,7 @@
     drawSky(loc);
     drawBirds();
     drawHills(loc);
-    drawBgFlora();
+    drawBgFlora(loc);
     drawSeabed(loc);
 
     // --- scene objects ---
@@ -2072,6 +2132,7 @@
     drawBossBeam();
     drawNetFx();
     drawTrap();
+    drawLanterns();
     drawTorpedoes();
     drawSmoke();
     drawGoblinDarkness();
@@ -4523,6 +4584,18 @@
     });
   }
 
+  // end-game areas gate themselves (Trench/Sanctuary/Cloud) — they're not part
+  // of the linear cheapest-first purchase chain
+  function isSpecialArea(L) { return !!(L.requireAreas || L.requireBosses || L.requireAllBirds || L.requireAllCreatures); }
+  function nextNormalAreaToBuy() {
+    var best = null, bc = Infinity;
+    for (var a in D.LOCATIONS) {
+      var L = D.LOCATIONS[a];
+      if (L.secret || state.areas[a] || isSpecialArea(L)) continue;
+      if ((L.cost || 0) < bc) { bc = L.cost || 0; best = a; }
+    }
+    return best;
+  }
   // ----- Area select -----
   function showAreas() {
     var ov = overlay("shop");
@@ -4550,6 +4623,13 @@
       }
       if (!unlocked && loc.requireAllCreatures && !allCreaturesFound()) {
         gate = "🔒 Discover every sea creature first";
+      }
+      // sequential progression: you can't skip ahead to a harder site — every
+      // CHEAPER ordinary dive site must be owned first (special end-game areas
+      // keep their own gates and are excluded so this can never soft-lock).
+      if (!unlocked && !gate && !loc.secret && !isSpecialArea(loc)) {
+        var nb = nextNormalAreaToBuy();
+        if (nb && nb !== id) gate = "🔒 Unlock " + D.LOCATIONS[nb].name + " first";
       }
       var tint = loc.tint || "#6fd0ff";
       var cardStyle = ' style="border-left:5px solid ' + tint + ';"';
