@@ -130,6 +130,24 @@ html, body {
   font-weight: 700; font-size: 14px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
+.guide-list { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.5; opacity: 0.92; }
+.guide-list li { margin-bottom: 5px; }
+#btn-enter-secret {
+  position: absolute;
+  bottom: calc(50% - 20px); left: 50%; transform: translateX(-50%);
+  display: none;
+  z-index: 9;
+  background: rgba(60, 30, 80, 0.78);
+  border: 1px solid rgba(200, 150, 255, 0.8);
+  backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+  border-radius: 22px;
+  padding: 12px 20px;
+  font-weight: 800; font-size: 15px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 18px rgba(180, 120, 255, 0.6);
+  animation: pulseGlow 1.4s ease-in-out infinite;
+}
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 14px rgba(180,120,255,0.5); } 50% { box-shadow: 0 0 26px rgba(200,150,255,0.9); } }
 #btn-sling {
   position: absolute;
   bottom: calc(132px + env(safe-area-inset-bottom)); left: 14px;

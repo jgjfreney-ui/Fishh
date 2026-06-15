@@ -575,20 +575,48 @@
     toast(msg, "epic", 5000);
     if (window.AUDIO) AUDIO.rumble();
   }
+  // Hidden passages out of ordinary areas. Swim into the spot and the FIRST
+  // time it simply happens (you're swept straight in); every visit AFTER, an
+  // "Enter Secret Location" button lets you dive in from that spot.
+  var SECRET_PASSAGES = [
+    { from: "river", to: "japan", msg: "⛩️ The river mouth opens onto a HIDDEN COAST — the Ornate Ocean!",
+      at: function (d, loc) { return d.x > loc.worldWidth - 24; },
+      guide: "Swim all the way RIGHT in River Run until the current sweeps you out to sea." },
+    { from: "kelp", to: "backrooms", msg: "🚪 You squeeze through a crack in the sea floor... and fall into THE BACKROOMS!",
+      at: function (d, loc) { return d.x < 30 && d.y > loc.maxDepth * PXPM - 50; },
+      guide: "Sink to the far-LEFT seabed of the Kelp Forest and slip through the crack." },
+    { from: "storm", to: "pirate", msg: "☠️ You're dragged through a galleon's hull into a DROWNED COVE of pirates!",
+      at: function (d, loc) { return d.x < 26 && d.y > loc.maxDepth * PXPM - 46; },
+      guide: "Dive to the wreck-strewn far-LEFT floor of the Stormy Seas." },
+  ];
+  // How to reach every hidden dive site (revealed by the $35k guide)
+  var SECRET_SITE_GUIDE = [
+    { area: "japan",      how: "Swim to the far RIGHT of <b>River Run</b> — the current sweeps you out to the Ornate Ocean." },
+    { area: "backrooms",  how: "Sink to the far-LEFT seabed of the <b>Kelp Forest</b> and slip through the crack in the floor." },
+    { area: "pirate",     how: "Dive the wreck-strewn far-LEFT floor of the <b>Stormy Seas</b> into the Drowned Cove." },
+    { area: "secretcave", how: "Dive the <b>Gloom Cavern</b> with every boss relic toggled OFF (in your Items) to find the Hollow Deep." },
+    { area: "oilrig",     how: "Smash sea-floor cages with the <b>Sledgehammer</b> to pry out a Cage Key, then carry it to the sunken oil rig." },
+    { area: "ashen",      how: "Buy the <b>Heat Suit</b> (Shop → Gear); the Ashen Caldera then opens in Change Area." },
+    { area: "olympus",    how: "Own the <b>Storm Summoner</b>, climb to the tallest peak of the <b>Sunlit Peaks</b>, line up with its tip and summon a storm." },
+  ];
+  var pendingSecretEnter = null; // area id to dive into after this frame
   // hidden-area discovery checks, run every dive frame
   function checkSecretUnlocks(loc, depthM) {
     var d = run.diver;
-    // Backrooms: slip through the sea floor at the very LEFT edge of the Kelp Forest
-    if (run.area === "kelp" && !state.areas.backrooms && d.x < 26 && d.y > loc.maxDepth * PXPM - 46) {
-      unlockSecretArea("backrooms", "🚪 You squeeze through a crack in the sea floor... and fall into THE BACKROOMS. (Now in Change Area.)");
-    }
-    // Hidden Coast: swim off the RIGHT edge of the River once every river fish is caught
-    if (run.area === "river" && !state.areas.japan && d.x > loc.worldWidth - 18 && areaFishComplete("river")) {
-      unlockSecretArea("japan", "⛩️ The river mouth opens onto a HIDDEN COAST! (Now in Change Area.)");
-    }
-    // Drowned Cove: dive into the wreck-strewn far-left floor of the Stormy Seas
-    if (run.area === "storm" && !state.areas.pirate && d.x < 26 && d.y > loc.maxDepth * PXPM - 46) {
-      unlockSecretArea("pirate", "☠️ You're dragged through a galleon's hull into a DROWNED COVE of pirates. (Now in Change Area.)");
+    run.secretEdge = null;
+    for (var i = 0; i < SECRET_PASSAGES.length; i++) {
+      var p = SECRET_PASSAGES[i];
+      if (p.from !== run.area) continue;
+      if (!p.at(d, loc)) continue;
+      if (!state.areas[p.to]) {
+        // first discovery — it just happens: reveal AND sweep you straight in
+        unlockSecretArea(p.to, p.msg);
+        pendingSecretEnter = p.to;
+      } else {
+        // already known — offer a one-tap entrance from this very spot
+        run.secretEdge = p.to;
+      }
+      break;
     }
   }
   // gating helpers for the Cloud Reaches (all birds) & Gloom Cavern (all
@@ -800,7 +828,8 @@
     lastT = t;
     if (scene === "dive" && run) {
       update(dt);
-      render();
+      if (pendingSecretEnter) { var pe = pendingSecretEnter; pendingSecretEnter = null; enterSecretArea(pe); }
+      else render();
     } else if (scene === "aquarium" && aqua) {
       updateAquarium(dt);
       renderAquarium();
@@ -1640,6 +1669,7 @@
     drawSeabed(loc);
 
     // --- scene objects ---
+    drawSecretPassageCue(loc);
     for (var i = 0; i < run.wrecks.length; i++) drawWreck(run.wrecks[i]);
     drawCages();
     drawOilRig();
@@ -2106,6 +2136,37 @@
         g.addColorStop(1, "rgba(" + col + ",0)");
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x + ox, y + oy, rr, 0, 7); ctx.fill();
       }
+    }
+  }
+  // a swirling current/portal cue luring you toward a hidden passage out of
+  // this area (subtle when undiscovered; a clear glowing portal once known)
+  function drawSecretPassageCue(loc) {
+    for (var i = 0; i < SECRET_PASSAGES.length; i++) {
+      var p = SECRET_PASSAGES[i];
+      if (p.from !== run.area) continue;
+      var known = !!state.areas[p.to];
+      // anchor the cue at the trigger zone
+      var wx = /worldWidth/.test(p.at.toString()) ? loc.worldWidth - 12 : 14;
+      var wy = /maxDepth/.test(p.at.toString()) ? loc.maxDepth * PXPM - 24 : run.diver.y;
+      if (!/maxDepth/.test(p.at.toString())) wy = Math.max(40, Math.min(loc.maxDepth * PXPM - 40, run.diver.y));
+      var x = wx - cam.x, y = wy - cam.y;
+      if (x < -80 || x > W + 80) continue;
+      var t = run.time * (known ? 2.4 : 1.2);
+      var baseR = known ? 26 : 16, a = known ? 0.5 : 0.22;
+      drawGlow(x, y, baseR + Math.sin(t) * 6, known ? "#c79aff" : "#9fd0ff", a);
+      // little swirl arms
+      ctx.save(); ctx.globalAlpha = known ? 0.7 : 0.3;
+      ctx.strokeStyle = known ? "#e6c8ff" : "#bfe0ff"; ctx.lineWidth = 2;
+      for (var s = 0; s < 3; s++) {
+        ctx.beginPath();
+        for (var k = 0; k <= 10; k++) {
+          var ang = t + s * 2.1 + k * 0.4, rr = (k / 10) * baseR;
+          var px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr;
+          if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+      ctx.restore();
     }
   }
   function drawTrap() {
@@ -2776,6 +2837,12 @@
       stb.style.display = state.items.stormsummoner ? "block" : "none";
       stb.textContent = run.stormCd > 0 ? "⚡ (" + Math.ceil(run.stormCd) + ")" : "⚡ Storm";
     }
+    var esb = document.getElementById("btn-enter-secret");
+    if (esb) {
+      var edge = run.secretEdge && D.LOCATIONS[run.secretEdge];
+      esb.style.display = edge ? "block" : "none";
+      if (edge) esb.textContent = "🌀 Enter " + D.LOCATIONS[run.secretEdge].name;
+    }
     var hb = document.getElementById("btn-harpoon");
     hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
     if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
@@ -3028,6 +3095,14 @@
     if (window.AUDIO) AUDIO.playArea(areaId, run && run.night);
   }
 
+  // dive straight from the current run into a (now-known) secret area,
+  // keeping the haul you've already collected this dive.
+  function enterSecretArea(areaId) {
+    if (!D.LOCATIONS[areaId]) return;
+    startDive(areaId); // newRun carries your bag over
+    if (window.AUDIO) AUDIO.rumble();
+  }
+
   // return to an in-progress dive after a boss-defeat overlay (so you can
   // keep exploring the run instead of being yanked back to the boat).
   function resumeDive() {
@@ -3054,6 +3129,8 @@
     if (slb) slb.style.display = "none";
     var stb = document.getElementById("btn-storm");
     if (stb) stb.style.display = "none";
+    var esb = document.getElementById("btn-enter-secret");
+    if (esb) esb.style.display = "none";
     var brb = document.getElementById("btn-breath");
     if (brb) brb.style.display = "none";
     if (run) run.venting = false;
@@ -3171,6 +3248,21 @@
 
     // HINTS
     html += '<div class="tab-body' + bodyClass("hints") + '" data-body="hints">';
+    // Secret-locations guide — a pricey one-time purchase that documents how to
+    // reach every hidden dive site. (You can still stumble into them unaided.)
+    if (state.secretGuide) {
+      html += '<div class="shop-item"><div class="si-info"><b>🗺️ Hidden Sites Guide</b> <span class="lvl">✓ Owned</span>'
+        + '<p>How to reach every secret dive site:</p><ul class="guide-list">';
+      SECRET_SITE_GUIDE.forEach(function (g) {
+        var nm = (state.areas[g.area] && D.LOCATIONS[g.area]) ? D.LOCATIONS[g.area].name : "A hidden site";
+        html += '<li><b>' + nm + '</b> — ' + g.how + '</li>';
+      });
+      html += '</ul></div></div>';
+    } else {
+      html += '<div class="shop-item"><div class="si-info"><b>🗺️ Hidden Sites Guide</b>'
+        + '<p>Sailors\' charts revealing exactly how to reach <b>every secret dive site</b>. (You can still find them on your own if you figure it out.)</p></div>'
+        + '<div class="si-buy"><button data-buyguide="1" ' + (state.money < 35000 ? 'disabled' : '') + '>$35,000</button></div></div>';
+    }
     html += '<p class="tiny">Every area hides a <b>secret fish</b>. Buy its hint here, then meet the condition while diving.</p>';
     D.FISH.filter(function (f) {
       if ((!f.secret && !(f.secretBoss && f.hint)) || !D.LOCATIONS[f.area]) return false;
@@ -3247,6 +3339,13 @@
     ov.querySelectorAll("[data-buyhint]").forEach(function (b) {
       b.onclick = function () { buyHint(b.getAttribute("data-buyhint")); };
     });
+    var bg = ov.querySelector("[data-buyguide]");
+    if (bg) bg.onclick = function () {
+      if (state.secretGuide || state.money < 35000) return;
+      state.money -= 35000; state.secretGuide = true; saveGame();
+      toast("🗺️ Hidden Sites Guide acquired — check the Hints tab!", "epic", 3000);
+      showShop();
+    };
   }
 
   function upgradeRow(key) {
@@ -4327,6 +4426,9 @@
     // storm-summoner button (lightning strike / open Olympus at the peak)
     var stb = document.getElementById("btn-storm");
     if (stb) stb.addEventListener("click", function () { if (scene === "dive" && run) summonStorm(); });
+    // enter-secret-location button (dive straight into a known hidden site)
+    var esb = document.getElementById("btn-enter-secret");
+    if (esb) esb.addEventListener("click", function () { if (scene === "dive" && run && run.secretEdge) enterSecretArea(run.secretEdge); });
     // vent-air button (press & hold to drain oxygen)
     var vb = document.getElementById("btn-vent");
     if (vb) {
