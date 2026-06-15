@@ -43,7 +43,7 @@
       stats: { maxDepth: 0, totalCaught: 0, earned: 0, dives: 0 },
       lastArea: "coral",
       settings: { muted: false, musicMuted: false, sfxMuted: false },
-      diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", look: "short" },
+      diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", suitTrim: "#bfe9ff", hair: 0, look: "short" },
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
       itemsOff: {},     // itemId -> true means owned but toggled OFF (boss gear)
@@ -2291,24 +2291,29 @@
   var SKIN_TONES = ["#f4c9a3", "#e8b088", "#d39a6e", "#b87a4f", "#8d5524", "#5a3318"];
   var HAIR_COLORS = ["#2b1d12", "#5a3a1a", "#a85e2e", "#caa33a", "#d8d8da", "#3a3f55", "#8a3b6b", "#2f6f5e"];
   var SUITS = [
-    { id: "teal",   color: "#1f7d9c", accent: "#ffd24a", cost: 0 },
-    { id: "navy",   color: "#26407a", accent: "#e08a3a", cost: 0 },
-    { id: "red",    color: "#b03a3a", accent: "#f3e6c8", cost: 0 },
-    { id: "green",  color: "#2f7d4a", accent: "#ffd24a", cost: 0 },
-    { id: "purple", color: "#6a3aa0", accent: "#7affd0", cost: 0 },
-    { id: "pink",   color: "#c0508f", accent: "#ffe14d", cost: 250 },
-    { id: "orange", color: "#d8742e", accent: "#2a5a7a", cost: 250 },
-    { id: "gold",   color: "#c79a2e", accent: "#3a2a10", cost: 1500 },
-    { id: "neon",   color: "#1fd6a0", accent: "#ff5bd0", cost: 1500 },
-    { id: "void",   color: "#2a2350", accent: "#9f7bff", cost: 3000 },
-    { id: "rainbow", color: "#ff5b7f", accent: "#7afcff", cost: 8000 },
+    { id: "teal",   color: "#1f7d9c", accent: "#ffd24a", trim: "#bfe9ff", cost: 0 },
+    { id: "navy",   color: "#26407a", accent: "#e08a3a", trim: "#9fc0ff", cost: 0 },
+    { id: "red",    color: "#b03a3a", accent: "#f3e6c8", trim: "#ffae6a", cost: 0 },
+    { id: "green",  color: "#2f7d4a", accent: "#ffd24a", trim: "#bfffa0", cost: 0 },
+    { id: "purple", color: "#6a3aa0", accent: "#7affd0", trim: "#ff9af0", cost: 0 },
+    { id: "pink",   color: "#c0508f", accent: "#ffe14d", trim: "#7afcff", cost: 250 },
+    { id: "orange", color: "#d8742e", accent: "#2a5a7a", trim: "#ffe14d", cost: 250 },
+    { id: "gold",   color: "#c79a2e", accent: "#3a2a10", trim: "#fff3b0", cost: 1500 },
+    { id: "neon",   color: "#1fd6a0", accent: "#ff5bd0", trim: "#f6ff5b", cost: 1500 },
+    { id: "void",   color: "#2a2350", accent: "#9f7bff", trim: "#5bf0ff", cost: 3000 },
+    { id: "rainbow", color: "#ff5b7f", accent: "#7afcff", trim: "#f6ff5b", cost: 8000 },
   ];
   function suitAccentFor(color) { return mix(color, "#ffffff", 0.42); }
+  function suitTrimFor(color, accent) { return mix(accent || mix(color, "#ffffff", 0.42), "#ffffff", 0.4); }
   var LOOKS = [
-    { id: "short", name: "Short" },
-    { id: "long",  name: "Long" },
-    { id: "bun",   name: "Bun" },
-    { id: "buzz",  name: "Buzz" },
+    { id: "short",    name: "Short" },
+    { id: "long",     name: "Long" },
+    { id: "bun",      name: "Bun" },
+    { id: "buzz",     name: "Buzz" },
+    { id: "ponytail", name: "Ponytail" },
+    { id: "mohawk",   name: "Mohawk" },
+    { id: "afro",     name: "Afro" },
+    { id: "braids",   name: "Braids" },
   ];
   // Themed wetsuits: one per location (unlock as you reach the area) ...
   var LOCATION_SUITS = [
@@ -2332,11 +2337,17 @@
     { name: "Hollow",    area: "secretcave",color: "#9a8ad0", secret: true },
     { name: "Oil Rig",   area: "oilrig",    color: "#caa14a", secret: true },
     { name: "Stormy",    area: "storm",     color: "#46506a" },
+    { name: "Sunlit",    area: "mountain",  color: "#8a9aae" },
+    { name: "Caldera",   area: "ashen",     color: "#e0552a", secret: true },
     { name: "Pirate",    area: "pirate",    color: "#8a6a3a", secret: true },
+    { name: "Olympus",   area: "olympus",   color: "#ffe07a", secret: true },
   ];
   // ... and one per secret fish (unlock by catching that secret)
   var SECRET_SUITS = D.FISH.filter(function (f) { return f.secret; })
-    .map(function (f) { return { id: f.id, name: f.name, color: f.color, accent: f.accent }; });
+    .map(function (f) { return { id: f.id, name: f.name, color: f.color, accent: f.accent, trim: f.trim }; });
+  // ... and one per boss you defeat (area bosses + hinted secret bosses)
+  var BOSS_SUITS = D.FISH.filter(function (f) { return f.areaBoss || (f.secretBoss && f.hint); })
+    .map(function (f) { return { id: f.id, name: f.name, color: f.color, accent: f.accent || suitAccentFor(f.color), trim: f.trim, area: f.area, secretArea: D.LOCATIONS[f.area] && D.LOCATIONS[f.area].secret }; });
 
   // Draw a clearly-human side-view diver with kicking legs/fins.
   // ctx2: target context · (cx,cy): screen centre · SC: pixel scale ·
@@ -2378,25 +2389,38 @@
     R(-8 - finLen, 4 + legBot, finLen, 2, fin); R(-8 - finLen, 5 + legBot, finLen, 1, suitD);
     R(-8, 3 + legBot, 4, 2, suit);
     var accent = opts.suitAccent || mix(suit, "#ffffff", 0.4);
-    // torso (wetsuit) — chunky & cute, two-tone
+    var trim = opts.suitTrim || mix(accent, "#ffffff", 0.32); // third suit colour (piping / gear)
+    var trimD = mix(trim, "#000000", 0.3);
+    // torso (wetsuit) — chunky & cute, now THREE-tone
     R(-4, -2, 9, 5, suit);
     R(-4, -2, 9, 1, mix(suit, "#fff", 0.3));    // top highlight
-    R(-4, 0, 9, 1, accent);                     // two-tone accent stripe
+    R(-4, -1, 9, 1, accent);                    // chest panel (accent)
+    R(-4, 0, 9, 1, trim);                       // two-tone trim stripe
     R(-4, 2, 9, 1, "#2c2620");                  // weight belt
+    R(-3, 2, 2, 1, trim);                       // belt buckle (trim)
     R(-4, -2, 1, 5, mix(suit, "#fff", 0.14));   // back rim light
+    R(-1, -1, 2, 2, trimD);                     // chest dive-computer
+    R(0, -1, 1, 1, mix(trim, "#fff", 0.6));     // gauge glint
     // forward arm + glove
     R(3, 2, 5, 2, suit); R(3, 3, 5, 1, suitD);
-    R(6, 2, 1, 2, accent);                      // cuff (accent)
+    R(5, 2, 1, 2, accent);                      // shoulder seam (accent)
+    R(6, 2, 1, 2, trim);                        // cuff (trim)
     R(7, 2, 2, 2, skin);                        // hand
     // BIG cute head
     R(5, -6, 5, 7, skin);
     R(5, -6, 5, 1, mix(skin, "#fff", 0.35));    // forehead highlight
     R(5, 1, 5, 1, mix(skin, "#000", 0.22));     // chin shadow
     R(10, -2, 1, 1, mix(skin, "#ff9a9a", 0.55)); // rosy cheek :)
+    // hood collar behind the head (trim-lined)
+    R(4, 0, 2, 1, suitD); R(4, -1, 1, 2, trim);
     // hair by look
     if (look === "short") { R(4, -7, 6, 2, hair); R(4, -6, 1, 4, hair); }
     else if (look === "long") { R(4, -7, 6, 2, hair); R(3, -6, 2, 8, hair); }
-    else if (look === "bun") { R(4, -7, 6, 2, hair); R(3, -8, 2, 2, hair); }
+    else if (look === "bun") { R(4, -7, 6, 2, hair); R(3, -8, 2, 2, hair); R(2, -8, 1, 1, hair); }
+    else if (look === "ponytail") { R(4, -7, 6, 2, hair); R(4, -6, 1, 3, hair); R(2, -7, 2, 1, hair); R(1, -7, 1, 5, hair); R(0, -5, 1, 3, hair); }
+    else if (look === "mohawk") { R(5, -9, 1, 3, hair); R(6, -8, 1, 2, hair); R(7, -8, 1, 1, hair); R(4, -7, 4, 1, hair); }
+    else if (look === "afro") { R(3, -9, 8, 4, hair); R(2, -8, 1, 3, hair); R(11, -8, 1, 3, hair); R(4, -5, 1, 2, hair); }
+    else if (look === "braids") { R(4, -7, 6, 2, hair); R(3, -6, 1, 7, hair); R(3, -1, 1, 1, trim); R(10, -6, 1, 6, hair); R(10, 0, 1, 1, trim); }
     else { R(5, -7, 5, 1, hair); } // buzz
     // mask strap
     R(4, -3, 5, 1, "#16323f");
@@ -2415,7 +2439,8 @@
     // --- gear that visibly reflects your upgrades & items ---
     var up = (state && state.upgrades) || {};
     var items = (state && state.items) || {};
-    R(-8 - finLen, -2 + legTop, finLen, 1, accent);   // fin trim (two-tone)
+    R(-8 - finLen, -2 + legTop, finLen, 1, trim);     // fin trim (third colour)
+    R(-8 - finLen, 5 + legBot, finLen, 1, trim);      // lower fin trim
     if (up.net > 0) { R(5, 3, 3, 1, "#9aa6b0"); R(8, 2, 1, 1, "#5cd0ff"); }            // wrist magnet
     if (up.scoop > 0) { R(-6, -6, 1, 5, "#caa15a"); R(-8, -8, 5, 3, mix(suit, "#fff", 0.5)); R(-8, -8, 5, 1, "#caa15a"); } // net on the back
     if (up.suit >= D.UPGRADES.suit.levels.length - 1) { R(-4, 0, 9, 1, "#ffd24a"); }  // maxed suit gold trim
@@ -3574,8 +3599,15 @@
       : (diverPreviewSuit && diverPreviewSuit.previewColor) ? diverPreviewSuit.previewColor
       : state.diver.suit;
     var suitAcc = diverPreviewSuit ? diverPreviewSuit.accent : state.diver.suitAccent;
-    var opts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look, suit: suitCol, suitAccent: suitAcc };
+    var suitTri = diverPreviewSuit ? (diverPreviewSuit.trim || suitTrimFor(suitCol, suitAcc)) : state.diver.suitTrim;
+    var opts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look, suit: suitCol, suitAccent: suitAcc, suitTrim: suitTri };
     drawDiverPixel(p, c.width / 2, c.height / 2, 6, 1, opts, t * 7);
+  }
+
+  // is a given boss defeated? (area bosses + secret bosses)
+  function bossDefeated(id) {
+    if (state.areaBossCaught && state.areaBossCaught[id]) return true;
+    return !!state[id + "Caught"];
   }
 
   // unified list of all wetsuits with names + ownership/buy/lock metadata
@@ -3583,24 +3615,36 @@
     var list = [];
     SUITS.forEach(function (s) {
       var owned = s.cost === 0 || state.diverUnlocks[s.id];
-      list.push({ key: "s_" + s.id, name: cap(s.id), color: s.color, accent: s.accent, owned: owned,
+      list.push({ key: "s_" + s.id, name: cap(s.id), color: s.color, accent: s.accent, trim: s.trim, owned: owned,
         buy: (!owned && s.cost > 0) ? { id: s.id, cost: s.cost } : null, group: "Wetsuits" });
     });
     LOCATION_SUITS.forEach(function (s) {
       var visited = s.always || (state.visited && state.visited[s.area]);
+      var trim = suitTrimFor(s.color);
       // a suit for an as-yet-undiscovered SECRET site stays a "???" mystery
       if (s.secret && !state.areas[s.area]) {
-        list.push({ key: "l_" + s.area, name: "???", color: "#16242f", accent: suitAccentFor(s.color), owned: false,
+        list.push({ key: "l_" + s.area, name: "???", color: "#16242f", accent: suitAccentFor(s.color), trim: trim, owned: false,
           lockReason: "Discover a hidden dive site", group: "Location suits" });
         return;
       }
-      list.push({ key: "l_" + s.area, name: s.name, color: s.color, accent: suitAccentFor(s.color), owned: !!visited,
+      list.push({ key: "l_" + s.area, name: s.name, color: s.color, accent: suitAccentFor(s.color), trim: trim, owned: !!visited,
         previewColor: s.color, lockReason: visited ? null : ("Dive the " + (D.LOCATIONS[s.area] ? D.LOCATIONS[s.area].name : s.name)), group: "Location suits" });
     });
     SECRET_SUITS.forEach(function (s) {
       var unlocked = !!state.discovered[s.id];
-      list.push({ key: "x_" + s.id, name: unlocked ? s.name : "???", color: unlocked ? s.color : "#16242f", accent: s.accent || suitAccentFor(s.color), owned: unlocked,
+      list.push({ key: "x_" + s.id, name: unlocked ? s.name : "???", color: unlocked ? s.color : "#16242f", accent: s.accent || suitAccentFor(s.color), trim: s.trim || suitTrimFor(s.color, s.accent), owned: unlocked,
         lockReason: unlocked ? null : "Catch its secret fish", group: "Secret suits" });
+    });
+    BOSS_SUITS.forEach(function (s) {
+      var beaten = bossDefeated(s.id);
+      // hidden secret-boss suits stay "???" so we never spoil their existence
+      if (s.secretArea && !state.areas[s.area] && !beaten) {
+        list.push({ key: "b_" + s.id, name: "???", color: "#1a1622", accent: "#4a4060", trim: "#6a5a8a", owned: false,
+          lockReason: "Defeat a hidden boss", group: "Boss suits" });
+        return;
+      }
+      list.push({ key: "b_" + s.id, name: beaten ? s.name : "???", color: beaten ? s.color : "#1a1622", accent: beaten ? s.accent : "#4a4060", trim: beaten ? (s.trim || suitTrimFor(s.color, s.accent)) : "#6a5a8a", owned: beaten,
+        lockReason: beaten ? null : "Defeat this boss", group: "Boss suits" });
     });
     return list;
   }
@@ -3622,7 +3666,7 @@
     if (pv.lockReason) html += '<span class="pv-locked">🔒 ' + pv.lockReason + '</span>';
     else if (pv.buy) html += '<button class="primary" data-suitbuy="' + pv.buy.id + '" ' + (state.money < pv.buy.cost ? 'disabled' : '') + '>Buy &amp; Wear — $' + fmt(pv.buy.cost) + '</button>';
     else if (state.diver.suit === pv.color) html += '<button disabled>Wearing ✓</button>';
-    else html += '<button class="primary" data-suitequip="' + pv.color + '" data-suitaccent="' + (pv.accent || "") + '">Equip</button>';
+    else html += '<button class="primary" data-suitequip="' + pv.color + '" data-suitaccent="' + (pv.accent || "") + '" data-suittrim="' + (pv.trim || "") + '">Equip</button>';
     html += '</div>';
     html += '<p class="tiny" style="text-align:center">Tap any item to preview it on your diver. Purely cosmetic!</p>';
 
@@ -3648,7 +3692,7 @@
     html += '</div>';
 
     // Wetsuits, grouped, each labelled with its name
-    ["Wetsuits", "Location suits", "Secret suits"].forEach(function (grp) {
+    ["Wetsuits", "Location suits", "Secret suits", "Boss suits"].forEach(function (grp) {
       html += '<h3>' + grp + '</h3><div class="suit-grid">';
       diverSuitList.filter(function (s) { return s.group === grp; }).forEach(function (s) {
         var sel = state.diver.suit === s.color && s.owned;
@@ -3658,7 +3702,7 @@
       });
       html += '</div>';
     });
-    html += '<p class="tiny">Location suits unlock as you reach each area. Secret suits unlock when you catch that area\'s secret fish.</p>';
+    html += '<p class="tiny">Location suits unlock as you reach each area. Secret suits unlock when you catch that area\'s secret fish. Boss suits unlock when you defeat each boss.</p>';
     html += '</div>';
 
     ov.innerHTML = html;
@@ -3689,6 +3733,7 @@
       b.onclick = function () {
         state.diver.suit = b.getAttribute("data-suitequip");
         state.diver.suitAccent = b.getAttribute("data-suitaccent") || suitAccentFor(state.diver.suit);
+        state.diver.suitTrim = b.getAttribute("data-suittrim") || suitTrimFor(state.diver.suit, state.diver.suitAccent);
         saveGame(); toast("Wetsuit equipped!", "good", 1200); showDiverShop();
       };
     });
@@ -3696,7 +3741,7 @@
       b.onclick = function () {
         var s = SUITS.filter(function (x) { return x.id === b.getAttribute("data-suitbuy"); })[0];
         if (!s || state.money < s.cost || state.diverUnlocks[s.id]) return;
-        state.money -= s.cost; state.diverUnlocks[s.id] = true; state.diver.suit = s.color; state.diver.suitAccent = s.accent;
+        state.money -= s.cost; state.diverUnlocks[s.id] = true; state.diver.suit = s.color; state.diver.suitAccent = s.accent; state.diver.suitTrim = s.trim || suitTrimFor(s.color, s.accent);
         saveGame(); toast("Unlocked & equipped the " + cap(s.id) + " wetsuit!", "good", 1800);
         diverPreviewSuit = null; showDiverShop();
       };

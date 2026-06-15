@@ -299,19 +299,19 @@
     { id: "goldenkoi",  name: "Golden Koi",    area: "coral",     rarity: "mythic", size: 2, value: 2600, minDepth: 0,   color: "#ffd54a", accent: "#fff3b0", shape: "koi",  secret: true,
       hint: "Shimmers only in the brightest shallows of Coral Coast (above 60m). Rare and skittish.",
       condition: { maxDepth: 60 } },
-    { id: "leafydragon",name: "Leafy Seadragon",area: "kelp",      rarity: "mythic", size: 2, value: 3000, minDepth: 100,color: "#7fc36b", shape: "seadragon", secret: true,
+    { id: "leafydragon",name: "Leafy Seadragon",area: "kelp",      rarity: "mythic", size: 2, value: 3000, minDepth: 100,color: "#5fae3a", accent: "#ffd24a", trim: "#d86aff", shape: "seadragon", secret: true,
       hint: "Camouflaged among deep kelp (below 100m). You must be patient and still.",
       condition: { minDepth: 100 } },
-    { id: "deeplev",    name: "Deep Leviathan", area: "trench",    rarity: "mythic", size: 9, value: 9000, minDepth: 900,color: "#3a4e6a", shape: "deeplev", secret: true,
+    { id: "deeplev",    name: "Deep Leviathan", area: "trench",    rarity: "mythic", size: 9, value: 9000, minDepth: 900,color: "#243a6a", accent: "#5bf0ff", trim: "#9f7bff", shape: "deeplev", secret: true,
       hint: "A colossal sea-serpent coils through the very bottom of the Trench (below 900m). Only the brave reach it.",
       condition: { minDepth: 900 } },
-    { id: "celestserp", name: "Astral Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#c9b3ff", shape: "celestserp", secret: true,
+    { id: "celestserp", name: "Astral Serpent",area:"sanctuary",rarity: "mythic", size: 7, value: 12000,minDepth: 400,color: "#b38aff", accent: "#fff3b0", trim: "#7afcff", shape: "celestserp", secret: true,
       hint: "Coils through the deepest starlight (below 400m), woven from the night sky itself.",
       condition: { minDepth: 400 } },
     { id: "rainbowtrout", name: "Rainbow Trout", area: "river", rarity: "mythic", size: 2, value: 3400, minDepth: 0, color: "#ff4d6d", accent: "#7afcff", rainbow: true, shape: "trout", secret: true,
       hint: "A dazzling trout that glints with every colour, darting through bright river shallows (above 40m).",
       condition: { maxDepth: 40 } },
-    { id: "rivergiant", name: "River Leviathan", area: "river", rarity: "mythic", size: 8, value: 11000, minDepth: 90, color: "#3a5a4a", shape: "rivergiant", secret: true,
+    { id: "rivergiant", name: "River Leviathan", area: "river", rarity: "mythic", size: 8, value: 11000, minDepth: 90, color: "#2f6a4a", accent: "#9fe0a0", trim: "#ffd24a", shape: "rivergiant", secret: true,
       hint: "An enormous serpent said to lurk in the deepest river pools (below 90m).",
       condition: { minDepth: 90 } },
 
@@ -437,7 +437,7 @@
     { id: "colossalclam", name: "Colossal Clam", area: "prism", creature: true, tool: "shovel", dropsPearl: true, rarity: "epic", size: 3, value: 1600, color: "#2fd0c0", accent: "#fff0f6", shape: "ammonite" },
     { id: "reefsnail",  name: "Turban Snail", area: "prism", creature: true, rarity: "common", size: 1, value: 120, color: "#caa15a", accent: "#fff0e0", shape: "snail" },
     // the secret camouflaged cuttlefish
-    { id: "cuttlefish", name: "Mimic Cuttlefish", area: "prism", rarity: "mythic", size: 2, value: 6500, minDepth: 0, color: "#9a8a7a", accent: "#caa15a", shape: "cuttlefish", secret: true, camo: true,
+    { id: "cuttlefish", name: "Mimic Cuttlefish", area: "prism", rarity: "mythic", size: 2, value: 6500, minDepth: 0, color: "#8a6aa0", accent: "#5bf0ff", trim: "#ff5bd0", shape: "cuttlefish", secret: true, camo: true,
       hint: "A master of disguise that melts into the reef — watch for the faint shimmer that doesn't match the coral.", condition: {} },
     { id: "prismboss",  name: "Kaleidos",     area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 24000, minDepth: 150, color: "#7a3ad0", accent: "#ff7ad0", rainbow: true, shape: "prismboss", hp: 5, reward: "" },
 
@@ -605,7 +605,7 @@
     { id: "brittlestar",name: "Brittle Star", area: "arctic", creature: true, rarity: "uncommon", size: 1, value: 160, color: "#c98a9a", shape: "starfish" },
     { id: "puffin",     name: "Puffin",       area: "arctic", bird: true, rarity: "common",   size: 1, value: 120, color: "#2a2e34", shape: "seabird", seedCost: 300 },
     { id: "arctictern", name: "Arctic Tern",  area: "arctic", bird: true, rarity: "uncommon", size: 1, value: 220, color: "#e8eef2", shape: "gull", seedCost: 500 },
-    { id: "frostwyrm",  name: "Frost Wyrm",   area: "arctic", rarity: "mythic", size: 9, value: 13000, minDepth: 550, color: "#9fe6ff", shape: "frostwyrm", secret: true,
+    { id: "frostwyrm",  name: "Frost Wyrm",   area: "arctic", rarity: "mythic", size: 9, value: 13000, minDepth: 550, color: "#7fd0ff", accent: "#ffffff", trim: "#3a8ad0", shape: "frostwyrm", secret: true,
       hint: "An ancient ice-serpent said to coil through the coldest deep (below 550m).", condition: { minDepth: 550 } },
 
     // ======== Fossil Abyss (prehistoric) ========
@@ -621,7 +621,7 @@
     { id: "ammonite",   name: "Ammonite",     area: "ancient", creature: true, rarity: "uncommon", size: 2, value: 240,  color: "#a08a5a", shape: "ammonite" },
     { id: "archaeopteryx", name: "Archaeopteryx", area: "ancient", bird: true, rarity: "uncommon", size: 1, value: 260, color: "#6a5a3a", shape: "songbird", seedCost: 600 },
     { id: "pteranodon", name: "Pteranodon",   area: "ancient", bird: true, rarity: "rare", size: 3, value: 700, color: "#8a6a4a", shape: "bird", seedCost: 1500 },
-    { id: "ancientlev", name: "Ancient Leviathan", area: "ancient", rarity: "mythic", size: 10, value: 16000, minDepth: 800, color: "#5a4a2a", shape: "ancientlev", secret: true,
+    { id: "ancientlev", name: "Ancient Leviathan", area: "ancient", rarity: "mythic", size: 10, value: 16000, minDepth: 800, color: "#6a5326", accent: "#ffd24a", trim: "#9f7bff", shape: "ancientlev", secret: true,
       hint: "The first and largest serpent, fossilised legends say it still hunts the abyss floor (below 800m).", condition: { minDepth: 800 } },
 
     // ======== Open Sea ========
