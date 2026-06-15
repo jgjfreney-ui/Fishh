@@ -262,21 +262,30 @@ html, body {
   position: absolute;
   top: calc(10px + env(safe-area-inset-top)); left: 10px; right: 10px;
   display: none;
-  align-items: center; gap: 8px;
+  flex-direction: column; gap: 8px;
   z-index: 9;
 }
+.aqua-row { display: flex; align-items: center; gap: 8px; }
+.aqua-actions button { flex: 1; }
 #aqua-ui button {
-  background: rgba(8, 30, 48, 0.72);
+  background: rgba(8, 30, 48, 0.82);
   border: 1px solid var(--line);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  border-radius: 12px; padding: 10px 14px; font-size: 15px; font-weight: 700;
+  border-radius: 12px; padding: 12px 14px; font-size: 15px; font-weight: 700;
+  min-height: 46px;
 }
+#aqua-prev, #aqua-next { min-width: 50px; }
 #aqua-title {
-  flex: 1; text-align: center; font-weight: 700;
-  background: rgba(8, 30, 48, 0.72);
-  border: 1px solid var(--line); border-radius: 12px; padding: 10px 8px;
+  flex: 1; text-align: center; font-weight: 700; font-size: 14px;
+  background: rgba(8, 30, 48, 0.82);
+  border: 1px solid var(--line); border-radius: 12px; padding: 11px 8px;
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+}
+#aqua-close {
+  background: rgba(150, 40, 50, 0.85) !important;
+  border-color: rgba(255, 150, 160, 0.7) !important;
+  min-width: 86px;
 }
 #aqua-swim { color: #042033; background: var(--accent) !important; border-color: transparent !important; }
 

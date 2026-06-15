@@ -829,13 +829,19 @@
   function loop(t) {
     var dt = Math.min(0.05, (t - lastT) / 1000 || 0);
     lastT = t;
-    if (scene === "dive" && run) {
-      update(dt);
-      if (pendingSecretEnter) { var pe = pendingSecretEnter; pendingSecretEnter = null; enterSecretArea(pe); }
-      else render();
-    } else if (scene === "aquarium" && aqua) {
-      updateAquarium(dt);
-      renderAquarium();
+    // never let a per-frame exception kill the rAF chain (which would freeze
+    // the whole game, e.g. leaving you unable to dive after the aquarium)
+    try {
+      if (scene === "dive" && run) {
+        update(dt);
+        if (pendingSecretEnter) { var pe = pendingSecretEnter; pendingSecretEnter = null; enterSecretArea(pe); }
+        else render();
+      } else if (scene === "aquarium" && aqua) {
+        updateAquarium(dt);
+        renderAquarium();
+      }
+    } catch (err) {
+      if (window.console) console.error("loop error", err);
     }
     requestAnimationFrame(loop);
   }
@@ -3453,14 +3459,17 @@
     aqua = { areaList: list, idx: 0, time: 0, entities: [], diverActive: false, night: false, focus: false, focusIdx: 0,
       diver: { x: W / 2, y: H / 2, vx: 0, vy: 0, face: 1 } };
     setupTank(0);
-    var dn = document.getElementById("aqua-daynight"); if (dn) dn.textContent = "🌙";
+    var dn = document.getElementById("aqua-daynight"); if (dn) dn.textContent = "🌙 Night";
     var sw = document.getElementById("aqua-swim"); if (sw) { sw.style.display = ""; sw.textContent = "🤿 Swim"; }
-    var fb = document.getElementById("aqua-focus"); if (fb) fb.textContent = "🔍";
+    var fb = document.getElementById("aqua-focus"); if (fb) fb.textContent = "🔍 Close-up";
     document.getElementById("aqua-ui").style.display = "flex";
   }
   function exitAquarium() {
     aqua = null;
     document.getElementById("aqua-ui").style.display = "none";
+    // clear any transient swim input so it can't bleed into the next dive
+    joy.active = false; joy.id = null; joy.dx = joy.dy = joy.mag = 0;
+    for (var k in keys) keys[k] = false;
     scene = "boat";
     if (window.AUDIO) AUDIO.playMenu(state && state.nextNight);
     showBoat();
@@ -3484,7 +3493,7 @@
     if (!aqua.focus && !aqua.entities.length) { toast("Nothing discovered in this tank yet.", "bad"); return; }
     aqua.focus = !aqua.focus; aqua.focusIdx = 0; aqua.diverActive = false;
     var sw = document.getElementById("aqua-swim"); if (sw) { sw.style.display = aqua.focus ? "none" : ""; sw.textContent = "🤿 Swim"; }
-    var fb = document.getElementById("aqua-focus"); if (fb) fb.textContent = aqua.focus ? "🏞️" : "🔍";
+    var fb = document.getElementById("aqua-focus"); if (fb) fb.textContent = aqua.focus ? "🏞️ Tank" : "🔍 Close-up";
     if (aqua.focus) aquaFocusTitle(); else document.getElementById("aqua-title").textContent = D.LOCATIONS[aqua.area].name + " · " + aqua.entities.length + " here";
   }
   function aquaFocusTitle() {
@@ -4453,7 +4462,7 @@
     bind("aqua-daynight", function () {
       if (!aqua) return;
       aqua.night = !aqua.night;
-      document.getElementById("aqua-daynight").textContent = aqua.night ? "☀️" : "🌙";
+      document.getElementById("aqua-daynight").textContent = aqua.night ? "☀️ Day" : "🌙 Night";
       if (window.AUDIO) AUDIO.playArea(aqua.area, aqua.night);
     });
     bind("aqua-focus", aquaToggleFocus);
@@ -4463,7 +4472,7 @@
       if (!aqua) return;
       aqua.diverActive = !aqua.diverActive;
       aqua.diver.x = W / 2; aqua.diver.y = H / 2;
-      document.getElementById("aqua-swim").textContent = aqua.diverActive ? "🚪 Exit" : "🤿 Swim";
+      document.getElementById("aqua-swim").textContent = aqua.diverActive ? "🛑 Stop" : "🤿 Swim";
     });
     // diver's hut controls
     // cozy UI click sounds
@@ -4503,6 +4512,8 @@
       aquaFrame: function (dt) { if (scene === "aquarium" && aqua) { updateAquarium(dt || 0.05); renderAquarium(); } },
       aquaNav: function (d) { aquaNav(d); },
       aquaFocus: function () { aquaToggleFocus(); },
+      aquaExit: function () { exitAquarium(); },
+      scene: function () { return scene; },
       forceShinyNext: function () { state.charms.shiny = 999; },
       fishKinds: function () { var o = { fish: 0, bird: 0, creature: 0, boss: 0 }; if (run) run.fish.forEach(function (f) { if (f.isBoss) o.boss++; else if (f.def.bird) o.bird++; else if (f.def.creature) o.creature++; else o.fish++; }); return o; },
     },
