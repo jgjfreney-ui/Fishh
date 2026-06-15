@@ -335,7 +335,7 @@
     { id: "crab",       name: "Crab",         area: "coral", creature: true, rarity: "common",   size: 1, value: 40,  color: "#d8654a", shape: "crab" },
     { id: "starfish",   name: "Starfish",     area: "coral", creature: true, rarity: "uncommon", size: 1, value: 85,  color: "#ff8f4a", shape: "starfish" },
     { id: "crayfish",   name: "Crayfish",     area: "river", creature: true, rarity: "common",   size: 1, value: 50,  color: "#a04a3a", shape: "lobster" },
-    { id: "waterbug",   name: "Water Bug",    area: "river", creature: true, rarity: "uncommon", size: 1, value: 95,  color: "#5a6a3a", shape: "bug" },
+    { id: "waterbug",   name: "Water Bug",    area: "river", creature: true, rarity: "uncommon", size: 1, value: 95,  color: "#5a6a3a", accent: "#9fc05a", shape: "insect" },
     { id: "seaurchin",  name: "Sea Urchin",   area: "kelp",  creature: true, rarity: "common",   size: 1, value: 65,  color: "#6a3a7a", shape: "urchin" },
     { id: "lobster",    name: "Lobster",      area: "kelp",  creature: true, rarity: "uncommon", size: 2, value: 170, color: "#9a3a2a", shape: "lobster" },
     { id: "giantisopod",name: "Giant Isopod", area: "trench", creature: true, rarity: "rare",    size: 2, value: 320, color: "#8a8a7a", shape: "bug" },
@@ -448,7 +448,7 @@
     // the secret camouflaged cuttlefish
     { id: "cuttlefish", name: "Mimic Cuttlefish", area: "prism", rarity: "mythic", size: 2, value: 6500, minDepth: 0, color: "#8a6aa0", accent: "#5bf0ff", trim: "#ff5bd0", shape: "cuttlefish", secret: true, camo: true,
       hint: "A master of disguise that melts into the reef — watch for the faint shimmer that doesn't match the coral.", condition: {} },
-    { id: "prismboss",  name: "Kaleidos",     area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 24000, minDepth: 150, color: "#7a3ad0", accent: "#ff7ad0", rainbow: true, shape: "prismboss", hp: 5, reward: "" },
+    { id: "kingcuttle", name: "The Vanishing King", area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 26000, minDepth: 150, color: "#8a5ad0", accent: "#ff7ad0", camo: true, shape: "kingcuttle", hp: 5, reward: "" },
 
     // ======== Sunken Grove (forest) ========
     { id: "grovefish",  name: "Grovefish",    area: "forest", rarity: "common",   size: 1, value: 60,  minDepth: 0,   color: "#6cae4a", shape: "goby" },
@@ -457,7 +457,7 @@
     { id: "canopyray",  name: "Canopy Ray",   area: "forest", rarity: "rare",     size: 4, value: 540, minDepth: 120, color: "#5a8a4a", shape: "ray" },
     { id: "willoweel",  name: "Willow Eel",   area: "forest", rarity: "rare",     size: 3, value: 480, minDepth: 180, color: "#3a6a3a", shape: "eel" },
     { id: "ancientcarp",name: "Ancient Carp", area: "forest", rarity: "epic",     size: 5, value: 1500,minDepth: 300, color: "#8a9a4a", shape: "fish" },
-    { id: "grovebeetle",name: "Grove Beetle", area: "forest", creature: true, rarity: "common", size: 1, value: 90, color: "#4a6a2a", shape: "bug" },
+    { id: "grovebeetle",name: "Grove Beetle", area: "forest", creature: true, rarity: "common", size: 1, value: 90, color: "#4a6a2a", accent: "#9fd05a", shape: "insect" },
     { id: "grovewarden",name: "Grove Warden", area: "forest", areaBoss: true, rarity: "mythic", size: 12, value: 14000, minDepth: 200, color: "#3a5a2a", accent: "#9fe0a0", shape: "mosasaur", hp: 4, reward: "" },
 
     // ======== Mangrove Swamp ========
@@ -559,6 +559,8 @@
     { id: "poolnoodle", name: "Pool Noodle Eel", area: "backrooms", rarity: "rare", size: 3, value: 520, minDepth: 80, color: "#4ad0e0", accent: "#ffffff", shape: "eel" },
     { id: "cctvfish",   name: "CCTV Fish",    area: "backrooms", rarity: "mythic", size: 2, value: 4000, minDepth: 0, color: "#7a8a90", accent: "#ff4040", shape: "cctv", secret: true,
       hint: "They watch from the corners. Linger at the very edges of the rooms and one will find you.", condition: { corner: true } },
+    { id: "parsonscuttle", name: "Parson's Cuttlefish", area: "backrooms", rarity: "mythic", size: 3, value: 7000, minDepth: 0, color: "#d8c468", accent: "#b8a038", trim: "#fff6a0", shape: "cuttlefish", secret: true, camo: true,
+      hint: "A cuttlefish that perfectly mimics the damp yellow wallpaper — all but invisible until it moves. Hold still and watch the walls.", condition: { still: true } },
     { id: "bacteriawhale", name: "Bacteria Whale", area: "backrooms", areaBoss: true, rarity: "mythic", size: 13, value: 24000, minDepth: 200, color: "#b8c83a", accent: "#eaff8a", shape: "bacteriawhale", hp: 5, reward: "" },
 
     // ======== Hidden Coast (secret, Japanese) ========

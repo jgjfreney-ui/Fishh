@@ -169,6 +169,7 @@
       grab: null, bossBeam: null,  // boss combat state
       playerBeam: null, breathCd: 0, // Kaiju Breath
       smoke: [], smokeTimer: 0, wyrmTimer: 6, // ashen smoke + magma wyrm
+      legendTimer: 35 + Math.random() * 35,   // defeated bosses return as legendary catches
       stormCd: 0, peakX: loc.peaks ? loc.worldWidth * 0.5 : null, // storm summoner + mountain peak
     };
     placeWrecks(loc);
@@ -650,6 +651,27 @@
 
   // Bosses get tougher the more you've beaten (so late bosses aren't trivial).
   // Meg Tooth still shaves one hit off every boss.
+  // ----- defeated bosses return as rare LEGENDARY catches in their home area --
+  var LEGEND_DEFS = {};
+  function legendDefFor(boss) {
+    if (!LEGEND_DEFS[boss.id]) {
+      var d = {}; for (var k in boss) d[k] = boss[k];
+      d.size = Math.min(6, boss.size);    // shrunk so you can actually bag it
+      d.legendary = true;
+      d.areaBoss = false; d.secretBoss = false; d.hp = undefined; // a catch, not a fight
+      LEGEND_DEFS[boss.id] = d;
+    }
+    return LEGEND_DEFS[boss.id];
+  }
+  function defeatedBossDefsForArea(area) {
+    var out = [];
+    for (var i = 0; i < D.FISH.length; i++) {
+      var f = D.FISH[i]; if (f.area !== area) continue;
+      if (f.areaBoss && state.areaBossCaught[f.id]) out.push(f);
+      else if (f.secretBoss && state[f.id + "Caught"]) out.push(f);
+    }
+    return out;
+  }
   // total bosses you've ever beaten (area + secret + trench), drives difficulty
   function totalBossesBeaten() {
     var n = 0;
@@ -943,6 +965,25 @@
     if (run.spawnTimer <= 0) {
       run.spawnTimer = 0.5 + Math.random() * 0.8;
       spawnFish(false);
+    }
+
+    // --- legendary returns: a boss you've beaten prowls its home area as a
+    //     rare, catchable LEGENDARY (no fight, big payout) ---
+    if (!run.bossPresent) {
+      run.legendTimer -= dt;
+      if (run.legendTimer <= 0) {
+        run.legendTimer = 30 + Math.random() * 45;
+        var beaten = defeatedBossDefsForArea(run.area);
+        if (beaten.length && run.fish.length < 30 && Math.random() < 0.5) {
+          var ldef = legendDefFor(beaten[(Math.random() * beaten.length) | 0]);
+          var lx = clamp(diver.x + (Math.random() < 0.5 ? -1 : 1) * (260 + Math.random() * 200), 30, loc.worldWidth - 30);
+          var ly = clamp(diver.y + (Math.random() - 0.5) * 280, 40, loc.maxDepth * PXPM - 20);
+          run.fish.push({ uid: ldef.id + "_L", def: ldef, x: lx, y: ly, baseY: ly,
+            vx: (lx < diver.x ? 1 : -1) * (26 + Math.random() * 16), phase: Math.random() * 6,
+            shiny: Math.random() < shinyChance(run.area), size: ldef.size, fleeing: 0, legendary: true });
+          toast("✨ A LEGENDARY " + ldef.name + " prowls these waters — bag it! ✨", "epic", 2800);
+        }
+      }
     }
 
     // --- secret fish: pop in the INSTANT you satisfy their condition ---
@@ -2707,6 +2748,7 @@
 
   function fishGlow(f) {
     if (f.isKraken) return { color: f.shiny ? "#fff2a0" : "#ff5b7f", alpha: 0.55 };
+    if (f.legendary) return { color: f.shiny ? "#fff2a0" : "#ffd24a", alpha: 0.5 };
     if (f.shiny) return { color: "#fff0a0", alpha: 0.38 };
     var d = f.def;
     var biolum = d.glow || d.shape === "jelly" || d.shape === "angler" || d.shape === "lantern"
