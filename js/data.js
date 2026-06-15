@@ -74,7 +74,7 @@
       sky: { top: "#bff0ff", bottom: "#ffe6fb" },
     },
     forest: {
-      id: "forest", name: "Sunken Grove", tint: "#5fae4a",
+      id: "forest", name: "Tidal Grove", tint: "#5fae4a",
       blurb: "A drowned old-growth forest — sun filters through towering submerged trees draped in green.",
       maxDepth: 600, worldWidth: 2600, topColor: "#3f8f5a", deepColor: "#0a2415",
       shinyBonus: 0, unlocked: false, cost: 150000,
@@ -472,6 +472,8 @@
     { id: "ghostwhale",  name: "Wraith Galleon Whale", area: "pirate", rarity: "legendary", size: 9, value: 7200, minDepth: 450, color: "#5a6470", accent: "#cfe0c8", shape: "ghostwhale" },
     { id: "peglegcrab",  name: "Peg-Leg Crab",  area: "pirate", creature: true, rarity: "uncommon", size: 2, value: 320, color: "#8a5a3a", accent: "#ffcf3a", shape: "crab" },
     { id: "pirateparrot", name: "Pirate Parrot", area: "pirate", bird: true, day: true, rarity: "rare", size: 2, value: 700, color: "#c0423a", accent: "#ffcf3a", shape: "songbird", seedCost: 1400 },
+    { id: "bluemacaw", name: "Blue Macaw", area: "pirate", bird: true, secret: true, rarity: "mythic", size: 2, value: 7000, color: "#2a6ad0", accent: "#ffcf3a", shape: "macaw", seedCost: 0,
+      hint: "A flash of brilliant blue darts through the rigging — too quick for seed. Knock it from the sky with a slingshot." },
     { id: "youngkraken", name: "Young Kraken",  area: "pirate", areaBoss: true, rarity: "mythic", size: 12, value: 28000, minDepth: 250, color: "#5a2f5d", accent: "#9affd0", shape: "youngkraken", hp: 5, reward: "" },
     { id: "davyjones",   name: "Davy Jones Pet", area: "pirate", secretBoss: true, rarity: "mythic", size: 14, value: 80000, minDepth: 200, color: "#2f4a3a", accent: "#9fffc0", shape: "davyjones", hp: 7, reward: "serpenteye" },
 

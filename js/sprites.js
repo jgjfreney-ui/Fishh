@@ -1107,6 +1107,14 @@
       "...FFb..........bFF.....",
       "....F..............F....",
     ],
+    macaw: [
+      "..FF.........bBb..",
+      ".FFFF......bBBBBEPG",
+      "..FFFFbBBBBBBBBBPG",
+      "...FFFbBBBBBBBb...",
+      "AAAAAAAAbBBBb.....",
+      ".AAAAAAAA.........",
+    ],
     koi: [
       "FF....bbBBBBBbb....",
       "FFFbBBBWWBBWWBBBb..",
@@ -1517,7 +1525,7 @@
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",
-    koi: "koi", salmon: "salmon", leatherback: "leatherback",
+    koi: "koi", salmon: "salmon", leatherback: "leatherback", macaw: "macaw",
     gull: "gull", duck: "duck", songbird: "songbird", raptor: "raptor", seabird: "seabird",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }

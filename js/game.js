@@ -1280,7 +1280,7 @@
   function spawnAmbientBird() {
     if (!run) return;
     var allContent = D.LOCATIONS[run.area].allContent;
-    var pool = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return (allContent || d.area === run.area) && (!d.night || run.night) && (!d.day || !run.night); });
+    var pool = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return (allContent || d.area === run.area) && (!d.night || run.night) && (!d.day || !run.night) && (!d.secret || state.hints[d.id]); });
     if (!pool.length) return;
     var ambient = 0;
     for (var i = 0; i < run.birds.length; i++) if (run.birds[i].mode === "ambient") ambient++;
@@ -2929,7 +2929,10 @@
     html += upgradeRow("sling");
     html += '<div class="shop-item"><div class="si-info"><b>Harpoons</b> <span class="lvl">×' + state.harpoons + '</span>'
       + '<p>Ammo for boss fights. Aim with the joystick and tap 🔱 to throw — 3 hits beats the Kraken or blobfish.</p></div>'
-      + '<div class="si-buy"><button data-buyharpoon="1" ' + (state.money < 2600 ? 'disabled' : '') + '>5 for $2,600</button></div></div>';
+      + '<div class="si-buy">'
+      + '<button data-buyharpoon="1" ' + (state.money < 520 ? 'disabled' : '') + '>1 — $520</button>'
+      + '<button data-buyharpoon="6" ' + (state.money < 3120 ? 'disabled' : '') + '>6 — $3,120</button>'
+      + '</div></div>';
     var hasTorch = !!state.items.torch;
     html += '<div class="shop-item"><div class="si-info"><b>🔦 Torch</b>' + (hasTorch ? ' <span class="lvl">✓ Owned</span>' : '')
       + '<p>Casts a bright <b>beam of light</b> in the direction you face — pierces the gloom of the deep and dark caves.</p></div>'
@@ -3035,9 +3038,10 @@
     });
     ov.querySelectorAll("[data-buyharpoon]").forEach(function (b) {
       b.onclick = function () {
-        if (state.money < 2600) return;
-        state.money -= 2600; state.harpoons += 5; saveGame();
-        toast("Bought 5 harpoons! (×" + state.harpoons + ")", "good", 1500); showShop();
+        var qty = parseInt(b.getAttribute("data-buyharpoon"), 10) || 1, cost = qty * 520;
+        if (state.money < cost) return;
+        state.money -= cost; state.harpoons += qty; saveGame();
+        toast("Bought " + qty + " harpoon" + (qty > 1 ? "s" : "") + "! (×" + state.harpoons + ")", "good", 1500); showShop();
       };
     });
     ov.querySelectorAll("[data-buytool]").forEach(function (b) {
@@ -3141,10 +3145,23 @@
 
   // ----- Aquarium (live tanks of everything you've caught) -----
   var aqua = null;
+  function aquaAreaHasContent(areaId) {
+    for (var i = 0; i < D.FISH.length; i++) {
+      var f = D.FISH[i]; if (f.area !== areaId) continue;
+      if (f.isKraken) { if (state.krakenCaught) return true; }
+      else if (f.isBlob) { if (state.blobfishCaught) return true; }
+      else if (f.areaBoss || f.secretBoss) { if (state.areaBossCaught[f.id] || state[f.id + "Caught"]) return true; }
+      else if (state.discovered[f.id]) return true;
+    }
+    return false;
+  }
   function showAquarium() {
     closeOverlay("modal"); closeOverlay("shop"); sellHud(false);
     scene = "aquarium";
-    aqua = { areaList: Object.keys(D.LOCATIONS).filter(function (a) { return !(D.LOCATIONS[a].secret && !state.areas[a]); }), idx: 0, time: 0, entities: [], diverActive: false, night: false, focus: false, focusIdx: 0,
+    // only show tanks for areas you've actually caught something in (no endless empty tanks)
+    var list = Object.keys(D.LOCATIONS).filter(function (a) { return !(D.LOCATIONS[a].secret && !state.areas[a]) && aquaAreaHasContent(a); });
+    if (!list.length) list = ["coral"];
+    aqua = { areaList: list, idx: 0, time: 0, entities: [], diverActive: false, night: false, focus: false, focusIdx: 0,
       diver: { x: W / 2, y: H / 2, vx: 0, vy: 0, face: 1 } };
     setupTank(0);
     var dn = document.getElementById("aqua-daynight"); if (dn) dn.textContent = "🌙";
@@ -3878,7 +3895,9 @@
       + '<button class="close" data-close="shop">✕</button></div>'
       + '<p class="tiny">Each bird is drawn down by its own seed. Take seeds on a dive, surface, and scatter them. Birds count toward 100%!</p>';
     for (var areaId in D.LOCATIONS) {
-      var birds = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return d.area === areaId; });
+      if (D.LOCATIONS[areaId].secret && !state.areas[areaId]) continue; // don't spoil hidden sites
+      // only seed-buyable birds (secret / slingshot-only birds aren't sold here)
+      var birds = D.BIRDS.map(function (id) { return D.FISH_BY_ID[id]; }).filter(function (d) { return d.area === areaId && !d.secret && d.seedCost > 0; });
       if (!birds.length) continue;
       html += '<h3>' + D.LOCATIONS[areaId].name + '</h3>';
       birds.forEach(function (d) {
