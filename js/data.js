@@ -846,6 +846,17 @@
         { cost: 48000, value: 11 },
       ],
     },
+    knife: {
+      name: "Diver's Knife",
+      desc: "A serrated dive knife — saw your way out of a boss's grip far faster. Each upgrade breaks the hold quicker (and bosses grip harder the more you've beaten).",
+      unit: "x wiggle",
+      levels: [
+        { cost: 0,     value: 1.0 }, // bare hands
+        { cost: 5000,  value: 1.6 },
+        { cost: 14000, value: 2.3 },
+        { cost: 34000, value: 3.2 },
+      ],
+    },
   };
 
   // --- Charms (stackable consumable-style permanent buffs) --------------
@@ -872,8 +883,8 @@
   // One-time purchasable items
   const ITEMS = {
     goggles: {
-      name: "Wide-View Goggles",
-      desc: "Crystal-clear goggles — see much further underwater and spot distant fish from a long way off.",
+      name: "Night-Vision Goggles",
+      desc: "Crystal-clear goggles — see much further underwater, AND a night-vision mode that turns night dives bright as day (toggle in your Items).",
       cost: 7500,
     },
     shinyPocket: {

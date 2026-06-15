@@ -21,7 +21,7 @@
       created: Date.now(),
       username: "Diver",
       money: 0,
-      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0 },
+      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0, knife: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
@@ -50,6 +50,8 @@
       seeds: {},        // birdId -> seed count
       harpoons: 0,      // ammo for boss fights
       nextNight: false, // is the NEXT dive at night? (alternates each dive)
+      nightVision: true, // goggles night-vision toggle (only matters if goggles owned)
+      secretGuide: false, // bought the 35k guide to unlocking secret locations
       achievements: {}, // achievementId -> timestamp earned
       home: { wallpaper: "plain", music: "menu", musicOwned: { menu: 1 }, decor: {}, displayFish: null },
       visited: { coral: true }, // areas you've actually dived (unlocks location suits)
@@ -94,6 +96,8 @@
   function catchRadius() { return up("net"); }
   // a boss-reward item only applies if owned AND not toggled off
   function itemOn(id) { return state.items[id] && !(state.itemsOff && state.itemsOff[id]); }
+  // Night-Vision Goggles active: night reads as day
+  function nightVisionOn() { return !!(run && run.night && state.items.goggles && state.nightVision); }
   // the boss-reward gear that can be toggled on/off
   var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown"];
   function anyBossItemOn() { for (var i = 0; i < BOSS_ITEMS.length; i++) if (itemOn(BOSS_ITEMS[i])) return true; return false; }
@@ -521,7 +525,7 @@
       y: loc.maxDepth * PXPM - 60,
       baseY: loc.maxDepth * PXPM - 60,
       vx: 20, phase: 0, shiny: shiny, size: def.size, fleeing: 0,
-      isKraken: !isBlob, isBlob: isBlob, isBoss: true, hp: bossHP(3), hitFlash: 0,
+      isKraken: !isBlob, isBlob: isBlob, isBoss: true, hp: bossHP(3, def), hitFlash: 0,
     });
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); if (isBlob) AUDIO.playBlob(); else AUDIO.playBoss(); }
@@ -609,11 +613,28 @@
 
   // Bosses get tougher the more you've beaten (so late bosses aren't trivial).
   // Meg Tooth still shaves one hit off every boss.
-  function bossHP(base) {
-    var beaten = 0;
-    for (var k in state.areaBossCaught) if (state.areaBossCaught[k]) beaten++;
-    if (state.blobfishCaught) beaten++;
-    var scaled = base + Math.floor(beaten * 0.8);
+  // total bosses you've ever beaten (area + secret + trench), drives difficulty
+  function totalBossesBeaten() {
+    var n = 0;
+    for (var k in state.areaBossCaught) if (state.areaBossCaught[k]) n++;
+    if (state.blobfishCaught) n++;
+    if (state.krakenCaught) n++;
+    var secret = ["magmawyrm", "cavernwyrm", "leatherback", "davyjones"];
+    for (var i = 0; i < secret.length; i++) if (state[secret[i] + "Caught"]) n++;
+    return n;
+  }
+  // a "tier" for an area from its unlock cost — later/pricier sites = tougher bosses
+  function areaTier(area) {
+    var loc = D.LOCATIONS[area]; if (!loc) return 0;
+    var c = loc.cost || 0;
+    if (loc.secret) c += 120000;           // hidden sites are end-game tough
+    return Math.min(5, Math.floor(c / 45000));
+  }
+  function bossHP(base, def) {
+    var beaten = totalBossesBeaten();
+    var tier = (def && def.area) ? areaTier(def.area) : 0;
+    var depthTier = def ? Math.floor((def.minDepth || 0) / 350) : 0;
+    var scaled = base + Math.floor(beaten * 0.8) + Math.floor(tier * 0.6) + depthTier;
     return Math.max(1, scaled - (itemOn("megtooth") ? 1 : 0));
   }
 
@@ -670,7 +691,7 @@
     var def = D.FISH_BY_ID[id], loc = D.LOCATIONS[run.area];
     run.fish.push({
       uid: id, def: def, x: loc.worldWidth / 2, y: loc.maxDepth * PXPM - 60, baseY: loc.maxDepth * PXPM - 60,
-      vx: 18, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, areaBoss: true, hp: bossHP(def.hp || 3), hitFlash: 0,
+      vx: 18, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, areaBoss: true, hp: bossHP(def.hp || 3, def), hitFlash: 0,
     });
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
@@ -686,7 +707,7 @@
     run.fish.push({
       uid: id, def: def, x: atx, y: aty, baseY: aty,
       vx: 20, phase: 0, shiny: false, size: def.size, fleeing: 0, isBoss: true, secretBoss: true,
-      hp: def.hp === 1 ? 1 : bossHP(def.hp || 5), hitFlash: 0,
+      hp: def.hp === 1 ? 1 : bossHP(def.hp || 5, def), hitFlash: 0,
     });
     run.bossPresent = true;
     if (window.AUDIO) { AUDIO.rumble(); AUDIO.playBoss(); }
@@ -1383,10 +1404,10 @@
     } else if (boss.mode === "grab" && run.grab && run.grab.boss === boss) {
       boss.modeT -= dt;
       boss.x = diver.x + boss.face * (18 + boss.size); boss.baseY = diver.y; boss.y = diver.y;
-      run.oxygen -= 7 * dt;                              // grabbing drains your air
-      // wiggle free: strong steering input builds the meter
+      run.oxygen -= (7 + totalBossesBeaten() * 0.7) * dt;  // the "wiggle tax" — grip drains more air the more bosses you've beaten
+      // wiggle free: strong steering input builds the meter — the Diver's Knife saws you out faster
       var input = (joy.active ? joy.mag : 0) + (keys["a"] || keys["d"] || keys["w"] || keys["s"] || keys["arrowleft"] || keys["arrowright"] || keys["arrowup"] || keys["arrowdown"] ? 1 : 0);
-      run.grab.wig += input * dt * 0.9;
+      run.grab.wig += input * dt * 0.9 * (D.UPGRADES.knife ? up("knife") : 1);
       if (run.grab.wig >= 1 || boss.modeT <= 0) {
         diver.vx = -boss.face * 200; diver.vy = -60;     // knock free
         run.grab = null; endBossAttack(boss);
@@ -1396,7 +1417,7 @@
   function startCharge(boss, diver) {
     boss.mode = "charge"; boss.modeT = 0.9;
     var ax = diver.x - boss.x, ay = diver.y - boss.y, l = Math.hypot(ax, ay) || 1;
-    var spd = 380 + boss.size * 8;
+    var spd = 380 + boss.size * 8 + totalBossesBeaten() * 12 + areaTier(boss.def.area) * 14; // bosses get faster deeper into the game
     boss.cvx = (ax / l) * spd; boss.cvy = (ay / l) * spd;
     toast(boss.def.name + " charges! 💨", "bad", 1200);
   }
@@ -1602,10 +1623,13 @@
     var loc = D.LOCATIONS[run.area];
     ctx.clearRect(0, 0, W, H);
 
+    // Night-Vision Goggles: with goggles + night vision toggled on, the night
+    // reads as bright as day (no nocturnal gloom, full sun rays/caustics).
+    var nvOn = nightVisionOn();
     // the open sky never goes dark; the cavern is extra gloomy
     var darkness = loc.airArea ? 0 : depthFactor(run.diver.y, loc);
     if (loc.caveArea) darkness = Math.min(0.92, darkness + 0.35);
-    if (run.night) darkness = Math.min(0.95, darkness + (loc.airArea ? 0.3 : 0.4)); // nocturnal gloom
+    if (run.night && !nvOn) darkness = Math.min(0.95, darkness + (loc.airArea ? 0.3 : 0.4)); // nocturnal gloom
 
     // --- background, lighting & scenery ---
     drawBackground(loc);
@@ -1692,13 +1716,13 @@
     if (loc.storm) drawStorm(loc);
     if (loc.peaks) drawPeaks(loc);
 
-    // nocturnal tint over the whole scene
-    if (run.night) { ctx.fillStyle = "rgba(8,12,42,0.5)"; ctx.fillRect(0, 0, W, H); }
+    // nocturnal tint over the whole scene (lifted by night-vision goggles)
+    if (run.night && !nightVisionOn()) { ctx.fillStyle = "rgba(8,12,42,0.5)"; ctx.fillRect(0, 0, W, H); }
 
     if (loc.starfield) drawStarfield();
 
-    // god rays from the surface (fade with depth; no sun rays at night)
-    var rayStrength = run.night ? 0 : 1 - clamp(cam.y / (520), 0, 1);
+    // god rays from the surface (fade with depth; sun rays return with night vision)
+    var rayStrength = (run.night && !nightVisionOn()) ? 0 : 1 - clamp(cam.y / (520), 0, 1);
     if (rayStrength > 0.02) {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
@@ -1719,7 +1743,7 @@
     }
 
     // animated caustics: rippling dappled light near the surface (all areas)
-    var caustic = run.night ? 0 : 1 - clamp(cam.y / 700, 0, 1);
+    var caustic = (run.night && !nightVisionOn()) ? 0 : 1 - clamp(cam.y / 700, 0, 1);
     if (caustic > 0.03 && !loc.caveArea) {
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
@@ -2446,6 +2470,7 @@
     if (up.suit >= D.UPGRADES.suit.levels.length - 1) { R(-4, 0, 9, 1, "#ffd24a"); }  // maxed suit gold trim
     if (items.shinyPocket) { R(-1, 2, 2, 2, "#ffd24a"); R(0, 1, 1, 1, "#fff7c0"); }   // shiny pouch
     if (up.light > 0) { R(6, -8, 2, 2, "#2a2f36"); R(7, -8, 1, 1, "#fff3b0"); }       // headlamp
+    if (up.knife > 0) { R(-3, 1, 1, 3, "#3a2f22"); R(-3, 3, 1, 2, "#d8dee6"); R(-3, 4, 1, 1, "#ffffff"); } // dive knife strapped to thigh
     if (items.goggles) {                                                              // wide-view goggles
       R(6, -4, 6, 1, "#0e2a36"); R(6, -3, 6, 4, mix(maskGlass, "#fff", 0.15));
       R(6, 1, 6, 1, "#0e2a36"); R(8, -2, 2, 2, "#0b2a3a"); R(9, -2, 1, 1, "#ffffff");
@@ -3058,7 +3083,7 @@
     // GEAR (everything except the net, which lives under Tools)
     html += '<div class="tab-body' + bodyClass("gear") + '" data-body="gear">';
     for (var key in D.UPGRADES) {
-      if (key === "scoop" || key === "trap" || key === "hammer" || key === "shovel" || key === "sling") continue; // these live in the Tools tab
+      if (key === "scoop" || key === "trap" || key === "hammer" || key === "shovel" || key === "sling" || key === "knife") continue; // these live in the Tools tab
       html += upgradeRow(key);
     }
     var hasHeat = !!state.items.heatsuit;
@@ -3080,6 +3105,7 @@
     html += upgradeRow("hammer");
     html += upgradeRow("shovel");
     html += upgradeRow("sling");
+    html += upgradeRow("knife");
     html += '<div class="shop-item"><div class="si-info"><b>Harpoons</b> <span class="lvl">×' + state.harpoons + '</span>'
       + '<p>Ammo for boss fights. Aim with the joystick and tap 🔱 to throw — 3 hits beats the Kraken or blobfish.</p></div>'
       + '<div class="si-buy">'
@@ -4134,7 +4160,11 @@
     if (bossHtml) html += bossHtml;
     if (state.items.stopwatch) html += row("⏱️ Tide Stopwatch", "pick day or night");
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
-    if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
+    if (state.items.goggles) {
+      html += row("🥽 Night-Vision Goggles", "see further");
+      html += '<div class="stat-row"><span>🌙 Night vision · night = day</span>'
+        + '<button class="mini-btn bosstoggle" data-nightvision="1">' + (state.nightVision ? "✅ ON" : "⬜ OFF") + '</button></div>';
+    }
     if (state.items.torch) html += row("🔦 Torch", "beam of light");
     if (state.items.kaijubreath) html += row("🔵 Kaiju Breath", "beam vacuums fish");
     if (state.items.serpenteye) html += row("👁️ Eye of the Serpent", "coin chests everywhere");
@@ -4170,6 +4200,8 @@
         saveGame(); showInventory();
       };
     });
+    var nvBtn = ov.querySelector("[data-nightvision]");
+    if (nvBtn) nvBtn.onclick = function () { state.nightVision = !state.nightVision; saveGame(); showInventory(); };
   }
 
   // ----- Achievements panel -----
