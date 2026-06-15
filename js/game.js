@@ -174,7 +174,7 @@
     placeCages(loc);
     generateDecor(loc);
     // initial population
-    for (var i = 0; i < 14; i++) spawnFish(true);
+    for (var i = 0; i < 17; i++) spawnFish(true);
     if (!loc.birdPool && !loc.creaturePool) for (var ci = 0; ci < 4; ci++) spawnCreature(true);
     state.stats.dives++;
   }
@@ -451,7 +451,7 @@
 
   function spawnFish(initial) {
     var loc = D.LOCATIONS[run.area];
-    if (run.fish.length > 26) return;
+    if (run.fish.length > 30) return;
 
     // Where (depth) does this fish spawn? bias around the diver's depth band.
     var diverDepthM = run.diver.y / PXPM;
@@ -658,6 +658,9 @@
     if (loc.secret) c += 120000;           // hidden sites are end-game tough
     return Math.min(5, Math.floor(c / 45000));
   }
+  // catches sell for MORE the further on the area is, so each new (pricier)
+  // site funds the upgrades and unlocks ahead of it.
+  function areaValueMult(area) { return 1 + areaTier(area) * 0.22; } // tier 0..5 → ×1.0..×2.1
   function bossHP(base, def) {
     var beaten = totalBossesBeaten();
     var tier = (def && def.area) ? areaTier(def.area) : 0;
@@ -1321,7 +1324,7 @@
     var idx = run.fish.indexOf(f);
     if (idx >= 0) run.fish.splice(idx, 1);
 
-    var val = def.value * (f.shiny ? D.SHINY_VALUE_MULT : 1) * (def.creature ? creatureValueMult() : 1);
+    var val = def.value * (f.shiny ? D.SHINY_VALUE_MULT : 1) * (def.creature ? creatureValueMult() : 1) * areaValueMult(def.area);
     run.bag.push({ fishId: def.id, shiny: f.shiny, size: def.size, value: val, name: def.name, color: def.color });
     run.bagUsed += def.size;
 
@@ -1351,7 +1354,7 @@
       if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1400); }
       return false;
     }
-    var val = def.value * (c.shiny ? D.SHINY_VALUE_MULT : 1) * creatureValueMult();
+    var val = def.value * (c.shiny ? D.SHINY_VALUE_MULT : 1) * creatureValueMult() * areaValueMult(def.area);
     run.bag.push({ fishId: def.id, shiny: c.shiny, size: def.size, value: val, name: def.name, color: def.color });
     run.bagUsed += def.size;
     var firstEver = !state.discovered[def.id];
@@ -1526,20 +1529,21 @@
     state[def.id + "Caught"] = true;   // davyjonesCaught / leatherbackCaught / magmawyrmCaught
     state.discovered[def.id] = true;   // show it in the Collection
     run.grab = null;                   // release any grab it had on you
-    state.money += def.value;
-    state.stats.earned += def.value;
+    var pay = Math.round(def.value * areaValueMult(def.area));
+    state.money += pay;
+    state.stats.earned += pay;
     if (def.reward === "serpenteye") state.items.serpenteye = true;
     var bi = run.fish.indexOf(boss); if (bi >= 0) run.fish.splice(bi, 1);
     saveGame();
-    setTimeout(function () { showSecretBossEnding(def); }, 700);
+    setTimeout(function () { showSecretBossEnding(def, pay); }, 700);
   }
-  function showSecretBossEnding(def) {
+  function showSecretBossEnding(def, pay) {
     scene = "ending"; sellHud(false);
     var ov = overlay("modal");
     var img = SPRITES.dataURL(SPRITES.archetypeForShape(def.shape), { color: def.color, accent: def.accent, scale: 5 });
     var html = '<div class="panel ending-panel"><h1>☠️ ' + def.name + ' defeated! ☠️</h1>';
     html += '<div class="blob-reveal" style="background-image:url(' + img + ')"></div>';
-    html += '<p>The captain\'s curse breaks. A flood of plunder is yours — <b>+$' + fmt(def.value) + '</b>.</p>';
+    html += '<p>The captain\'s curse breaks. A flood of plunder is yours — <b>+$' + fmt(pay || def.value) + '</b>.</p>';
     if (def.reward === "serpenteye") html += '<p class="prize">You take the <b>Eye of the Serpent</b> 👁️ — golden <b>coin chests</b> now wash up in <b>every</b> dive site.</p>';
     html += '<button id="btn-resume" class="big primary">🤿 Keep Diving</button>';
     html += '<button id="btn-continue" class="big">⬆ Back to Boat</button></div>';
@@ -1552,7 +1556,9 @@
   function catchAreaBoss(boss) {
     var def = boss.def;
     state.areaBossCaught[def.id] = true;
-    state.money += def.value;
+    var pay = Math.round(def.value * areaValueMult(def.area));
+    state.money += pay;
+    state.stats.earned += pay;
     if (def.reward === "necklace") state.items.necklace = true;
     else if (def.reward === "stinger") state.items.jellystinger = true;
     else if (def.reward === "megtooth") state.items.megtooth = true;
@@ -1562,7 +1568,7 @@
     else if (def.reward === "kaijubreath") state.items.kaijubreath = true;
     run.bossPresent = false;
     saveGame();
-    setTimeout(function () { showAreaBossEnding(def); }, 700);
+    setTimeout(function () { showAreaBossEnding(def, pay); }, 700);
   }
 
   function useSeed(birdId) {
@@ -1585,7 +1591,7 @@
 
   function catchBird(b) {
     var def = b.def;
-    var val = def.value * (b.shiny ? D.SHINY_VALUE_MULT : 1);
+    var val = def.value * (b.shiny ? D.SHINY_VALUE_MULT : 1) * areaValueMult(def.area);
     run.bag.push({ fishId: def.id, shiny: b.shiny, size: def.size, value: val, name: def.name, color: def.color });
     run.bagUsed += def.size;
     var firstEver = !state.discovered[def.id], firstShiny = b.shiny && !state.shinyFound[def.id];
@@ -4014,7 +4020,7 @@
     saveGame();
   }
 
-  function showAreaBossEnding(def) {
+  function showAreaBossEnding(def, pay) {
     scene = "ending";
     sellHud(false);
     var ov = overlay("modal");
@@ -4045,7 +4051,7 @@
       html += '<p class="prize">Tap 🔵 in a dive to fire a beam of blue energy that <b>vacuums up every fish</b> it touches.</p>';
     } else {
       html += '<p>A mighty trophy added to your collection.</p>';
-      html += '<p class="prize">+$' + fmt(def.value) + '</p>';
+      html += '<p class="prize">+$' + fmt(pay || def.value) + '</p>';
     }
     html += '<button id="btn-resume" class="big primary">🤿 Keep Diving</button>';
     html += '<button id="btn-continue" class="big">⬆ Back to Boat</button></div>';
