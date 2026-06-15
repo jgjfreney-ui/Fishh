@@ -472,7 +472,7 @@
     { id: "tairyu",     name: "Tatsu Dragon", area: "japan", rarity: "epic",     size: 6, value: 2200, minDepth: 200, color: "#c0423a", accent: "#ffd24a", shape: "dragon" },
     { id: "japcrab",    name: "Heikegani Crab", area: "japan", creature: true, rarity: "uncommon", size: 2, value: 300, color: "#b0503a", shape: "crab" },
     { id: "ornatestork",name: "Ornate Stork", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 880, color: "#f0f4f6", accent: "#e0556a", shape: "stork", seedCost: 1800 },
-    { id: "kaiju",      name: "The Kaiju",    area: "japan", areaBoss: true, rarity: "mythic", size: 14, value: 30000, minDepth: 250, color: "#2f4a3a", accent: "#6affc0", shape: "kaiju", hp: 6, reward: "" },
+    { id: "kaiju",      name: "The Kaiju",    area: "japan", areaBoss: true, rarity: "mythic", size: 14, value: 30000, minDepth: 250, color: "#2f4a3a", accent: "#6affc0", shape: "kaiju", hp: 6, reward: "kaijubreath" },
 
     // ======== Hollow Deep (secret cave) — Olm is its secret fish ========
     { id: "olm",        name: "Olm",          area: "secretcave", rarity: "epic", size: 1, value: 1200, minDepth: 0, color: "#f0d6cc", accent: "#ffc0cc", shape: "eel", secret: true,

@@ -156,6 +156,8 @@
       slingShots: slingShotsMax(), // slingshot ammo this dive
       pebbles: [],                 // slingshot projectiles
       bellUsed: false,
+      grab: null, bossBeam: null,  // boss combat state
+      playerBeam: null, breathCd: 0, // Kaiju Breath
     };
     placeWrecks(loc);
     placeCages(loc);
@@ -917,6 +919,13 @@
     }
     var cr = mRange;
 
+    // --- boss AI: charge, grab (drain O2 — wiggle free!) & the Kaiju's breath ---
+    if (run.bossPresent) {
+      var theBoss = null;
+      for (var bx2 = 0; bx2 < run.fish.length; bx2++) if (run.fish[bx2].isBoss && run.fish[bx2].hp > 0) { theBoss = run.fish[bx2]; break; }
+      if (theBoss) updateBossAI(theBoss, dt, diver);
+    } else { run.grab = null; run.bossBeam = null; }
+
     // --- Deploy Net: any fish inside the dropped net is bagged (ignores hold) ---
     if (run.trap && run.trap.active && run.trap.r > 0) {
       for (var tpi = run.fish.length - 1; tpi >= 0; tpi--) {
@@ -989,6 +998,19 @@
         b.y += (bdy / bd) * 72 * dt;
         if (bd < 26) { catchBird(b); run.birds.splice(bi, 1); }
       }
+    }
+
+    // --- Kaiju Breath beam (vacuum up fish it touches) ---
+    if (run.breathCd > 0) run.breathCd -= dt;
+    if (run.playerBeam) {
+      var pbm = run.playerBeam; pbm.life -= dt; pbm.x = diver.x; pbm.y = diver.y;
+      for (var pbf = run.fish.length - 1; pbf >= 0; pbf--) {
+        var pf2 = run.fish[pbf]; if (pf2.isBoss) continue;
+        var rx2 = pf2.x - pbm.x, ry2 = pf2.y - pbm.y;
+        var along2 = rx2 * pbm.dx + ry2 * pbm.dy, perp2 = Math.abs(rx2 * -pbm.dy + ry2 * pbm.dx);
+        if (along2 > 0 && along2 < pbm.len && perp2 < 40) catchFish(pf2, true);
+      }
+      if (pbm.life <= 0) run.playerBeam = null;
     }
 
     // --- slingshot pebbles (knock birds down) ---
@@ -1232,6 +1254,87 @@
     run.harpoonFx.push({ x: run.diver.x, y: run.diver.y, vx: ax * spd, vy: ay * spd, life: 1.4, ang: Math.atan2(ay, ax) });
   }
 
+  // ===== Boss combat AI: charge, grab + O2 drain (wiggle out), kaiju breath =====
+  function updateBossAI(boss, dt, diver) {
+    if (boss.mode == null) { boss.mode = "roam"; boss.atkT = 3 + Math.random() * 3; boss.modeT = 0; }
+    boss.face = diver.x < boss.x ? -1 : 1;
+    var isKaiju = boss.def.id === "kaiju" || boss.def.id === "leviathanking";
+    if (boss.hitFlash > 0) { boss.atkT = Math.max(boss.atkT, 1.0); } // don't attack mid-flinch
+
+    if (boss.mode === "roam") {
+      boss.atkT -= dt;
+      if (boss.atkT <= 0 && !run.grab) {
+        if (isKaiju && Math.random() < 0.55) startBreath(boss, diver);
+        else startCharge(boss, diver);
+      }
+    } else if (boss.mode === "charge") {
+      boss.modeT -= dt;
+      boss.x += boss.cvx * dt; boss.baseY += boss.cvy * dt; boss.y = boss.baseY;
+      if (!run.grab && Math.hypot(boss.x - diver.x, boss.y - diver.y) < 34 + boss.size * 2) startGrab(boss);
+      if (boss.modeT <= 0) endBossAttack(boss);
+    } else if (boss.mode === "breath") {
+      boss.modeT -= dt;
+      // a blue energy beam locked toward where the diver was; drains O2 if you're in it
+      var bd = run.bossBeam;
+      if (bd) {
+        // distance from diver to the beam ray
+        var rx = diver.x - bd.x, ry = diver.y - bd.y;
+        var along = rx * bd.dx + ry * bd.dy;            // projection along the beam
+        var perp = Math.abs(rx * -bd.dy + ry * bd.dx);  // perpendicular distance
+        if (along > 0 && along < bd.len && perp < 34) {
+          run.oxygen -= 14 * dt; // the breath sears your air away
+          if (Math.random() < 0.5) run.bubbles.push({ x: diver.x + (Math.random() - 0.5) * 12, y: diver.y, r: 2 + Math.random() * 3, vy: 50, life: 1 });
+        }
+      }
+      if (boss.modeT <= 0) endBossAttack(boss);
+    } else if (boss.mode === "grab" && run.grab && run.grab.boss === boss) {
+      boss.modeT -= dt;
+      boss.x = diver.x + boss.face * (18 + boss.size); boss.baseY = diver.y; boss.y = diver.y;
+      run.oxygen -= 7 * dt;                              // grabbing drains your air
+      // wiggle free: strong steering input builds the meter
+      var input = (joy.active ? joy.mag : 0) + (keys["a"] || keys["d"] || keys["w"] || keys["s"] || keys["arrowleft"] || keys["arrowright"] || keys["arrowup"] || keys["arrowdown"] ? 1 : 0);
+      run.grab.wig += input * dt * 0.9;
+      if (run.grab.wig >= 1 || boss.modeT <= 0) {
+        diver.vx = -boss.face * 200; diver.vy = -60;     // knock free
+        run.grab = null; endBossAttack(boss);
+      }
+    }
+  }
+  function startCharge(boss, diver) {
+    boss.mode = "charge"; boss.modeT = 0.9;
+    var ax = diver.x - boss.x, ay = diver.y - boss.y, l = Math.hypot(ax, ay) || 1;
+    var spd = 380 + boss.size * 8;
+    boss.cvx = (ax / l) * spd; boss.cvy = (ay / l) * spd;
+    toast(boss.def.name + " charges! 💨", "bad", 1200);
+  }
+  function startGrab(boss) {
+    run.grab = { boss: boss, wig: 0 }; boss.mode = "grab"; boss.modeT = 4.0;
+    toast("GRABBED! Wiggle the joystick to break free! 🌀", "bad", 2000);
+    if (window.AUDIO) AUDIO.rumble();
+  }
+  function startBreath(boss, diver) {
+    boss.mode = "breath"; boss.modeT = 1.8; boss.face = diver.x < boss.x ? -1 : 1;
+    var ax = diver.x - boss.x, ay = diver.y - boss.y, l = Math.hypot(ax, ay) || 1;
+    run.bossBeam = { x: boss.x, y: boss.y, dx: ax / l, dy: ay / l, len: 560, t: 0 };
+    toast(boss.def.name + " unleashes an energy breath! 🔵", "bad", 1600);
+    if (window.AUDIO) AUDIO.rumble();
+  }
+  function endBossAttack(boss) {
+    boss.mode = "roam"; boss.atkT = 3.5 + Math.random() * 3.5; run.bossBeam = null;
+  }
+
+  // Kaiju Breath: fire a blue beam in your facing/aim direction that bags fish
+  function fireBreath() {
+    if (!state.items.kaijubreath || run.breathCd > 0) return;
+    var ax, ay;
+    if (joy.active && joy.mag > 0.2) { ax = joy.dx; ay = joy.dy; }
+    else { ax = run.diver.face < 0 ? -1 : 1; ay = 0; }
+    var l = Math.hypot(ax, ay) || 1;
+    run.playerBeam = { x: run.diver.x, y: run.diver.y, dx: ax / l, dy: ay / l, len: 360, life: 0.9 };
+    run.breathCd = 4;
+    if (window.AUDIO) AUDIO.rumble();
+  }
+
   // Slingshot: fire a pebble to knock a bird out of the sky (catch on hit)
   function fireSling() {
     if (slingShotsMax() <= 0 || run.slingShots <= 0) { toast("No slingshot shots left this dive.", "bad"); return; }
@@ -1284,6 +1387,7 @@
     else if (def.reward === "sonar") state.items.sonar = true;
     else if (def.reward === "rocfeather") state.items.rocfeather = true;
     else if (def.reward === "crabcrown") state.items.crabcrown = true;
+    else if (def.reward === "kaijubreath") state.items.kaijubreath = true;
     run.bossPresent = false;
     saveGame();
     setTimeout(function () { showAreaBossEnding(def); }, 700);
@@ -1400,6 +1504,7 @@
     drawDiver();
     drawHarpoons();
     drawPebbles();
+    drawBossBeam();
     drawNetFx();
     drawTrap();
 
@@ -1421,6 +1526,17 @@
     drawFishLabels();
 
     if (joy.active) drawJoystick();
+
+    // grab struggle meter
+    if (run.grab) {
+      var mw = 220, mh = 18, mx = (W - mw) / 2, my = H * 0.32;
+      ctx.fillStyle = "rgba(0,0,0,0.55)"; ctx.fillRect(mx - 4, my - 22, mw + 8, mh + 26);
+      ctx.fillStyle = "#fff"; ctx.font = "bold 13px 'Segoe UI',sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("🌀 WIGGLE FREE!", W / 2, my - 6);
+      ctx.fillStyle = "rgba(255,255,255,0.25)"; ctx.fillRect(mx, my, mw, mh);
+      ctx.fillStyle = "#7afcff"; ctx.fillRect(mx, my, mw * clamp(run.grab.wig, 0, 1), mh);
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.strokeRect(mx, my, mw, mh);
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -1753,6 +1869,24 @@
     ctx.restore();
   }
 
+  function drawBeam(bd, c0, c1) {
+    var x = bd.x - cam.x, y = bd.y - cam.y, ex = x + bd.dx * bd.len, ey = y + bd.dy * bd.len;
+    var nx = -bd.dy, ny = bd.dx, w0 = 8, w1 = 40 + Math.sin(run.time * 30) * 4;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    var g = ctx.createLinearGradient(x, y, ex, ey);
+    g.addColorStop(0, c0); g.addColorStop(1, c1);
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.moveTo(x + nx * w0, y + ny * w0); ctx.lineTo(x - nx * w0, y - ny * w0);
+    ctx.lineTo(ex - nx * w1, ey - ny * w1); ctx.lineTo(ex + nx * w1, ey + ny * w1);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function drawBossBeam() {
+    if (run.bossBeam) drawBeam(run.bossBeam, "rgba(120,200,255,0.85)", "rgba(60,120,255,0.1)");
+    if (run.playerBeam) drawBeam(run.playerBeam, "rgba(150,230,255,0.9)", "rgba(80,160,255,0.12)");
+  }
   function drawPebbles() {
     if (!run.pebbles) return;
     for (var i = 0; i < run.pebbles.length; i++) {
@@ -2399,6 +2533,12 @@
     var hb = document.getElementById("btn-harpoon");
     hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
     if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
+    // Kaiju Breath button (own the breath + submerged)
+    var brb = document.getElementById("btn-breath");
+    if (brb) {
+      brb.style.display = (!atTop && state.items.kaijubreath) ? "block" : "none";
+      brb.textContent = run.breathCd > 0 ? "🔵 (" + Math.ceil(run.breathCd) + ")" : "🔵 Breath";
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -2666,6 +2806,8 @@
     if (tb) tb.style.display = "none";
     var slb = document.getElementById("btn-sling");
     if (slb) slb.style.display = "none";
+    var brb = document.getElementById("btn-breath");
+    if (brb) brb.style.display = "none";
     if (run) run.venting = false;
     document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
@@ -3658,6 +3800,9 @@
     } else if (def.reward === "crabcrown") {
       html += '<p>You claim the jewelled <b>Spider Crab Crown</b>! 👑</p>';
       html += '<p class="prize">Every sea creature you catch is now worth <b>DOUBLE</b>.</p>';
+    } else if (def.reward === "kaijubreath") {
+      html += '<p>You absorb the beast\'s power — the <b>Kaiju Breath</b>! 🔵</p>';
+      html += '<p class="prize">Tap 🔵 in a dive to fire a beam of blue energy that <b>vacuums up every fish</b> it touches.</p>';
     } else {
       html += '<p>A mighty trophy added to your collection.</p>';
       html += '<p class="prize">+$' + fmt(def.value) + '</p>';
@@ -3874,6 +4019,7 @@
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
     if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
     if (state.items.torch) html += row("🔦 Torch", "beam of light");
+    if (state.items.kaijubreath) html += row("🔵 Kaiju Breath", "beam vacuums fish");
     if (state.items.divingbell) html += row("🛎️ Diving Bell", "1 air save / dive");
     if (hammerLevel() > 0) html += row("🔨 Sledgehammer", "Lv " + hammerLevel());
     if (shovelLevel() > 0) html += row("⛏️ Shovel", "Lv " + shovelLevel());
@@ -4023,6 +4169,9 @@
     // slingshot button (shoot a pebble to knock down birds)
     var slb = document.getElementById("btn-sling");
     if (slb) slb.addEventListener("click", function () { if (scene === "dive" && run) fireSling(); });
+    // kaiju-breath button (beam that vacuums up fish)
+    var brb = document.getElementById("btn-breath");
+    if (brb) brb.addEventListener("click", function () { if (scene === "dive" && run) fireBreath(); });
     // vent-air button (press & hold to drain oxygen)
     var vb = document.getElementById("btn-vent");
     if (vb) {
