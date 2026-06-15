@@ -46,6 +46,15 @@
       shinyBonus: 0, unlocked: false, cost: 3000,
       sky: { top: "#bfe8c0", bottom: "#eafce0" },
     },
+    cave: {
+      id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
+      blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
+      maxDepth: 800, worldWidth: 2600, topColor: "#2a3340", deepColor: "#04050a",
+      shinyBonus: 0.12, unlocked: false, cost: 3800,
+      caveArea: true, creaturePool: true,
+      sky: { top: "#1a2230", bottom: "#0a0e16" },
+    },
+
     kelp: {
       id: "kelp", name: "Kelp Forest", tint: "#2fb59a",
       blurb: "Towering green columns hide clever, slippery creatures.",
@@ -54,14 +63,6 @@
       sky: { top: "#9fb6b0", bottom: "#d6e6dc" },
     },
 
-    cave: {
-      id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
-      blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
-      maxDepth: 800, worldWidth: 2600, topColor: "#2a3340", deepColor: "#04050a",
-      shinyBonus: 0.12, unlocked: false, cost: 9000,
-      caveArea: true, creaturePool: true,
-      sky: { top: "#1a2230", bottom: "#0a0e16" },
-    },
     arctic: {
       id: "arctic", name: "Arctic Shelf", tint: "#8fd0f0",
       blurb: "Frigid water beneath the ice. Belugas, narwhals and pale giants drift through the cold.",

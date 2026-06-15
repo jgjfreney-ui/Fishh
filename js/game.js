@@ -52,7 +52,7 @@
       harpoons: 0,      // ammo for boss fights
       nextNight: false, // is the NEXT dive at night? (alternates each dive)
       nightVision: true, // goggles night-vision toggle (only matters if goggles owned)
-      secretGuide: false, // bought the 35k guide to unlocking secret locations
+      locHints: {},       // areaId -> true: bought the hint for that hidden site
       achievements: {}, // achievementId -> timestamp earned
       home: { wallpaper: "plain", music: "menu", musicOwned: { menu: 1 }, decor: {}, displayFish: null },
       visited: { coral: true }, // areas you've actually dived (unlocks location suits)
@@ -774,15 +774,26 @@
       guide: "Dive to the wreck-strewn far-LEFT floor of the Stormy Seas." },
   ];
   // How to reach every hidden dive site (revealed by the $35k guide)
+  // Each hidden dive site has its OWN hint to buy. Early ones share a base
+  // price; later-game sites cost more. `teaser` is shown before purchase (no
+  // spoilers — it never names the hidden site); `how` is revealed after.
+  // `requires` = you only hear the rumour once you've unlocked that source area
+  // (so late-game sites aren't spoiled early).
   var SECRET_SITE_GUIDE = [
-    { area: "japan",      how: "Sink into the far-RIGHT corner of the <b>River Run</b> riverbed and swim down through the tunnel in the floor." },
-    { area: "backrooms",  how: "Sink to the far-LEFT seabed of the <b>Kelp Forest</b> and slip through the crack in the floor." },
-    { area: "pirate",     how: "Dive the wreck-strewn far-LEFT floor of the <b>Stormy Seas</b> into the Drowned Cove." },
-    { area: "secretcave", how: "Dive the <b>Gloom Cavern</b> with every boss relic toggled OFF (in your Items) to find the Hollow Deep." },
-    { area: "oilrig",     how: "Smash sea-floor cages with the <b>Sledgehammer</b> to pry out a Cage Key, then carry it to the sunken oil rig." },
-    { area: "flooded",    how: "Fully strip the loot from <b>5 cargo-ship wrecks</b>, then swim into another cargo wreck's hold." },
-    { area: "ashen",      how: "Buy the <b>Heat Suit</b> (Shop → Gear); the Ashen Caldera then opens in Change Area." },
-    { area: "olympus",    how: "Own the <b>Storm Summoner</b>, climb to the tallest peak of the <b>Sunlit Peaks</b>, line up with its tip and summon a storm." },
+    { area: "japan",      requires: "river",   price: 6000,  teaser: "A fisherman swears a hidden coast lies somewhere past <b>River Run</b>.",
+      how: "Sink into the far-RIGHT corner of the <b>River Run</b> riverbed and swim down through the tunnel in the floor." },
+    { area: "backrooms",  requires: "kelp",    price: 6000,  teaser: "Something is wrong beneath the <b>Kelp Forest</b> floor...",
+      how: "Sink to the far-LEFT seabed of the <b>Kelp Forest</b> and slip through the crack in the floor." },
+    { area: "secretcave", requires: "cave",    price: 9000,  teaser: "A hollow pocket is said to hide deep in the <b>Gloom Cavern</b>.",
+      how: "Dive the <b>Gloom Cavern</b> with every boss relic toggled OFF (in your Items) to find it." },
+    { area: "pirate",     requires: "storm",   price: 16000, teaser: "A cursed place sleeps somewhere under the <b>Stormy Seas</b>.",
+      how: "Dive the wreck-strewn far-LEFT floor of the <b>Stormy Seas</b>." },
+    { area: "oilrig",     requires: "opensea", price: 16000, teaser: "A derelict structure rusts somewhere out in the <b>Open Sea</b>.",
+      how: "Smash sea-floor cages with the <b>Sledgehammer</b> to pry out a Cage Key, then carry it to the sunken rig in the Open Sea." },
+    { area: "flooded",    requires: "opensea", price: 24000, teaser: "Sailors whisper of a freighter lost in the deep, full of loot.",
+      how: "Fully strip the loot from <b>5 cargo-ship wrecks</b>, then swim into another cargo wreck's hold." },
+    { area: "olympus",    requires: "mountain", price: 35000, teaser: "They say something divine waits above the highest peak of all.",
+      how: "Own the <b>Storm Summoner</b>, climb to the tallest peak of the <b>Sunlit Peaks</b>, line up with its tip and summon a storm." },
   ];
   var pendingSecretEnter = null; // area id to dive into after this frame
   // hidden-area discovery checks, run every dive frame
@@ -3560,6 +3571,9 @@
       if (s.items.shovel && !s.upgrades.shovel) s.upgrades.shovel = 1;
     }
     if (!s.stats) s.stats = base.stats;
+    if (!s.locHints) s.locHints = {};
+    // anyone who'd bought the old all-in-one guide keeps every location hint
+    if (s.secretGuide) { SECRET_SITE_GUIDE.forEach(function (g) { s.locHints[g.area] = true; }); }
     return s;
   }
 
@@ -3854,22 +3868,31 @@
 
     // HINTS
     html += '<div class="tab-body' + bodyClass("hints") + '" data-body="hints">';
-    // Secret-locations guide — a pricey one-time purchase that documents how to
-    // reach every hidden dive site. (You can still stumble into them unaided.)
-    if (state.secretGuide) {
-      html += '<div class="shop-item"><div class="si-info"><b>🗺️ Hidden Sites Guide</b> <span class="lvl">✓ Owned</span>'
-        + '<p>How to reach every secret dive site:</p><ul class="guide-list">';
-      SECRET_SITE_GUIDE.forEach(function (g) {
-        var nm = (state.areas[g.area] && D.LOCATIONS[g.area]) ? D.LOCATIONS[g.area].name : "A hidden site";
-        html += '<li><b>' + nm + '</b> — ' + g.how + '</li>';
-      });
-      html += '</ul></div></div>';
-    } else {
-      html += '<div class="shop-item"><div class="si-info"><b>🗺️ Hidden Sites Guide</b>'
-        + '<p>Sailors\' charts revealing exactly how to reach <b>every secret dive site</b>. (You can still find them on your own if you figure it out.)</p></div>'
-        + '<div class="si-buy"><button data-buyguide="1" ' + (state.money < 35000 ? 'disabled' : '') + '>$35,000</button></div></div>';
-    }
-    html += '<p class="tiny">Every area hides a <b>secret fish</b>. Buy its hint here, then meet the condition while diving.</p>';
+    // Hidden-location hints — each secret dive site has its OWN hint to buy.
+    // (You can still stumble into any of them unaided.)
+    html += '<h3 style="margin:4px 0 6px">🗺️ Hidden Sites</h3>';
+    var anySite = false;
+    SECRET_SITE_GUIDE.forEach(function (g) {
+      var found = !!state.areas[g.area];      // already discovered it
+      var bought = !!state.locHints[g.area];
+      if (found && !bought) return;           // found on your own — no need for a hint
+      // no early spoilers: only rumour a site once its source area is unlocked
+      if (!bought && g.requires && !state.areas[g.requires]) return;
+      anySite = true;
+      if (found || bought) {
+        var nm = D.LOCATIONS[g.area] ? D.LOCATIONS[g.area].name : "A hidden site";
+        html += '<div class="shop-item"><div class="si-info"><b>🗺️ ' + nm + '</b> '
+          + (found ? '<span class="lvl">✓ Discovered</span>' : '<span class="lvl">Hint owned</span>')
+          + '<p>' + g.how + '</p></div></div>';
+      } else {
+        // unbought: a vague teaser only — never names the hidden site (no spoiler)
+        html += '<div class="shop-item"><div class="si-info"><b>🗺️ Rumoured hidden site</b>'
+          + '<p>' + g.teaser + '</p></div>'
+          + '<div class="si-buy"><button data-buyloc="' + g.area + '" ' + (state.money < g.price ? 'disabled' : '') + '>$' + fmt(g.price) + '</button></div></div>';
+      }
+    });
+    if (!anySite) html += '<p class="tiny">No rumours of hidden sites right now — keep exploring!</p>';
+    html += '<p class="tiny" style="margin-top:10px">Every area also hides a <b>secret fish</b>. Buy its hint here, then meet the condition while diving.</p>';
     D.FISH.filter(function (f) {
       if ((!f.secret && !(f.secretBoss && f.hint)) || !D.LOCATIONS[f.area]) return false;
       if (D.LOCATIONS[f.area].secret && !state.areas[f.area]) return false; // don't spoil undiscovered secret areas
@@ -3945,13 +3968,16 @@
     ov.querySelectorAll("[data-buyhint]").forEach(function (b) {
       b.onclick = function () { buyHint(b.getAttribute("data-buyhint")); };
     });
-    var bg = ov.querySelector("[data-buyguide]");
-    if (bg) bg.onclick = function () {
-      if (state.secretGuide || state.money < 35000) return;
-      state.money -= 35000; state.secretGuide = true; saveGame();
-      toast("🗺️ Hidden Sites Guide acquired — check the Hints tab!", "epic", 3000);
-      showShop();
-    };
+    ov.querySelectorAll("[data-buyloc]").forEach(function (b) {
+      b.onclick = function () {
+        var area = b.getAttribute("data-buyloc");
+        var g = SECRET_SITE_GUIDE.filter(function (x) { return x.area === area; })[0];
+        if (!g || state.locHints[area] || state.areas[area] || state.money < g.price) return;
+        state.money -= g.price; state.locHints[area] = true; saveGame();
+        toast("🗺️ Hint acquired — check the Hidden Sites list!", "epic", 2600);
+        showShop();
+      };
+    });
   }
 
   function upgradeRow(key) {
@@ -5161,7 +5187,9 @@
       aquaNav: function (d) { aquaNav(d); },
       aquaFocus: function () { aquaToggleFocus(); },
       aquaExit: function () { exitAquarium(); },
+      aquaInfo: function () { return aqua ? { tanks: aqua.areaList.length, idx: aqua.idx, area: aqua.area, focus: aqua.focus, entities: aqua.entities.length } : null; },
       scene: function () { return scene; },
+      discoverAll: function () { D.FISH.forEach(function (f) { state.discovered[f.id] = true; if (f.areaBoss) state.areaBossCaught[f.id] = true; else if (f.secretBoss) state[f.id + "Caught"] = true; }); state.krakenCaught = true; state.blobfishCaught = true; },
       forceShinyNext: function () { state.charms.shiny = 999; },
       fishKinds: function () { var o = { fish: 0, bird: 0, creature: 0, boss: 0 }; if (run) run.fish.forEach(function (f) { if (f.isBoss) o.boss++; else if (f.def.bird) o.bird++; else if (f.def.creature) o.creature++; else o.fish++; }); return o; },
     },
