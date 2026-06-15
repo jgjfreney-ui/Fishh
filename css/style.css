@@ -209,6 +209,21 @@ html, body {
 }
 #aqua-swim { color: #042033; background: var(--accent) !important; border-color: transparent !important; }
 
+#home-ui {
+  position: absolute;
+  bottom: calc(12px + env(safe-area-inset-bottom)); left: 10px; right: 10px;
+  display: none;
+  align-items: center; justify-content: center; gap: 8px;
+  z-index: 9;
+}
+#home-ui button {
+  background: rgba(8, 30, 48, 0.72);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border-radius: 12px; padding: 10px 14px; font-size: 15px; font-weight: 700;
+}
+.home-store .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 4px; vertical-align: middle; margin-left: 6px; border: 1px solid rgba(255,255,255,0.3); }
+
 .update-banner {
   background: linear-gradient(120deg, rgba(63,208,255,0.18), rgba(185,107,255,0.18));
   border: 1px solid rgba(120, 200, 255, 0.45);

@@ -47,6 +47,7 @@
       harpoons: 0,      // ammo for boss fights
       nextNight: false, // is the NEXT dive at night? (alternates each dive)
       achievements: {}, // achievementId -> timestamp earned
+      home: { wallpaper: "plain", music: "menu", musicOwned: { menu: 1 }, decor: {}, displayFish: null },
     };
   }
 
@@ -603,6 +604,9 @@
     var id = AREA_BOSS_BY_AREA[area];
     if (!id || state.areaBossCaught[id]) return null;
     var trig = (D.FISH_BY_ID[id] && D.FISH_BY_ID[id].trigger) || "fish";
+    // special whole-collection triggers (Gloom Cavern rises once every creature is caught)
+    if (trig === "allcreatures") return allCreaturesFound() ? id : null;
+    if (trig === "allbirds") return allBirdsFound() ? id : null;
     for (var i = 0; i < D.FISH.length; i++) {
       var f = D.FISH[i];
       if (f.area !== area || f.areaBoss || f.isKraken || f.isBlob || f.secret) continue;
@@ -710,6 +714,9 @@
     } else if (scene === "aquarium" && aqua) {
       updateAquarium(dt);
       renderAquarium();
+    } else if (scene === "home") {
+      homeTime += dt;
+      renderHome();
     }
     requestAnimationFrame(loop);
   }
@@ -2141,6 +2148,7 @@
     html += '<button id="btn-items" class="big">🎒 Items</button>';
     html += '<button id="btn-treasures" class="big">🏺 Treasures</button>';
     html += '<button id="btn-achievements" class="big">🏆 Achievements</button>';
+    html += '<button id="btn-home" class="big">🏠 Diver\'s Hut</button>';
     html += '<button id="btn-trade" class="big">🎁 Gift Fish</button>';
     html += '<button id="btn-sound" class="big">' + (state.settings.muted ? '🔇 Sound: Off' : '🔊 Sound: On') + '</button>';
     html += '<button id="btn-menu" class="big">💾 Save &amp; Menu</button>';
@@ -2173,6 +2181,7 @@
     bind("btn-items", showInventory);
     bind("btn-treasures", showTreasureGallery);
     bind("btn-achievements", showAchievements);
+    bind("btn-home", showHome);
     bind("btn-trade", function () { lastGiftCode = null; showTrade(); });
     bind("btn-rename", function () {
       askText("Name your captain", state.username || "Diver", function (name) {
@@ -2598,6 +2607,231 @@
       ctx.restore();
     }
     if (e.shiny && Math.sin(aqua.time * 3 + e.phase) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2); }
+  }
+
+  // ---------------------------------------------------------------------
+  //  Diver's Hut (a cosy home you decorate)
+  // ---------------------------------------------------------------------
+  var homeTime = 0;
+  var HOME_WALLS = [
+    { id: "plain",     name: "Plain Cream",   cost: 0,    color: "#cdc1a8" },
+    { id: "blue",      name: "Ocean Blue",    cost: 700,  color: "#35617e" },
+    { id: "coral",     name: "Coral Pink",    cost: 700,  color: "#b06f7e" },
+    { id: "wood",      name: "Wood Panels",   cost: 1400, color: "#6a4a2a" },
+    { id: "kelp",      name: "Kelp Green",    cost: 1400, color: "#3a6a4a" },
+    { id: "starry",    name: "Starry Night",  cost: 3000, color: "#161636" },
+    { id: "backrooms", name: "Backrooms",     cost: 5000, color: "#c2b246" },
+  ];
+  var HOME_DECOR = [
+    { id: "rug",    name: "Woven Rug",       cost: 600 },
+    { id: "plant",  name: "Potted Kelp",     cost: 900 },
+    { id: "lamp",   name: "Lava Lamp",       cost: 1600 },
+    { id: "anchor", name: "Old Anchor",      cost: 2000 },
+    { id: "ship",   name: "Model Ship",      cost: 2800 },
+    { id: "books",  name: "Bookshelf",       cost: 2400 },
+    { id: "lantern",name: "Hanging Lantern", cost: 1200 },
+    { id: "window", name: "Porthole Window", cost: 3500 },
+  ];
+  var HOME_MUSIC = [
+    { id: "menu",      name: "Harbour Theme", cost: 0 },
+    { id: "coral",     name: "Coral Coast",   cost: 400 },
+    { id: "kelp",      name: "Kelp Forest",   cost: 400 },
+    { id: "arctic",    name: "Arctic Shelf",  cost: 600 },
+    { id: "trench",    name: "The Trench",    cost: 800 },
+    { id: "japan",     name: "Hidden Coast",  cost: 1200 },
+    { id: "sanctuary", name: "Starlight",     cost: 1500 },
+    { id: "backrooms", name: "Backrooms Hum", cost: 1500 },
+  ];
+  function wallById(id) { for (var i = 0; i < HOME_WALLS.length; i++) if (HOME_WALLS[i].id === id) return HOME_WALLS[i]; return HOME_WALLS[0]; }
+
+  function showHome() {
+    closeOverlay("modal"); closeOverlay("shop"); sellHud(false);
+    scene = "home"; homeTime = 0;
+    document.getElementById("home-ui").style.display = "flex";
+    if (window.AUDIO) AUDIO.playArea(state.home.music || "menu", false);
+  }
+  function exitHome() {
+    document.getElementById("home-ui").style.display = "none";
+    scene = "boat";
+    if (window.AUDIO) AUDIO.playMenu();
+    showBoat();
+  }
+
+  function renderHome() {
+    var h = state.home, floorY = H - 96;
+    var wall = wallById(h.wallpaper);
+    ctx.clearRect(0, 0, W, H);
+    // wall + pattern
+    ctx.fillStyle = wall.color; ctx.fillRect(0, 0, W, floorY);
+    ctx.save();
+    if (wall.id === "wood") {
+      ctx.fillStyle = "rgba(0,0,0,0.16)";
+      for (var wx = 0; wx < W; wx += 64) ctx.fillRect(wx, 0, 3, floorY);
+    } else if (wall.id === "starry") {
+      ctx.fillStyle = "#fff";
+      for (var s = 0; s < 50; s++) { if (Math.sin(homeTime * 0.5 + s) > 0.1) ctx.fillRect((s * 53) % W, (s * 37) % floorY, 2, 2); }
+    } else if (wall.id === "backrooms") {
+      ctx.fillStyle = "rgba(0,0,0,0.10)";
+      for (var bx = 0; bx < W; bx += 48) for (var by = 0; by < floorY; by += 48) ctx.strokeStyle = "rgba(120,108,40,0.5)", ctx.strokeRect(bx, by, 48, 48);
+    } else {
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      for (var px = 0; px < W; px += 40) ctx.fillRect(px, 0, 18, floorY);
+    }
+    ctx.restore();
+    // floor (wood planks)
+    ctx.fillStyle = "#5a3f24"; ctx.fillRect(0, floorY, W, H - floorY);
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    for (var fx = 0; fx < W; fx += 70) ctx.fillRect(fx, floorY, 2, H - floorY);
+    ctx.fillStyle = "rgba(255,255,255,0.06)"; ctx.fillRect(0, floorY, W, 3);
+
+    // ----- fish plaque (framed, on the wall, top-left) -----
+    var plX = 70, plY = 70;
+    ctx.fillStyle = "#3a2a16"; ctx.fillRect(plX - 8, plY - 8, 116, 96);
+    ctx.fillStyle = "#caa15a"; ctx.fillRect(plX - 4, plY - 4, 108, 88);
+    ctx.fillStyle = "#1a2733"; ctx.fillRect(plX, plY, 100, 80);
+    if (h.displayFish && D.FISH_BY_ID[h.displayFish]) {
+      var pf = D.FISH_BY_ID[h.displayFish];
+      var psh = !!state.shinyFound[h.displayFish];
+      SPRITES.draw(ctx, SPRITES.archetypeForShape(pf.shape), plX + 50, plY + 40, { color: pf.color, accent: pf.accent, shiny: psh, targetH: 54 });
+      ctx.fillStyle = "#ffe9b0"; ctx.font = "10px 'Segoe UI',sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(pf.name, plX + 50, plY + 74);
+    } else {
+      ctx.fillStyle = "#6a7a86"; ctx.font = "11px 'Segoe UI',sans-serif"; ctx.textAlign = "center";
+      ctx.fillText("Pick a fish", plX + 50, plY + 42);
+      ctx.fillText("for the plaque", plX + 50, plY + 56);
+    }
+
+    // ----- trophy rack (shelf top-right, beaten bosses) -----
+    var trX = W - 360, trY = 64;
+    ctx.fillStyle = "#3a2a16"; ctx.fillRect(trX, trY + 56, 320, 8);
+    var to = 0;
+    for (var bk in state.areaBossCaught) {
+      if (!state.areaBossCaught[bk]) continue;
+      var bd = D.FISH_BY_ID[bk]; if (!bd) continue;
+      SPRITES.draw(ctx, SPRITES.archetypeForShape(bd.shape), trX + 28 + to * 52, trY + 36, { color: bd.color, accent: bd.accent, targetH: 34 });
+      to++; if (to > 5) break;
+    }
+    if (state.krakenCaught) SPRITES.draw(ctx, "kraken", trX + 28 + to * 52, trY + 34, { color: "#7a1f3d", shiny: state.krakenShiny, targetH: 40 });
+    ctx.fillStyle = "#d8c9a8"; ctx.font = "11px 'Segoe UI',sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("🏆 Trophy Rack", trX, trY + 80);
+
+    // ----- owned decor -----
+    var d = h.decor || {};
+    if (d.rug) { ctx.fillStyle = "#8a3a4a"; ctx.fillRect(W / 2 - 120, floorY + 18, 240, 30); ctx.fillStyle = "#caa15a"; ctx.fillRect(W / 2 - 120, floorY + 26, 240, 4); }
+    if (d.books) { ctx.fillStyle = "#4a3420"; ctx.fillRect(60, floorY - 96, 70, 96); for (var bb = 0; bb < 4; bb++) { ctx.fillStyle = ["#b85","#5a8","#58b","#b58"][bb]; ctx.fillRect(64, floorY - 92 + bb * 22, 62, 18); } }
+    if (d.plant) { ctx.fillStyle = "#7a4a2a"; ctx.fillRect(160, floorY - 26, 26, 26); ctx.fillStyle = "#3fa34d"; for (var pl = 0; pl < 5; pl++) ctx.fillRect(164 + pl * 4, floorY - 26 - (10 + (pl % 2) * 14), 4, 28); }
+    if (d.lamp) { ctx.fillStyle = "#2a2a3a"; ctx.fillRect(W - 120, floorY - 60, 16, 60); var lc = "hsl(" + ((homeTime * 40) % 360 | 0) + ",70%,60%)"; ctx.fillStyle = "#ffd24a"; ctx.beginPath(); ctx.ellipse(W - 112, floorY - 64, 16, 26, 0, 0, 7); ctx.fill(); }
+    if (d.anchor) { ctx.fillStyle = "#9aa6b0"; ctx.fillRect(220, floorY - 50, 6, 50); ctx.fillRect(206, floorY - 44, 34, 6); ctx.beginPath(); ctx.arc(223, floorY - 4, 16, 0, Math.PI); ctx.lineWidth = 6; ctx.strokeStyle = "#9aa6b0"; ctx.stroke(); }
+    if (d.ship) { ctx.fillStyle = "#6a4a2a"; ctx.fillRect(W - 220, floorY - 30, 70, 22); ctx.fillStyle = "#e8e0c8"; ctx.fillRect(W - 190, floorY - 70, 4, 42); ctx.fillStyle = "#d8d0b8"; ctx.beginPath(); ctx.moveTo(W - 186, floorY - 66); ctx.lineTo(W - 160, floorY - 40); ctx.lineTo(W - 186, floorY - 40); ctx.fill(); }
+    if (d.lantern) { ctx.fillStyle = "#3a2a16"; ctx.fillRect(W / 2 - 2, 0, 4, 40); ctx.fillStyle = "#ffd24a"; ctx.globalAlpha = 0.8; ctx.beginPath(); ctx.arc(W / 2, 48, 12, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+    if (d.window) { ctx.fillStyle = "#2a3a4a"; ctx.beginPath(); ctx.arc(W - 90, 90, 46, 0, 7); ctx.fill(); ctx.fillStyle = "#5fb8e0"; ctx.beginPath(); ctx.arc(W - 90, 90, 38, 0, 7); ctx.fill(); ctx.fillStyle = "#9ad8f0"; ctx.beginPath(); ctx.arc(W - 78, 78, 12, 0, 7); ctx.fill(); }
+
+    // ----- chair + your diver sitting on it -----
+    var cx = W / 2, cy = floorY - 6;
+    ctx.fillStyle = "#5a3a1f";
+    ctx.fillRect(cx - 26, cy - 40, 52, 10);   // seat
+    ctx.fillRect(cx - 26, cy - 70, 8, 40);    // back-left post
+    ctx.fillRect(cx + 18, cy - 70, 8, 40);    // back-right post
+    ctx.fillRect(cx - 18, cy - 66, 36, 6);    // back rail
+    ctx.fillRect(cx - 24, cy - 30, 6, 30); ctx.fillRect(cx + 18, cy - 30, 6, 30); // legs
+    drawDiverPixel(ctx, cx, cy - 56, 4, 1, state.diver, 1.6 + Math.sin(homeTime * 1.5) * 0.2);
+
+    // captain card
+    ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(plX - 8, plY + 96, 116, 40);
+    ctx.fillStyle = "#ffe9b0"; ctx.font = "bold 12px 'Segoe UI',sans-serif"; ctx.textAlign = "left";
+    ctx.fillText("🤿 " + (state.username || "Diver"), plX - 2, plY + 114);
+    ctx.fillStyle = "#cfe6f2"; ctx.font = "10px 'Segoe UI',sans-serif";
+    ctx.fillText(Object.keys(state.discovered).length + " species · ♪ " + (musicName(h.music)), plX - 2, plY + 128);
+
+    // title
+    ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.font = "bold 16px 'Segoe UI',sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("🏠 " + (state.username || "Diver") + "'s Hut", W / 2, 28);
+  }
+  function musicName(id) { for (var i = 0; i < HOME_MUSIC.length; i++) if (HOME_MUSIC[i].id === id) return HOME_MUSIC[i].name; return "—"; }
+
+  var homeShopTab = "decor";
+  function showHomeShop() {
+    var ov = overlay("shop");
+    var h = state.home;
+    function tb(id, label) { return '<button class="tab' + (homeShopTab === id ? ' active' : '') + '" data-htab="' + id + '">' + label + '</button>'; }
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🛍️ Hut Store</h2>'
+      + '<div class="money-line">💰 $' + fmt(state.money) + '</div>'
+      + '<button class="close" data-close="shop">✕</button></div>'
+      + '<div class="shop-tabs">' + tb("decor", "Decor") + tb("wall", "Wallpaper") + tb("music", "Music") + '</div>';
+    html += '<div class="home-store">';
+    if (homeShopTab === "decor") {
+      HOME_DECOR.forEach(function (it) {
+        var own = !!(h.decor && h.decor[it.id]);
+        html += '<div class="shop-item"><div class="si-info"><b>' + it.name + '</b>' + (own ? ' <span class="lvl">✓</span>' : '') + '</div>'
+          + '<div class="si-buy">' + (own ? '<span class="maxed">Placed</span>'
+            : '<button data-hbuy="decor:' + it.id + '" ' + (state.money < it.cost ? 'disabled' : '') + '>$' + fmt(it.cost) + '</button>') + '</div></div>';
+      });
+    } else if (homeShopTab === "wall") {
+      HOME_WALLS.forEach(function (it) {
+        var own = it.cost === 0 || (h.wallsOwned && h.wallsOwned[it.id]);
+        var sel = h.wallpaper === it.id;
+        html += '<div class="shop-item"><div class="si-info"><b>' + it.name + '</b> <span class="swatch" style="background:' + it.color + '"></span></div>'
+          + '<div class="si-buy">' + (sel ? '<span class="maxed">Active</span>'
+            : own ? '<button data-hsel="wall:' + it.id + '">Use</button>'
+            : '<button data-hbuy="wall:' + it.id + '" ' + (state.money < it.cost ? 'disabled' : '') + '>$' + fmt(it.cost) + '</button>') + '</div></div>';
+      });
+    } else {
+      HOME_MUSIC.forEach(function (it) {
+        var own = it.cost === 0 || (h.musicOwned && h.musicOwned[it.id]);
+        var sel = h.music === it.id;
+        html += '<div class="shop-item"><div class="si-info"><b>🎵 ' + it.name + '</b></div>'
+          + '<div class="si-buy">' + (sel ? '<span class="maxed">Playing</span>'
+            : own ? '<button data-hsel="music:' + it.id + '">Play</button>'
+            : '<button data-hbuy="music:' + it.id + '" ' + (state.money < it.cost ? 'disabled' : '') + '>$' + fmt(it.cost) + '</button>') + '</div></div>';
+      });
+    }
+    html += '</div></div>';
+    ov.innerHTML = html; ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
+    ov.querySelectorAll(".tab").forEach(function (t) { t.onclick = function () { homeShopTab = t.getAttribute("data-htab"); showHomeShop(); }; });
+    ov.querySelectorAll("[data-hbuy]").forEach(function (b) { b.onclick = function () { homeBuy(b.getAttribute("data-hbuy")); }; });
+    ov.querySelectorAll("[data-hsel]").forEach(function (b) { b.onclick = function () { homeSelect(b.getAttribute("data-hsel")); }; });
+  }
+  function homeBuy(spec) {
+    var p = spec.split(":"), kind = p[0], id = p[1], h = state.home;
+    var cat = kind === "decor" ? HOME_DECOR : kind === "wall" ? HOME_WALLS : HOME_MUSIC;
+    var it = null; for (var i = 0; i < cat.length; i++) if (cat[i].id === id) it = cat[i];
+    if (!it || state.money < it.cost) return;
+    state.money -= it.cost;
+    if (kind === "decor") { h.decor = h.decor || {}; h.decor[id] = true; }
+    else if (kind === "wall") { h.wallsOwned = h.wallsOwned || {}; h.wallsOwned[id] = true; h.wallpaper = id; }
+    else { h.musicOwned = h.musicOwned || {}; h.musicOwned[id] = true; h.music = id; if (window.AUDIO) AUDIO.playArea(id, false); }
+    saveGame(); toast(it.name + " purchased!", "good", 1500); showHomeShop();
+  }
+  function homeSelect(spec) {
+    var p = spec.split(":"), kind = p[0], id = p[1], h = state.home;
+    if (kind === "wall") h.wallpaper = id;
+    else if (kind === "music") { h.music = id; if (window.AUDIO) AUDIO.playArea(id, false); }
+    saveGame(); showHomeShop();
+  }
+  function showHomePlaque() {
+    var ov = overlay("shop");
+    var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🐟 Display Plaque</h2>'
+      + '<button class="close" data-close="shop">✕</button></div>'
+      + '<p class="tiny">Pick any fish you\'ve discovered to mount on your wall.</p><div class="coll-grid">';
+    html += '<div class="coll-card found" data-plaque="__none"><div class="coll-name">None</div></div>';
+    D.FISH.forEach(function (f) {
+      if (!state.discovered[f.id]) return;
+      var sh = !!state.shinyFound[f.id];
+      html += '<div class="coll-card found ' + (state.home.displayFish === f.id ? 'required' : '') + '" data-plaque="' + f.id + '">'
+        + '<div class="coll-sprite" style="background-image:url(' + collSprite(f, true, sh, false) + ')"></div>'
+        + '<div class="coll-name">' + f.name + '</div></div>';
+    });
+    html += '</div></div>';
+    ov.innerHTML = html; ov.classList.add("open");
+    ov.querySelector('[data-close="shop"]').onclick = function () { closeOverlay("shop"); };
+    ov.querySelectorAll("[data-plaque]").forEach(function (c) {
+      c.onclick = function () {
+        var id = c.getAttribute("data-plaque");
+        state.home.displayFish = id === "__none" ? null : id;
+        saveGame(); closeOverlay("shop");
+      };
+    });
   }
 
   // ----- Collection (now opened as the "List" view from the Aquarium) -----
@@ -3354,6 +3588,12 @@
       aqua.diver.x = W / 2; aqua.diver.y = H / 2;
       document.getElementById("aqua-swim").textContent = aqua.diverActive ? "🚪 Exit" : "🤿 Swim";
     });
+    // diver's hut controls
+    bind("home-shop", function () { homeShopTab = "decor"; showHomeShop(); });
+    bind("home-plaque", showHomePlaque);
+    bind("home-suit", function () { diverPreviewSuit = null; showDiverShop(); });
+    bind("home-gear", showInventory);
+    bind("home-close", exitHome);
     // cozy UI click sounds
     document.addEventListener("click", function (e) {
       var el = e.target;
@@ -3390,6 +3630,8 @@
       aquarium: function () { showAquarium(); },
       aquaFrame: function (dt) { if (scene === "aquarium" && aqua) { updateAquarium(dt || 0.05); renderAquarium(); } },
       aquaNav: function (d) { aquaNav(d); },
+      home: function () { showHome(); },
+      homeFrame: function () { if (scene === "home") { homeTime += 0.05; renderHome(); } },
       forceShinyNext: function () { state.charms.shiny = 999; },
       fishKinds: function () { var o = { fish: 0, bird: 0, creature: 0, boss: 0 }; if (run) run.fish.forEach(function (f) { if (f.isBoss) o.boss++; else if (f.def.bird) o.bird++; else if (f.def.creature) o.creature++; else o.fish++; }); return o; },
     },
