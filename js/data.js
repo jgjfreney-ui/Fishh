@@ -116,7 +116,7 @@
       sky: { top: "#fff6d8", bottom: "#cfe0ff" },
     },
     ashen: {
-      id: "ashen", name: "Ashen Hollow", tint: "#e0552a", requireItem: "heatsuit", smoke: true,
+      id: "ashen", name: "Ashen Caldera", tint: "#e0552a", requireItem: "heatsuit", smoke: true,
       blurb: "A drowned volcanic vent — black water lit by lava, choked with drifting ash and smoke. You'll cook without a Heat Suit.",
       maxDepth: 700, worldWidth: 2600, topColor: "#3a2218", deepColor: "#0a0402",
       shinyBonus: 0.08, unlocked: false, cost: 200000,

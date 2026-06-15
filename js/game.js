@@ -2059,7 +2059,7 @@
     }
   }
   // drifting puffs that obscure whatever's inside them
-  // dark ash for Ashen Hollow; pale icy fog for the Arctic
+  // dark ash for the Ashen Caldera; pale icy fog for the Arctic
   function drawSmoke() {
     if (!run.smoke || !run.smoke.length) return;
     var fog = run.loc && run.loc.fog;
@@ -3034,7 +3034,7 @@
     }
     var hasHeat = !!state.items.heatsuit;
     html += '<div class="shop-item"><div class="si-info"><b>🟥 Heat Suit</b>' + (hasHeat ? ' <span class="lvl">✓ Owned</span>' : '')
-      + '<p>A reflective lava-proof suit — required to dive the searing <b>Ashen Hollow</b> without cooking.</p></div>'
+      + '<p>A reflective lava-proof suit — required to dive the searing <b>Ashen Caldera</b> without cooking.</p></div>'
       + '<div class="si-buy">' + (hasHeat ? '<span class="maxed">✓</span>'
         : '<button data-buytool="heatsuit:60000" ' + (state.money < 60000 ? 'disabled' : '') + '>$60,000</button>') + '</div></div>';
     var hasCold = !!state.items.coldsuit;
