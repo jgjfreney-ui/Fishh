@@ -516,20 +516,19 @@
     for (var i = 0; i < D.REQUIRED_FISH.length; i++) if (state.discovered[D.REQUIRED_FISH[i]]) n++;
     return n;
   }
-  // TRUE 100% — every catalogued fish/creature/bird + every secret in the SEVEN
-  // CORE areas. The bonus zones (Sanctuary, Cloud, Gloom, Boneyard, Swamp,
-  // Grove, Backrooms, Hidden Coast, Hollow Deep) are extras, so the Kraken
-  // stays reachable without hunting down every hidden corner of the map.
-  var CORE_AREAS = { coral: 1, river: 1, kelp: 1, arctic: 1, ancient: 1, opensea: 1, trench: 1 };
+  // TRUE 100% — EVERYTHING: every fish/creature/bird and every secret across
+  // every dive site, INCLUDING the hidden secret locations and all new content.
+  // (The Sanctuary itself is excluded only because it is unlocked AFTER the
+  // Kraken; you can't be asked to finish it first.)
   function trueComplete() {
     for (var i = 0; i < D.COMPLETION_FISH.length; i++) {
       var cf = D.FISH_BY_ID[D.COMPLETION_FISH[i]];
-      if (!CORE_AREAS[cf.area]) continue;
+      if (cf.area === "sanctuary") continue;
       if (!state.discovered[cf.id]) return false;
     }
     for (var j = 0; j < D.FISH.length; j++) {
       var f = D.FISH[j];
-      if (f.secret && CORE_AREAS[f.area] && !state.discovered[f.id]) return false;
+      if (f.secret && f.area !== "sanctuary" && !state.discovered[f.id]) return false;
     }
     return true;
   }
@@ -2471,7 +2470,7 @@
     // GEAR (everything except the net, which lives under Tools)
     html += '<div class="tab-body' + bodyClass("gear") + '" data-body="gear">';
     for (var key in D.UPGRADES) {
-      if (key === "scoop") continue;
+      if (key === "scoop" || key === "trap") continue; // these live in the Tools tab
       html += upgradeRow(key);
     }
     html += '</div>';

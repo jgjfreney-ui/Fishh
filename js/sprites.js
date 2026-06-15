@@ -738,15 +738,26 @@
       "...A...A........A...A.....",
     ],
     crab: [
-      "..A.........A..",
-      ".A.b.......b.A.",
-      "A.b.bBBBBB.b.A.",
-      ".AbBBBBBBBBBbA.",
-      "AAbBEPBBBEPBbAA",
-      ".AbBBBBBBBBBbA.",
-      "A.bBBBBBBBBBb.A",
-      ".A.bBBBBBBBb.A.",
-      "..b.b.b.b.b.b..",
+      "AA..........AA",
+      "AAAb......bAAA",
+      ".AAb......bAA.",
+      "...bbBBBBbb...",
+      "..bBBBBBBBBb..",
+      ".bBEPBBBBEPBb.",
+      "bBBBBBBBBBBBBb",
+      "bBBBBBBBBBBBBb",
+      "b.b.b.bb.b.b.b",
+      ".b.b......b.b.",
+    ],
+    hermitcrab: [
+      ".......bbBBBb.",
+      "....bBBLLLLBBb",
+      "AAAbBLbbbbLBBb",
+      ".AbBBLbBBbLBBb",
+      "AAAbBLbbbbLBBb",
+      ".AbBBBLLLLBBb.",
+      "..bbBbBBBb....",
+      ".b.b.b.b......",
     ],
     lobster: [
       "A.............A",
@@ -936,6 +947,7 @@
     kaiju: "kaiju", wallpaperfish: "wallpaperfish", cctv: "cctv", clam: "clam",
     clownfish: "clownfish", codfish: "codfish", puffer: "puffer", perch: "perch",
     mackerel: "mackerel", sardine: "sardine", guppy: "guppy", trout: "trout", goby: "goby", snail: "snail",
+    hermitcrab: "hermitcrab",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
