@@ -237,7 +237,7 @@
     opensea:   { plants: ["rock", "coral", "rock"], plantColors: ["#2a6a9a", "#3a8aaa", "#4a6a8a"], rock: "#1a3a5a", floor: "#123048" },
     cave:      { plants: ["crystal", "vent", "rock"], plantColors: ["#8affc0", "#7a5a9a", "#4a3a5a"], rock: "#1a151f", floor: "#0a0710" },
     cloud:     { plants: ["coral", "coral", "rock"], plantColors: ["#bfe0c0", "#a0d8e8", "#cfeaff"], rock: "#9fc0d8", floor: "#7fae8a" },
-    forest:    { plants: ["kelp", "kelp", "coral"], plantColors: ["#3f8f3d", "#6cae4a", "#2f7f3f", "#8a9a4a"], rock: "#3a4a2a", floor: "#2a3a18" },
+    forest:    { plants: ["coral", "rock", "coral"], plantColors: ["#3f8f3d", "#5a7a32", "#2f7f3f", "#7a6a3a"], rock: "#3a4a2a", floor: "#2a3a18" },
     swamp:     { plants: ["kelp", "anemone", "rock"], plantColors: ["#5a6a2a", "#7a8a3a", "#3a4a1a"], rock: "#3a3a22", floor: "#2a2a12" },
     boneyard:  { plants: ["rock", "crystal", "rock"], plantColors: ["#d8d2c0", "#bcb6a4", "#8a8474"], rock: "#2a2e34", floor: "#14181e" },
     backrooms: { plants: ["rock", "rock", "rock"], plantColors: ["#c8b84a", "#b8a838", "#9a8a28"], rock: "#a89838", floor: "#8a7a28" },
@@ -273,7 +273,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire", mountain: "spire", olympus: "bigcrystal", flooded: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "tree", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire", mountain: "spire", olympus: "bigcrystal", flooded: "spire" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -344,6 +344,23 @@
         ctx.closePath(); ctx.fill();
         ctx.fillStyle = mix(fl.color, "#ffffff", 0.4);
         ctx.fillRect(Math.round(x - 3), Math.round(floorScreenY - fl.h + 10), 4, Math.round(fl.h - 14));
+      } else if (fl.type === "tree") {
+        // submerged old-growth tree: brown trunk + leafy green canopy that sways
+        ctx.globalAlpha = 0.6;
+        var topY = floorScreenY - fl.h, sway = Math.sin(run.time * 0.5 + fl.sway) * 8;
+        ctx.fillStyle = mix(fl.color, "#2a1c10", 0.7); // trunk
+        var tw = 10 * fl.w;
+        ctx.fillRect(Math.round(x - tw / 2), Math.round(topY + fl.h * 0.32), Math.round(tw), Math.round(fl.h * 0.68));
+        // a couple of boughs
+        ctx.fillRect(Math.round(x - 22 * fl.w), Math.round(topY + fl.h * 0.4), Math.round(22 * fl.w), 5);
+        ctx.fillRect(Math.round(x + sway), Math.round(topY + fl.h * 0.5), Math.round(20 * fl.w), 5);
+        // leafy canopy — overlapping green blobs
+        ctx.fillStyle = fl.color;
+        for (var cb = 0; cb < 6; cb++) {
+          var bx = x + sway + Math.sin(cb * 1.7 + fl.sway) * 30 * fl.w;
+          var by = topY + (cb % 3) * 16 + Math.cos(cb * 1.3) * 8;
+          ctx.beginPath(); ctx.arc(bx, by, 24 * fl.w, 0, 7); ctx.fill();
+        }
       } else { // spire
         ctx.globalAlpha = 0.6;
         ctx.beginPath();

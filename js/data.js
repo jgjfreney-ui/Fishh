@@ -457,6 +457,10 @@
     { id: "canopyray",  name: "Canopy Ray",   area: "forest", rarity: "rare",     size: 4, value: 540, minDepth: 120, color: "#5a8a4a", shape: "ray" },
     { id: "willoweel",  name: "Willow Eel",   area: "forest", rarity: "rare",     size: 3, value: 480, minDepth: 180, color: "#3a6a3a", shape: "eel" },
     { id: "ancientcarp",name: "Ancient Carp", area: "forest", rarity: "epic",     size: 5, value: 1500,minDepth: 300, color: "#8a9a4a", shape: "fish" },
+    { id: "dappletrout",name: "Dapple Trout", area: "forest", rarity: "common",   size: 2, value: 120, minDepth: 20,  color: "#7aa84a", accent: "#d8e0a0", shape: "trout" },
+    { id: "rootperch",  name: "Root Perch",   area: "forest", rarity: "uncommon", size: 2, value: 200, minDepth: 60,  color: "#5a7a3a", accent: "#caa15a", shape: "perch" },
+    { id: "bramblemack",name: "Bramble Mackerel", area: "forest", rarity: "uncommon", size: 2, value: 260, minDepth: 100, color: "#4a8a5a", accent: "#bfe0a0", shape: "mackerel" },
+    { id: "gladecatfish", name: "Glade Catfish", area: "forest", rarity: "rare",   size: 3, value: 620, minDepth: 180, color: "#6a5a3a", accent: "#9fd05a", shape: "catfish" },
     { id: "grovebeetle",name: "Grove Beetle", area: "forest", creature: true, rarity: "common", size: 1, value: 90, color: "#4a6a2a", accent: "#9fd05a", shape: "insect" },
     { id: "grovewarden",name: "Grove Warden", area: "forest", areaBoss: true, rarity: "mythic", size: 12, value: 14000, minDepth: 200, color: "#3a5a2a", accent: "#9fe0a0", shape: "mosasaur", hp: 4, reward: "" },
 

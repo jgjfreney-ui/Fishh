@@ -28,11 +28,13 @@
   function triad(tonic, deg) {
     if (deg === "IV") return [tonic + 5, tonic + 9, tonic + 12];
     if (deg === "V") return [tonic + 7, tonic + 11, tonic + 14];
+    if (deg === "vi") return [tonic + 9, tonic + 12, tonic + 16]; // relative minor
     return [tonic, tonic + 4, tonic + 7]; // I
   }
   function bassRoot(tonic, deg) {
     if (deg === "IV") return tonic - 7;
     if (deg === "V") return tonic - 5;
+    if (deg === "vi") return tonic - 3;
     return tonic - 12;
   }
 
@@ -56,7 +58,7 @@
     cloud:     { tonic: 72, bpm: 120, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
     // Gloom Cavern — sparse, low, mysterious but still cosy (cave-pentatonic, not scary)
     cave:      { tonic: 53, bpm: 88, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
-    forest:    { tonic: 62, bpm: 112, density: 0.55, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
+    forest:    { tonic: 57, bpm: 80, density: 0.36, lead: "triangle", bells: true, waves: false, prog: ["I", "vi", "IV", "V"], pent: PENTA }, // mellow sun-dappled under-forest
     swamp:     { tonic: 55, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     boneyard:  { tonic: 50, bpm: 84, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     backrooms: { tonic: 58, bpm: 100, density: 0.5, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "IV"], heavyBass: true },
