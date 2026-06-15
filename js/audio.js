@@ -55,6 +55,7 @@
     backrooms: { tonic: 58, bpm: 100, density: 0.5, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "IV"], heavyBass: true },
     japan:     { tonic: 64, bpm: 104, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
     secretcave:{ tonic: 55, bpm: 86, density: 0.38, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    oilrig:    { tonic: 48, bpm: 110, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], heavyBass: true },
     // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power
     // chords, pounding bass). Epic, not eerie.
     boss:      { tonic: 45, bpm: 156, density: 0.78, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, power: true, heavyBass: true },
@@ -204,6 +205,7 @@
     backrooms: { fn: ambShimmer, min: 4000, max: 9000 },
     japan:  { fn: ambWhale,   min: 6000, max: 13000 },
     secretcave: { fn: ambBubble, min: 2500, max: 6500 },
+    oilrig: { fn: ambBubble, min: 2500, max: 6000 },
   };
   function scheduleAmb() {
     var a = AMB[mode]; if (!a) return;

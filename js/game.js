@@ -21,11 +21,11 @@
       created: Date.now(),
       username: "Diver",
       money: 0,
-      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0 },
+      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
                forest: false, swamp: false, boneyard: false, backrooms: false, japan: false, secretcave: false,
-               cave: false, cloud: false, sanctuary: false },
+               oilrig: false, cave: false, cloud: false, sanctuary: false },
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -98,6 +98,7 @@
   function oxygenMul() { return up("suit"); }
   function lightRadius() { return up("light"); }
   function netSize() { return up("scoop"); }
+  function trapSize() { return up("trap"); } // Deploy Net coverage radius (0 = none)
 
   function rarityCharmTilt() { return state.charms.rarity * D.CHARMS.rarity.perStack; }
   function shinyChance(area) {
@@ -147,13 +148,34 @@
       night: !!state.nextNight,   // this dive's time of day
       sonarTimer: 0,
       secretShown: {},            // secretId -> already popped in this dive
+      trap: { active: false, x: 0, y: 0, r: 0 }, // deployed net
     };
     placeWrecks(loc);
+    placeCages(loc);
     generateDecor(loc);
     // initial population
     for (var i = 0; i < 14; i++) spawnFish(true);
     if (!loc.birdPool && !loc.creaturePool) for (var ci = 0; ci < 4; ci++) spawnCreature(true);
     state.stats.dives++;
+  }
+
+  // Locked cages (smashed open with the Sledgehammer). In the Open Sea, a
+  // special cage sits at the bottom-right holding the Cage Key.
+  function placeCages(loc) {
+    run.cages = [];
+    run.oilrig = null;
+    if (loc.birdPool || loc.creaturePool || loc.airArea) return;
+    var floor = loc.maxDepth * PXPM;
+    var n = 2 + (Math.random() * 2 | 0);
+    for (var i = 0; i < n; i++) {
+      run.cages.push({ x: 200 + Math.random() * (loc.worldWidth - 400), y: floor - 18 - Math.random() * 40, opened: false, hasKey: false });
+    }
+    if (loc.id === "opensea") {
+      // the key cage, bottom-right corner
+      if (!state.items.cagekey) run.cages.push({ x: loc.worldWidth - 120, y: floor - 22, opened: false, hasKey: true });
+      // the derelict oil rig rises from the sea floor
+      run.oilrig = { x: loc.worldWidth * 0.5, y: floor - 30 };
+    }
   }
 
   function spawnCreature(initial) {
@@ -195,6 +217,7 @@
     backrooms: { plants: ["rock", "rock", "rock"], plantColors: ["#c8b84a", "#b8a838", "#9a8a28"], rock: "#a89838", floor: "#8a7a28" },
     japan:     { plants: ["coral", "kelp", "coral"], plantColors: ["#e0556a", "#ff9a4a", "#5cc46a", "#ffd6e0"], rock: "#3a4a6a", floor: "#23304a" },
     secretcave:{ plants: ["crystal", "vent", "rock"], plantColors: ["#9fffd0", "#8a7ad0", "#5a4a6a"], rock: "#141019", floor: "#08060c" },
+    oilrig:    { plants: ["vent", "rock", "rock"], plantColors: ["#caa14a", "#6a6258", "#3a3320"], rock: "#2a2418", floor: "#100c06" },
   };
 
   function generateDecor(loc) {
@@ -217,7 +240,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -587,7 +610,7 @@
     { id: "bossAll",  name: "Apex Predator",    desc: "Defeat every area boss",  check: function () { return bossesBeaten() >= Object.keys(AREA_BOSS_BY_AREA).length; } },
     { id: "secret1",  name: "Hidden Depths",    desc: "Catch a secret fish",     check: function () { for (var i = 0; i < D.FISH.length; i++) { var f = D.FISH[i]; if (f.secret && state.discovered[f.id]) return true; } return false; } },
     { id: "deep1000", name: "Into the Abyss",   desc: "Dive to 1000m deep",      check: function () { return state.stats.maxDepth >= 1000; } },
-    { id: "backrooms",name: "You Shouldn't Be Here", desc: "Find the Backrooms",  check: function () { return !!state.areas.backrooms; } },
+    { id: "earn5m",   name: "Sea Tycoon",       desc: "Earn $5,000,000 in total",check: function () { return state.stats.earned >= 5000000; } },
     { id: "kraken",   name: "The Legend",       desc: "Catch the Kraken",        check: function () { return state.krakenCaught; } },
   ];
   function checkAchievements() {
@@ -877,6 +900,15 @@
     }
     var cr = mRange;
 
+    // --- Deploy Net: any fish inside the dropped net is bagged (ignores hold) ---
+    if (run.trap && run.trap.active && run.trap.r > 0) {
+      for (var tpi = run.fish.length - 1; tpi >= 0; tpi--) {
+        var tpf = run.fish[tpi];
+        if (tpf.isBoss) continue;
+        if (Math.hypot(tpf.x - run.trap.x, tpf.y - run.trap.y) < run.trap.r) catchFish(tpf, true);
+      }
+    }
+
     // --- sea-floor creatures (caught with a Net; magnet ignores them) ---
     // (skipped in the Cloud Reaches / Gloom Cavern, where creatures & birds
     //  instead swim freely and are magnet-caught like fish via spawnFish)
@@ -888,11 +920,17 @@
     for (var ci = run.creatures.length - 1; ci >= 0; ci--) {
       var c = run.creatures[ci];
       c.phase += dt * 5;
-      c.x += c.vx * dt;
+      if (!c.def.tool) c.x += c.vx * dt;   // clams stay put
       c.y = run.floorY - 8 + Math.sin(c.phase) * 1.2;
       if (c.x < -60 || c.x > loc.worldWidth + 60) { run.creatures.splice(ci, 1); continue; }
       var cdx = diver.x - c.x, cdy = diver.y - c.y, cdist = Math.hypot(cdx, cdy);
-      if (hasNet) {
+      if (c.def.tool === "shovel") {            // clams: prised open with the Shovel
+        if (state.items.shovel) {
+          if (cdist < 55 && catchCreature(c)) { startNetFx(c, 55); if (c.def.dropsPearl) dropPearl(c); run.creatures.splice(ci, 1); }
+        } else if (cdist < 60 && run.time - (run.netHint || -99) > 12) {
+          run.netHint = run.time; toast("Buy a ⛏️ Shovel (Shop → Tools) to pry open clams!", "bad", 2400);
+        }
+      } else if (hasNet) {
         if (cdist < netR && catchCreature(c)) { startNetFx(c, netR); run.creatures.splice(ci, 1); }
       } else if (cdist < 60 && run.time - (run.netHint || -99) > 12) {
         run.netHint = run.time;
@@ -958,6 +996,46 @@
       tr.phase += dt * 3;
       var tdx = tr.x - diver.x, tdy = tr.y - diver.y;
       if (Math.hypot(tdx, tdy) < cr * 0.8) { collectTreasure(tr); run.treasures.splice(ti, 1); }
+    }
+
+    // --- Cages (smashed with the Sledgehammer) ---
+    if (run.cages) {
+      for (var cgi = 0; cgi < run.cages.length; cgi++) {
+        var cg = run.cages[cgi];
+        if (cg.opened) continue;
+        if (Math.hypot(cg.x - diver.x, cg.y - diver.y) < 46) {
+          if (state.items.sledgehammer) {
+            cg.opened = true;
+            if (window.AUDIO) AUDIO.rumble();
+            // burst of treasure
+            for (var bt = 0; bt < 3 + (Math.random() * 3 | 0); bt++) {
+              var pdef = D.TREASURES[(Math.random() * 7) | 0]; // common-ish loot
+              run.treasures.push({ def: pdef, x: cg.x + (Math.random() - 0.5) * 40, y: cg.y - 14 - Math.random() * 24, phase: Math.random() * 6 });
+            }
+            if (cg.hasKey && !state.items.cagekey) {
+              state.items.cagekey = true; saveGame();
+              run.floaters.push({ x: cg.x, y: cg.y - 24, text: "🔑 Cage Key!", color: "#ffe14d", life: 2.4 });
+              toast("🔑 You pried a strange KEY from the cage. What does it open?", "epic", 4000);
+            } else {
+              toast("🔨 Cage smashed — treasure spills out!", "good", 1600);
+            }
+          } else if (run.time - (run.cageHint || -99) > 8) {
+            run.cageHint = run.time;
+            toast("A locked cage! Buy a 🔨 Sledgehammer (Shop → Tools) to crack it open.", "bad", 2600);
+          }
+        }
+      }
+    }
+    // --- The Oil Rig (Open Sea): approach with the Cage Key to open the way ---
+    if (run.oilrig && !state.areas.oilrig) {
+      if (Math.hypot(run.oilrig.x - diver.x, run.oilrig.y - diver.y) < 90) {
+        if (state.items.cagekey) {
+          unlockSecretArea("oilrig", "🔑 The key fits a hatch in the rig — it grinds open onto a black sea of oil. A NEW DIVE SITE awaits. (Now in Change Area.)");
+        } else if (run.time - (run.rigHint || -99) > 8) {
+          run.rigHint = run.time;
+          toast("A sealed hatch on the rig... it needs some kind of key.", "bad", 2600);
+        }
+      }
     }
 
     // --- Sonar Radar (orca drop): ping hot/cold toward the nearest wreck ---
@@ -1028,11 +1106,11 @@
   // ---------------------------------------------------------------------
   //  Catch / collect
   // ---------------------------------------------------------------------
-  function catchFish(f) {
+  function catchFish(f, ignoreCap) {
     var def = f.def;
     // Shiny Pocket lets shinies through even when the hold is full
     var pocketed = f.shiny && state.items.shinyPocket;
-    if (run.bagUsed + def.size > inventoryCap() && !pocketed) {
+    if (!ignoreCap && run.bagUsed + def.size > inventoryCap() && !pocketed) {
       if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1400); }
       f.fleeing = 1.0; // push it away so the magnet doesn't keep grabbing
       return;
@@ -1128,6 +1206,19 @@
     } else {
       toast("HIT! " + boss.hp + " more to go! 🔱", "epic", 1400);
     }
+  }
+
+  var CLAM_PEARL = null;
+  function dropPearl(c) {
+    if (Math.random() > 0.55) return; // not every clam has one
+    if (!CLAM_PEARL) { for (var i = 0; i < D.TREASURES.length; i++) if (D.TREASURES[i].id === "clampearl") CLAM_PEARL = D.TREASURES[i]; }
+    if (!CLAM_PEARL) return;
+    var mult = itemOn("necklace") ? 2 : 1;
+    run.bagTreasure.push({ id: CLAM_PEARL.id, value: CLAM_PEARL.value * mult, name: CLAM_PEARL.name, color: CLAM_PEARL.color });
+    state.treasures[CLAM_PEARL.id] = (state.treasures[CLAM_PEARL.id] || 0) + 1;
+    run.floaters.push({ x: c.x, y: c.y - 16, text: "✦ Pearl!", color: "#fff0f6", life: 1.8 });
+    toast("A pearl inside! 🦪✨", "shiny", 1800);
+    saveGame();
   }
 
   function catchAreaBoss(boss) {
@@ -1246,6 +1337,8 @@
 
     // --- scene objects ---
     for (var i = 0; i < run.wrecks.length; i++) drawWreck(run.wrecks[i]);
+    drawCages();
+    drawOilRig();
     drawCreatures();
     for (var t = 0; t < run.treasures.length; t++) drawTreasure(run.treasures[t]);
     for (var f = 0; f < run.fish.length; f++) drawFishEntity(run.fish[f]);
@@ -1253,6 +1346,7 @@
     drawDiver();
     drawHarpoons();
     drawNetFx();
+    drawTrap();
 
     // --- volumetric lighting / depth darkness ---
     drawLighting(loc, darkness);
@@ -1472,6 +1566,57 @@
       var wy = surfaceY + Math.sin((x + cam.x) * 0.05 + run.time * 1.6) * 2;
       ctx.fillRect(x, wy - 1, 6, 2);
     }
+    ctx.restore();
+  }
+
+  function drawCages() {
+    if (!run.cages) return;
+    for (var i = 0; i < run.cages.length; i++) {
+      var cg = run.cages[i]; if (cg.opened) continue;
+      var x = cg.x - cam.x, y = cg.y - cam.y;
+      if (x < -50 || x > W + 50 || y < -50 || y > H + 50) continue;
+      ctx.fillStyle = "#6a6258"; ctx.fillRect(x - 18, y - 24, 36, 28);     // frame
+      ctx.fillStyle = "#3a342c"; ctx.fillRect(x - 14, y - 20, 28, 22);     // dark interior
+      ctx.fillStyle = "#ffcf3a"; for (var b = 0; b < 3; b++) ctx.fillRect(x - 8 + b * 8, y - 16, 3, 3); // loot glint
+      ctx.strokeStyle = "#8a8278"; ctx.lineWidth = 2;                       // bars
+      for (var bx = -14; bx <= 14; bx += 7) { ctx.beginPath(); ctx.moveTo(x + bx, y - 22); ctx.lineTo(x + bx, y + 2); ctx.stroke(); }
+      if (cg.hasKey) { ctx.fillStyle = "#ffe14d"; ctx.font = "12px sans-serif"; ctx.textAlign = "center"; ctx.fillText("🔒", x, y - 28); }
+    }
+  }
+  function drawOilRig() {
+    if (!run.oilrig) return;
+    var x = run.oilrig.x - cam.x, top = -cam.y; // rig stands from the surface down
+    if (x < -160 || x > W + 160) return;
+    ctx.save();
+    // legs from the seabed up through the water
+    var fy = run.floorY - cam.y;
+    ctx.strokeStyle = "#5a4a32"; ctx.lineWidth = 6;
+    [-46, -16, 16, 46].forEach(function (lx) { ctx.beginPath(); ctx.moveTo(x + lx, fy); ctx.lineTo(x + lx * 0.5, Math.max(top, -40)); ctx.stroke(); });
+    // platform at the surface
+    var py = Math.max(top - 4, -30);
+    ctx.fillStyle = "#3a3220"; ctx.fillRect(x - 70, py - 14, 140, 16);
+    ctx.fillStyle = "#caa14a"; ctx.fillRect(x - 18, py - 60, 36, 48);      // derrick base
+    ctx.strokeStyle = "#8a7a4a"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x - 18, py - 12); ctx.lineTo(x, py - 80); ctx.lineTo(x + 18, py - 12); ctx.stroke();
+    // hatch glow if you still need the key
+    if (!state.areas.oilrig) { ctx.fillStyle = state.items.cagekey ? "#7affa0" : "#ff7a3a"; ctx.beginPath(); ctx.arc(x, fy - 28, 7, 0, 7); ctx.fill(); }
+    ctx.restore();
+  }
+
+  function drawTrap() {
+    if (!run.trap || !run.trap.active || run.trap.r <= 0) return;
+    var x = run.trap.x - cam.x, y = run.trap.y - cam.y, r = run.trap.r;
+    if (x < -r - 40 || x > W + r + 40 || y < -r - 40 || y > H + r + 40) return;
+    ctx.save();
+    ctx.strokeStyle = "rgba(180,255,180,0.5)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke();
+    // net mesh
+    ctx.strokeStyle = "rgba(200,255,200,0.18)"; ctx.lineWidth = 1;
+    for (var g = -r; g <= r; g += 16) {
+      ctx.beginPath(); ctx.moveTo(x + g, y - r); ctx.lineTo(x + g, y + r); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - r, y + g); ctx.lineTo(x + r, y + g); ctx.stroke();
+    }
+    ctx.fillStyle = "rgba(120,220,120,0.08)"; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
     ctx.restore();
   }
 
@@ -2002,6 +2147,12 @@
       vb.style.display = atTop ? "none" : "block";
       if (atTop && run.venting) { run.venting = false; vb.classList.remove("venting"); }
     }
+    // deploy-net button: shown when you own a Deploy Net and are submerged
+    var tb = document.getElementById("btn-trap");
+    if (tb) {
+      tb.style.display = (!atTop && trapSize() > 0) ? "block" : "none";
+      tb.textContent = (run.trap && run.trap.active) ? "🪤 Move Net" : "🪤 Deploy Net";
+    }
     var hb = document.getElementById("btn-harpoon");
     hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
     if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
@@ -2047,7 +2198,7 @@
     var html = '<div class="panel start-panel">';
     html += '<h1>🌊 Deep Sea Diver 🐙</h1>';
     html += '<p class="sub">Dive deep. Catch everything. Awaken the Kraken.</p>';
-    html += '<div class="update-banner">🐠 NEW: the <b>Aquarium Update</b>! Watch every fish &amp; shiny you\'ve caught swim in living tanks — and dive in to swim with them.</div>';
+    html += '<div class="update-banner">🛠️ NEW: the <b>Tools Update</b>! Grab a <b>Sledgehammer</b> to crack open cages, a <b>Shovel</b> to pry pearl-filled clams, and a <b>Deploy Net</b> that traps fish even when your hold is full — all in the Shop\'s Tools tab.</div>';
     html += '<div class="slot-list">';
     saves.forEach(function (s) {
       if (s.data) {
@@ -2255,6 +2406,8 @@
     document.getElementById("btn-harpoon").style.display = "none";
     var vb = document.getElementById("btn-vent");
     if (vb) { vb.style.display = "none"; vb.classList.remove("venting"); }
+    var tb = document.getElementById("btn-trap");
+    if (tb) tb.style.display = "none";
     if (run) run.venting = false;
     document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
@@ -2287,12 +2440,23 @@
     }
     html += '</div>';
 
-    // TOOLS — Fishing Net + Harpoons + Stopwatch
+    // TOOLS — Fishing Net + Deploy Net + Harpoons + special tools
     html += '<div class="tab-body' + bodyClass("tools") + '" data-body="tools">';
     html += upgradeRow("scoop");
+    html += upgradeRow("trap");
     html += '<div class="shop-item"><div class="si-info"><b>Harpoons</b> <span class="lvl">×' + state.harpoons + '</span>'
       + '<p>Ammo for boss fights. Aim with the joystick and tap 🔱 to throw — 3 hits beats the Kraken or blobfish.</p></div>'
       + '<div class="si-buy"><button data-buyharpoon="1" ' + (state.money < 2600 ? 'disabled' : '') + '>5 for $2,600</button></div></div>';
+    var hasHammer = !!state.items.sledgehammer;
+    html += '<div class="shop-item"><div class="si-info"><b>🔨 Sledgehammer</b>' + (hasHammer ? ' <span class="lvl">✓ Owned</span>' : '')
+      + '<p>Smash open locked <b>cages</b> on the sea floor — they\'re packed with treasure.</p></div>'
+      + '<div class="si-buy">' + (hasHammer ? '<span class="maxed">✓</span>'
+        : '<button data-buytool="sledgehammer:8000" ' + (state.money < 8000 ? 'disabled' : '') + '>$8,000</button>') + '</div></div>';
+    var hasShovel = !!state.items.shovel;
+    html += '<div class="shop-item"><div class="si-info"><b>⛏️ Shovel</b>' + (hasShovel ? ' <span class="lvl">✓ Owned</span>' : '')
+      + '<p>Pry <b>clams</b> off the sea bed — some hold a precious <b>pearl</b>.</p></div>'
+      + '<div class="si-buy">' + (hasShovel ? '<span class="maxed">✓</span>'
+        : '<button data-buytool="shovel:6000" ' + (state.money < 6000 ? 'disabled' : '') + '>$6,000</button>') + '</div></div>';
     var hasWatch = !!state.items.stopwatch;
     html += '<div class="shop-item"><div class="si-info"><b>Tide Stopwatch</b>' + (hasWatch ? ' <span class="lvl">✓ Owned</span>' : '')
       + '<p>Choose whether each dive is <b>day or night</b> — tap the ☀️/🌙 on the boat to set it. Without it, day &amp; night just take turns.</p></div>'
@@ -2345,7 +2509,7 @@
     }).forEach(function (f) {
       var owned = state.hints[f.id];
       var found = state.discovered[f.id];
-      var cost = 1000;
+      var cost = hintCost(f);
       html += '<div class="shop-item">'
         + '<div class="si-info"><b>' + (owned ? f.name : "??? (" + D.LOCATIONS[f.area].name + ")") + '</b> '
         + (found ? '<span class="lvl">✓ Caught</span>' : (owned ? '<span class="lvl">Hint owned</span>' : ''))
@@ -2391,6 +2555,14 @@
         if (state.money < 2600) return;
         state.money -= 2600; state.harpoons += 5; saveGame();
         toast("Bought 5 harpoons! (×" + state.harpoons + ")", "good", 1500); showShop();
+      };
+    });
+    ov.querySelectorAll("[data-buytool]").forEach(function (b) {
+      b.onclick = function () {
+        var p = b.getAttribute("data-buytool").split(":"), id = p[0], cost = +p[1];
+        if (state.items[id] || state.money < cost) return;
+        state.money -= cost; state.items[id] = true; saveGame();
+        toast((id === "sledgehammer" ? "🔨 Sledgehammer" : "⛏️ Shovel") + " acquired!", "good", 1800); showShop();
       };
     });
     ov.querySelectorAll("[data-buystopwatch]").forEach(function (b) {
@@ -2452,13 +2624,19 @@
     showShop();
   }
 
+  // secret-fish hints now cost real money, scaled to the price of their area
+  function hintCost(f) {
+    var loc = D.LOCATIONS[f.area];
+    var base = loc ? loc.cost : 4000;
+    return Math.max(3000, Math.min(60000, Math.round(base * 0.08 / 100) * 100));
+  }
   function buyHint(id) {
-    var cost = 1000;
+    var f = D.FISH_BY_ID[id];
+    var cost = hintCost(f);
     if (state.money < cost || state.hints[id]) return;
     state.money -= cost;
     state.hints[id] = true;
     saveGame();
-    var f = D.FISH_BY_ID[id];
     toast("Hint unlocked: " + f.name, "epic", 2600);
     showShop();
   }
@@ -3559,6 +3737,13 @@
     // harpoon throw button (boss fights)
     var hb = document.getElementById("btn-harpoon");
     if (hb) hb.addEventListener("click", function () { if (scene === "dive" && run) throwHarpoon(); });
+    // deploy-net button (drop a trap net at your position)
+    var tb = document.getElementById("btn-trap");
+    if (tb) tb.addEventListener("click", function () {
+      if (scene !== "dive" || !run || trapSize() <= 0) return;
+      run.trap.active = true; run.trap.x = run.diver.x; run.trap.y = run.diver.y; run.trap.r = trapSize();
+      toast("🪤 Net deployed! Anything that swims in is bagged.", "good", 1600);
+    });
     // vent-air button (press & hold to drain oxygen)
     var vb = document.getElementById("btn-vent");
     if (vb) {

@@ -116,6 +116,13 @@
       shinyBonus: 0.1, unlocked: false, cost: 0,
       sky: { top: "#1a2230", bottom: "#0a0e16" },
     },
+    oilrig: {
+      id: "oilrig", name: "The Oil Rig", tint: "#caa14a", secret: true,
+      blurb: "A black sea of crude beneath a derelict rig — where rusted machines and salvage-bots still swim.",
+      maxDepth: 800, worldWidth: 2800, topColor: "#2a2418", deepColor: "#050402",
+      shinyBonus: 0.12, unlocked: false, cost: 0,
+      sky: { top: "#3a3320", bottom: "#1a160a" },
+    },
     cave: {
       id: "cave", name: "Gloom Cavern", tint: "#8a7ad0",
       blurb: "A creepy flooded cavern where every kind of sea creature gathers — drifting freely in the dark. Something huge skitters below.",
@@ -288,6 +295,10 @@
     { id: "abalone",    name: "Abalone",      area: "kelp",  creature: true, rarity: "uncommon",  size: 1, value: 150,  color: "#8a7a9a", shape: "urchin" },
     { id: "seacucumber",name: "Sea Cucumber", area: "trench", creature: true, rarity: "rare",     size: 2, value: 380,  color: "#6a4a5a", shape: "bug" },
     { id: "voidstar",   name: "Void Star",    area: "sanctuary", creature: true, rarity: "legendary", size: 1, value: 1800, color: "#9f7bff", shape: "starfish" },
+    // ---- Clams: prised open with a SHOVEL; some hide a pearl ----
+    { id: "clam",       name: "Giant Clam",   area: "coral", creature: true, tool: "shovel", dropsPearl: true, rarity: "uncommon", size: 1, value: 180, color: "#cdbba0", accent: "#fff3e0", shape: "clam" },
+    { id: "musselbed",  name: "Mussel",       area: "kelp",  creature: true, tool: "shovel", dropsPearl: true, rarity: "common",   size: 1, value: 120, color: "#5a5a6a", accent: "#cfd6e0", shape: "clam" },
+    { id: "deepclam",   name: "Abyss Clam",   area: "trench",creature: true, tool: "shovel", dropsPearl: true, rarity: "rare",     size: 2, value: 520, color: "#7a6a8a", accent: "#e0d6ff", shape: "clam" },
     // ---- Hollow Deep (the secret cave) — its own creatures + fish ----
     // (Gloom Cavern itself now just gathers all the PRE-EXISTING creatures.)
     { id: "cavefish",   name: "Blind Cavefish", area: "secretcave", rarity: "common",   size: 1, value: 140,  minDepth: 0, color: "#e8dcd0", shape: "fish" },
@@ -389,6 +400,17 @@
     { id: "olm",        name: "Olm",          area: "secretcave", rarity: "epic", size: 1, value: 1200, minDepth: 0, color: "#f0d6cc", accent: "#ffc0cc", shape: "eel", secret: true,
       hint: "A ghostly blind salamander of the lightless deep — it surfaces only in the Hollow Deep.", condition: {} },
     { id: "cavelantern",name: "Cave Lantern", area: "secretcave", rarity: "rare", size: 2, value: 420, minDepth: 60, color: "#bcd0c0", accent: "#ffe98a", shape: "lantern" },
+
+    // ======== The Oil Rig (secret) — metal / mechanical / robot catchables ========
+    { id: "cogfish",    name: "Cogfish",      area: "oilrig", rarity: "common",   size: 1, value: 160, minDepth: 0,   color: "#8a8a90", accent: "#ffcf3a", shape: "fish" },
+    { id: "boltminnow", name: "Bolt Minnow",  area: "oilrig", rarity: "common",   size: 1, value: 140, minDepth: 0,   color: "#9aa0a8", accent: "#ff7a3a", shape: "longfish" },
+    { id: "pipeeel",    name: "Pipe Eel",     area: "oilrig", rarity: "uncommon", size: 3, value: 320, minDepth: 40,  color: "#6a7078", accent: "#3ad0ff", shape: "eel" },
+    { id: "robojelly",  name: "Robo-Jelly",   area: "oilrig", rarity: "uncommon", size: 2, value: 300, minDepth: 30,  color: "#4a5a6a", accent: "#3affd0", shape: "glowjelly" },
+    { id: "gearray",    name: "Gear Ray",     area: "oilrig", rarity: "rare",     size: 4, value: 560, minDepth: 120, color: "#7a7068", accent: "#ffcf3a", shape: "ray" },
+    { id: "drillshark", name: "Drill Shark",  area: "oilrig", rarity: "epic",     size: 6, value: 2400, minDepth: 250, color: "#5a5a62", accent: "#ff5b3a", shape: "shark" },
+    { id: "mechsquid",  name: "Mecha Squid",  area: "oilrig", rarity: "rare",     size: 4, value: 680, minDepth: 200, color: "#52606a", accent: "#3ad0ff", shape: "squid" },
+    { id: "boltcrab",   name: "Salvage Bot",  area: "oilrig", creature: true, rarity: "uncommon", size: 2, value: 340, color: "#7a7a82", accent: "#ffcf3a", shape: "crab" },
+    { id: "rigtitan",   name: "The Rig Titan", area: "oilrig", areaBoss: true, rarity: "mythic", size: 14, value: 32000, minDepth: 250, color: "#4a4a52", accent: "#ff7a3a", shape: "kaiju", hp: 6, reward: "" },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
@@ -494,6 +516,7 @@
     { id: "coins",   name: "Gold Coins",     value: 60,   color: "#ffd34a", rarity: "common" },
     { id: "bottle",  name: "Message Bottle", value: 90,   color: "#8fd6c0", rarity: "common" },
     { id: "pearl",   name: "Lustrous Pearl", value: 220,  color: "#f3eaff", rarity: "uncommon" },
+    { id: "clampearl", name: "Clam Pearl",   value: 480,  color: "#fff0f6", rarity: "rare" },
     { id: "goblet",  name: "Silver Goblet",  value: 300,  color: "#cfd6de", rarity: "uncommon" },
     { id: "ruby",    name: "Blood Ruby",     value: 700,  color: "#e23b5a", rarity: "rare" },
     { id: "amulet",  name: "Ancient Amulet", value: 1200, color: "#49d6c0", rarity: "rare" },
@@ -605,6 +628,18 @@
         { cost: 3400, value: 80 },
         { cost: 7800, value: 110 },
         { cost: 16000,value: 145 },
+      ],
+    },
+    trap: {
+      name: "Deploy Net",
+      desc: "A net you DROP in the water (tap 🪤). Any fish that swims into it is bagged — even when your hold is full. Bigger sizes cover more water.",
+      unit: "size",
+      levels: [
+        { cost: 0,     value: 0 },    // none
+        { cost: 4000,  value: 110 },  // small
+        { cost: 12000, value: 170 },  // medium
+        { cost: 30000, value: 240 },  // big
+        { cost: 70000, value: 330 },  // huge
       ],
     },
   };

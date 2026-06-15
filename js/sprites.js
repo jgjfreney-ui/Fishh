@@ -592,6 +592,15 @@
       "bBBBBBBBBBb.....",
       "....A...A......",
     ],
+    clam: [
+      "...bBBBBBBb...",
+      ".bBBBBBBBBBBb.",
+      "bBBLLLLLLLLBBb",
+      "bBLLLLWWLLLLBb",
+      "bBBLLLLLLLLBBb",
+      ".bBBBBBBBBBBb.",
+      "..AAAAAAAAAA..",
+    ],
     flatfish: [
       "....E.E.......",
       "..bBBBBBBBBBb.",
@@ -825,7 +834,7 @@
     glowjelly: "glowjelly", seamoth: "seamoth", ghostray: "ghostray", stargazer: "stargazer",
     vampsquid: "vampsquid", glowworm: "glowworm", owl: "owl", slug: "slug",
     skeletonshark: "skeletonshark", bacteriawhale: "bacteriawhale", crocodile: "crocodile",
-    kaiju: "kaiju", wallpaperfish: "wallpaperfish", cctv: "cctv",
+    kaiju: "kaiju", wallpaperfish: "wallpaperfish", cctv: "cctv", clam: "clam",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
