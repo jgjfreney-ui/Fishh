@@ -74,6 +74,13 @@
       requireAreas: ["river", "kelp", "arctic", "ancient", "opensea"], // always the last to unlock
       sky: { top: "#86b4d4", bottom: "#cfe8f2" },
     },
+    prism: {
+      id: "prism", name: "Prism Reef", tint: "#ff7ad0",
+      blurb: "A kaleidoscopic coral garden ablaze with colour — and a master of disguise hiding in plain sight.",
+      maxDepth: 420, worldWidth: 2600, topColor: "#2fc0d0", deepColor: "#1a3a7a",
+      shinyBonus: 0.08, unlocked: false, cost: 60000,
+      sky: { top: "#bff0ff", bottom: "#ffe6fb" },
+    },
     forest: {
       id: "forest", name: "Sunken Grove", tint: "#5fae4a",
       blurb: "A drowned old-growth forest — sun filters through towering submerged trees draped in green.",
@@ -375,6 +382,26 @@
     { id: "novasnail",  name: "Nova Snail",     area: "sanctuary", creature: true, night: true, rarity: "rare", size: 1, value: 700, color: "#9f7bff", accent: "#fff3b0", shape: "snail" },
     { id: "barnowl",    name: "Barn Owl",       area: "forest",  bird: true, night: true, rarity: "rare", size: 2, value: 540, color: "#e8dcc8", accent: "#caa15a", shape: "owl", seedCost: 1000 },
     { id: "tawnyowl",   name: "Tawny Owl",      area: "swamp",   bird: true, night: true, rarity: "rare", size: 2, value: 560, color: "#8a6a4a", accent: "#e0c0a0", shape: "owl", seedCost: 1000 },
+
+    // ======== Prism Reef (colourful) ========
+    { id: "mandarinfish", name: "Mandarinfish", area: "prism", rarity: "common",   size: 1, value: 200, minDepth: 0,   color: "#2a8ac0", accent: "#ff9a3a", shape: "fish" },
+    { id: "neontetra",  name: "Neon Tetra",   area: "prism", rarity: "common",   size: 1, value: 160, minDepth: 0,   color: "#2fd0e0", accent: "#ff3a6a", shape: "guppy" },
+    { id: "royalgramma",name: "Royal Gramma", area: "prism", rarity: "uncommon", size: 1, value: 280, minDepth: 20,  color: "#9a3ad0", accent: "#ffe14d", shape: "tang" },
+    { id: "flamewrasse",name: "Flame Wrasse", area: "prism", rarity: "uncommon", size: 2, value: 320, minDepth: 40,  color: "#ff5b3a", accent: "#ffe14d", shape: "fish" },
+    { id: "regalangel", name: "Regal Angelfish", area: "prism", rarity: "rare",  size: 2, value: 520, minDepth: 80,  color: "#ffcf3a", accent: "#2a6ac0", shape: "tang" },
+    { id: "harlequin",  name: "Harlequin Tusk", area: "prism", rarity: "rare",   size: 3, value: 620, minDepth: 120, color: "#3ac0a0", accent: "#ff5b3a", shape: "fish" },
+    { id: "rainbowparrot", name: "Rainbow Parrotfish", area: "prism", rarity: "epic", size: 4, value: 1800, minDepth: 200, color: "#36d6a0", accent: "#ff7ad0", rainbow: true, shape: "fish" },
+    // Prism birds (varied time)
+    { id: "lorikeet",   name: "Rainbow Lorikeet", area: "prism", bird: true, day: true, rarity: "uncommon", size: 1, value: 240, color: "#2a8ac0", accent: "#ff5b3a", shape: "bird", seedCost: 600 },
+    { id: "sunbird",    name: "Sunbird",      area: "prism", bird: true, rarity: "rare", size: 1, value: 420, color: "#3ac0a0", accent: "#ffcf3a", shape: "bird", seedCost: 900 },
+    // Prism clams (prised with the Shovel) — including a brand-new giant clam
+    { id: "rainbowclam",name: "Rainbow Clam", area: "prism", creature: true, tool: "shovel", dropsPearl: true, rarity: "uncommon", size: 2, value: 360, color: "#ff7ad0", accent: "#7afcff", shape: "clam" },
+    { id: "colossalclam", name: "Colossal Clam", area: "prism", creature: true, tool: "shovel", dropsPearl: true, rarity: "epic", size: 3, value: 1600, color: "#2fd0c0", accent: "#fff0f6", shape: "clam" },
+    { id: "reefsnail",  name: "Turban Snail", area: "prism", creature: true, rarity: "common", size: 1, value: 120, color: "#caa15a", accent: "#fff0e0", shape: "snail" },
+    // the secret camouflaged cuttlefish
+    { id: "cuttlefish", name: "Mimic Cuttlefish", area: "prism", rarity: "mythic", size: 2, value: 6500, minDepth: 0, color: "#9a8a7a", accent: "#caa15a", shape: "squid", secret: true, camo: true,
+      hint: "A master of disguise that melts into the reef — watch for the faint shimmer that doesn't match the coral.", condition: {} },
+    { id: "prismboss",  name: "Kaleidos",     area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 24000, minDepth: 150, color: "#7a3ad0", accent: "#ff7ad0", rainbow: true, shape: "squid", hp: 5, reward: "" },
 
     // ======== Sunken Grove (forest) ========
     { id: "grovefish",  name: "Grovefish",    area: "forest", rarity: "common",   size: 1, value: 60,  minDepth: 0,   color: "#6cae4a", shape: "goby" },

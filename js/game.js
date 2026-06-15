@@ -24,7 +24,7 @@
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
-               forest: false, swamp: false, boneyard: false, backrooms: false, japan: false, secretcave: false,
+               prism: false, forest: false, swamp: false, boneyard: false, backrooms: false, japan: false, secretcave: false,
                oilrig: false, cave: false, cloud: false, sanctuary: false },
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
@@ -218,6 +218,7 @@
     japan:     { plants: ["coral", "kelp", "coral"], plantColors: ["#e0556a", "#ff9a4a", "#5cc46a", "#ffd6e0"], rock: "#3a4a6a", floor: "#23304a" },
     secretcave:{ plants: ["crystal", "vent", "rock"], plantColors: ["#9fffd0", "#8a7ad0", "#5a4a6a"], rock: "#141019", floor: "#08060c" },
     oilrig:    { plants: ["vent", "rock", "rock"], plantColors: ["#caa14a", "#6a6258", "#3a3320"], rock: "#2a2418", floor: "#100c06" },
+    prism:     { plants: ["coral", "coral", "anemone"], plantColors: ["#ff5b9f", "#ffcf3a", "#3ad0e0", "#9a3ad0", "#36d6a0", "#ff7a3a"], rock: "#3a4a8a", floor: "#2a4a8a" },
   };
 
   function generateDecor(loc) {
@@ -240,7 +241,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -1417,15 +1418,37 @@
       ctx.restore();
     }
 
-    // drifting plankton motes
+    // animated caustics: rippling dappled light near the surface (all areas)
+    var caustic = run.night ? 0 : 1 - clamp(cam.y / 700, 0, 1);
+    if (caustic > 0.03 && !loc.caveArea) {
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      var tint = loc.starfield ? "rgba(190,170,255," : (loc.airArea ? "rgba(255,255,255," : "rgba(180,235,255,");
+      for (var cz = 0; cz < 7; cz++) {
+        var cy2 = ((cz * 84 - cam.y * 0.5) % (H + 120) + (H + 120)) % (H + 120) - 60;
+        ctx.beginPath();
+        for (var sxp = -10; sxp <= W + 10; sxp += 18) {
+          var wy = cy2 + Math.sin((sxp + cam.x) * 0.012 + run.time * 1.3 + cz) * 9 + Math.sin((sxp) * 0.05 + run.time * 2.1) * 4;
+          if (sxp === -10) ctx.moveTo(sxp, wy); else ctx.lineTo(sxp, wy);
+        }
+        ctx.lineWidth = 2 + (cz % 2);
+        ctx.strokeStyle = tint + (0.05 * caustic).toFixed(3) + ")";
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // drifting plankton motes (gentle organic sway)
     ctx.save();
     ctx.fillStyle = loc.starfield ? "rgba(200,180,255,0.5)" : "rgba(220,240,255,0.35)";
-    for (var p = 0; p < 40; p++) {
-      var px = ((p * 211 - cam.x * 0.6 + run.time * 8) % W + W) % W;
-      var py = ((p * 97 + Math.sin(run.time * 0.5 + p) * 12 - cam.y * 0.6) % H + H) % H;
-      var s = p % 4 === 0 ? 2 : 1;
+    for (var p = 0; p < 46; p++) {
+      var px = ((p * 211 - cam.x * 0.6 + run.time * (6 + (p % 3) * 4)) % W + W) % W;
+      var py = ((p * 97 + Math.sin(run.time * 0.5 + p) * 16 + Math.cos(run.time * 0.3 + p * 2) * 8 - cam.y * 0.6) % H + H) % H;
+      var s = p % 5 === 0 ? 2 : 1;
+      ctx.globalAlpha = 0.5 + 0.5 * Math.sin(run.time + p);
       ctx.fillRect(px | 0, py | 0, s, s);
     }
+    ctx.globalAlpha = 1;
     ctx.restore();
   }
 
@@ -2062,6 +2085,17 @@
       return; // labels handled by drawFishLabels()
     }
     var arch = SPRITES.archetypeForShape(f.def.shape);
+
+    // camouflage species (cuttlefish) melt into the background — render very faint,
+    // with only a soft shimmer that flickers it into view for a moment
+    if (f.def.camo && !f.pulled) {
+      var camoA = 0.16 + 0.16 * (0.5 + 0.5 * Math.sin(run.time * 1.7 + f.x * 0.05));
+      ctx.save();
+      ctx.globalAlpha = camoA;
+      SPRITES.draw(ctx, arch, x, y, { color: f.def.color, accent: f.def.accent, shiny: f.shiny, flip: flip, targetH: th });
+      ctx.restore();
+      return; // labels handled by drawFishLabels()
+    }
 
     // rainbow species shimmer through the colour wheel
     if (f.def.rainbow) {

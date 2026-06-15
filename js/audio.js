@@ -45,6 +45,7 @@
     arctic:    { tonic: 67, bpm: 84,  density: 0.45, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
     ancient:   { tonic: 50, bpm: 104, density: 0.55, lead: "square",   bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
     opensea:   { tonic: 60, bpm: 108, density: 0.55, lead: "triangle", bells: false, waves: false, prog: ["I", "V", "IV", "I"] },
+    prism:     { tonic: 64, bpm: 124, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
     // Cloud Reaches — high, airy, twinkly and uplifting (you're in the sky!)
     cloud:     { tonic: 72, bpm: 120, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
     // Gloom Cavern — sparse, low, mysterious but still cosy (cave-pentatonic, not scary)
@@ -230,6 +231,7 @@
     japan:  { fn: ambWhale,   min: 6000, max: 13000 },
     secretcave: { fn: ambBubble, min: 2500, max: 6500 },
     oilrig: { fn: ambBubble, min: 2500, max: 6000 },
+    prism:  { fn: ambShimmer, min: 2500, max: 6000 },
   };
   function scheduleAmb() {
     var a = AMB[mode];
