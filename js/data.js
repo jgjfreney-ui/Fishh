@@ -322,6 +322,7 @@
     { id: "clam",       name: "Giant Clam",   area: "coral", creature: true, tool: "shovel", dropsPearl: true, rarity: "uncommon", size: 1, value: 180, color: "#cdbba0", accent: "#fff3e0", shape: "clam" },
     { id: "musselbed",  name: "Mussel",       area: "kelp",  creature: true, tool: "shovel", dropsPearl: true, rarity: "common",   size: 1, value: 120, color: "#5a5a6a", accent: "#cfd6e0", shape: "clam" },
     { id: "deepclam",   name: "Abyss Clam",   area: "trench",creature: true, tool: "shovel", dropsPearl: true, rarity: "rare",     size: 2, value: 520, color: "#7a6a8a", accent: "#e0d6ff", shape: "clam" },
+    { id: "openclam",   name: "Pelagic Clam", area: "opensea",creature: true, tool: "shovel", dropsPearl: true, rarity: "common",  size: 2, value: 220, color: "#6a7a8a", accent: "#dfeaff", shape: "clam" },
     // ---- Hollow Deep (the secret cave) — its own creatures + fish ----
     // (Gloom Cavern itself now just gathers all the PRE-EXISTING creatures.)
     { id: "cavefish",   name: "Blind Cavefish", area: "secretcave", rarity: "common",   size: 1, value: 140,  minDepth: 0, color: "#e8dcd0", shape: "fish" },
@@ -575,6 +576,7 @@
     // ======== Area bosses (rise once you've caught every fish in their area) ========
     { id: "manowar",   name: "Man o' War",   area: "coral",   areaBoss: true, rarity: "mythic", size: 7,  value: 3000, minDepth: 120, color: "#b06bd0", accent: "#ffd6f2", shape: "manowar", hp: 3, reward: "stinger" },
     { id: "siphonophore", name: "Siphonophore", area: "opensea", areaBoss: true, rarity: "mythic", size: 10, value: 6000, minDepth: 200, color: "#ff6f91", shape: "siphonophore", hp: 3, reward: "necklace" },
+    { id: "leatherback", name: "Colossal Leatherback", area: "opensea", secretBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 200, color: "#2a2e3a", accent: "#caa15a", shape: "leatherback", hp: 6, reward: "" },
     { id: "apexmega",  name: "Apex Megalodon", area: "ancient", areaBoss: true, rarity: "mythic", size: 12, value: 8000, minDepth: 300, color: "#3a4650", shape: "apexmega", hp: 3, reward: "megtooth" },
     { id: "rogueorca", name: "Rogue Orca",    area: "arctic",  areaBoss: true, trigger: "creatures", rarity: "mythic", size: 11, value: 5000, minDepth: 250, color: "#16181d", accent: "#f2f6fa", shape: "orca", hp: 3, reward: "sonar" },
     { id: "roc",       name: "The Roc",       area: "cloud",   areaBoss: true, rarity: "mythic", size: 12, value: 9000, minDepth: 200, color: "#6a4a2a", accent: "#d8c0a0", shape: "roc", hp: 3, reward: "rocfeather" },

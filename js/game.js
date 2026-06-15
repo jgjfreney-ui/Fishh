@@ -28,6 +28,8 @@
                oilrig: false, cave: false, cloud: false, sanctuary: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
       davyjonesCaught: false,
+      openseaClams: 0,       // clams dug in the Open Sea (15 summons the Leatherback)
+      leatherbackCaught: false,
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -885,6 +887,9 @@
       } else {
         var ab = areaBossForArea(run.area);
         if (ab) spawnAreaBoss(ab);
+        else if (run.area === "opensea" && (state.openseaClams || 0) >= 15 && !state.leatherbackCaught) {
+          spawnSecretBoss("leatherback");
+        }
       }
     }
 
@@ -979,7 +984,15 @@
       if (c.def.tool === "shovel") {            // clams: prised open with the Shovel — only while OPEN
         var clamOpen = Math.sin(c.phase) > 0.1;
         if (shovelLevel() > 0) {
-          if (clamOpen && cdist < 55 && catchCreature(c)) { startNetFx(c, 55); if (c.hasPearl) dropPearl(c); run.creatures.splice(ci, 1); }
+          if (clamOpen && cdist < 55 && catchCreature(c)) {
+            startNetFx(c, 55); if (c.hasPearl) dropPearl(c);
+            if (run.area === "opensea" && !state.leatherbackCaught) {   // dig clams here to summon the Leatherback
+              state.openseaClams = (state.openseaClams || 0) + 1; saveGame();
+              if (state.openseaClams === 15) toast("🐢 15 clams dug! Something colossal stirs in the Open Sea deep...", "epic", 4000);
+              else toast("Open Sea clams: " + state.openseaClams + "/15", "good", 1400);
+            }
+            run.creatures.splice(ci, 1);
+          }
           else if (!clamOpen && cdist < 50 && run.time - (run.netHint || -99) > 6) { run.netHint = run.time; toast("Wait for the clam to open...", "bad", 1400); }
         } else if (cdist < 60 && run.time - (run.netHint || -99) > 12) {
           run.netHint = run.time; toast("Buy a ⛏️ Shovel (Shop → Tools) to pry open clams!", "bad", 2400);
@@ -1420,7 +1433,7 @@
 
   function catchSecretBoss(boss) {
     var def = boss.def;
-    state.davyjonesCaught = true;
+    state[def.id + "Caught"] = true;   // davyjonesCaught / leatherbackCaught / ...
     state.money += def.value;
     state.stats.earned += def.value;
     if (def.reward === "serpenteye") state.items.serpenteye = true;
@@ -3926,6 +3939,7 @@
     if (state.items.kaijubreath) html += row("🔵 Kaiju Breath", "beam vacuums fish");
     if (state.items.serpenteye) html += row("👁️ Eye of the Serpent", "coin chests everywhere");
     if (state.areas.pirate && !state.davyjonesCaught) html += row("☠️ Captain's Key", state.keyPieces + " / 4 pieces");
+    if (!state.leatherbackCaught && (state.openseaClams || 0) > 0) html += row("🐢 Open Sea clams", (state.openseaClams || 0) + " / 15");
     if (state.items.divingbell) html += row("🛎️ Diving Bell", "1 air save / dive");
     if (hammerLevel() > 0) html += row("🔨 Sledgehammer", "Lv " + hammerLevel());
     if (shovelLevel() > 0) html += row("⛏️ Shovel", "Lv " + shovelLevel());
