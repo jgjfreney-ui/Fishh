@@ -1151,5 +1151,6 @@
     dataURL: dataURL,
     archetypeForShape: archetypeForShape,
     has: function (a) { return !!SPR[a]; },
+    dims: function (a) { var s = SPR[a] || SPR.fish; return { w: s.w, h: s.h }; },
   };
 })();
