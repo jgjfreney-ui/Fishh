@@ -170,6 +170,7 @@
       playerBeam: null, breathCd: 0, // Kaiju Breath
       smoke: [], smokeTimer: 0, wyrmTimer: 6, // ashen smoke + magma wyrm
       legendTimer: 35 + Math.random() * 35,   // defeated bosses return as legendary catches
+      aimX: 1, aimY: 0,                        // last steering direction (torch/breath aim)
       stormCd: 0, peakX: loc.peaks ? loc.worldWidth * 0.5 : null, // storm summoner + mountain peak
     };
     placeWrecks(loc);
@@ -896,6 +897,9 @@
       tvx = (ax / len) * sp * mag;
       tvy = (ay / len) * sp * mag;
       if (Math.abs(ax) > 0.05) diver.face = ax > 0 ? 1 : -1;
+      // remember the aim direction so the torch / breath / sling point where
+      // you're steering, not just left/right
+      run.aimX = ax / len; run.aimY = ay / len;
     }
     // ease velocity toward the target so movement glides naturally instead of
     // snapping (fixes the "stiff + slippery" feel): quick to start, quick to stop
@@ -1566,10 +1570,10 @@
     if (!state.items.kaijubreath || run.breathCd > 0) return;
     var ax, ay;
     if (joy.active && joy.mag > 0.2) { ax = joy.dx; ay = joy.dy; }
-    else { ax = run.diver.face < 0 ? -1 : 1; ay = 0; }
+    else { ax = run.aimX != null ? run.aimX : (run.diver.face < 0 ? -1 : 1); ay = run.aimY || 0; }
     var l = Math.hypot(ax, ay) || 1;
     run.playerBeam = { x: run.diver.x, y: run.diver.y, dx: ax / l, dy: ay / l, len: 360, life: 0.9 };
-    run.breathCd = 4;
+    run.breathCd = 8; // longer recharge
     if (window.AUDIO) AUDIO.rumble();
   }
 
@@ -1782,6 +1786,7 @@
     drawNetFx();
     drawTrap();
     drawSmoke();
+    drawGoblinDarkness();
     drawStormFlash();
 
     // --- volumetric lighting / depth darkness ---
@@ -1980,15 +1985,18 @@
   // red torii gates standing in the haze + falling pink petals (Ornate Ocean)
   function drawJapanAtmos(loc) {
     ctx.save();
-    // torii gates, parallax in the background
+    // torii gates — anchored to the SEABED so they stand on the floor and rise
+    // tall (rather than floating in the middle of the screen)
+    var floorScreenY = loc.maxDepth * PXPM - cam.y;
     for (var g = 0; g < 5; g++) {
       var gx = ((g * 620 - cam.x * 0.4) % (W + 300) + (W + 300)) % (W + 300) - 150;
-      var base = H * 0.78 - cam.y * 0.15, hgt = 150 + (g % 3) * 40, wid = 90 + (g % 2) * 30;
+      var base = floorScreenY - 8, hgt = 360 + (g % 3) * 90, wid = 120 + (g % 2) * 40;
+      if (base < -40) continue; // seabed (and gates) above the view — skip
       ctx.fillStyle = "rgba(150,30,40,0.30)";
-      ctx.fillRect(gx - wid / 2, base - hgt, 10, hgt);                 // left post
-      ctx.fillRect(gx + wid / 2 - 10, base - hgt, 10, hgt);            // right post
-      ctx.fillRect(gx - wid / 2 - 14, base - hgt - 8, wid + 28, 12);   // top lintel (kasagi)
-      ctx.fillRect(gx - wid / 2 - 6, base - hgt + 16, wid + 12, 8);    // second beam (nuki)
+      ctx.fillRect(gx - wid / 2, base - hgt, 12, hgt);                 // left post
+      ctx.fillRect(gx + wid / 2 - 12, base - hgt, 12, hgt);            // right post
+      ctx.fillRect(gx - wid / 2 - 16, base - hgt - 10, wid + 32, 14);  // top lintel (kasagi)
+      ctx.fillRect(gx - wid / 2 - 8, base - hgt + 20, wid + 16, 9);    // second beam (nuki)
     }
     // falling cherry-blossom petals
     for (var p = 0; p < 36; p++) {
@@ -2338,6 +2346,22 @@
       ctx.restore();
     }
   }
+  // the Goblin Shark trails a roiling cloud of inky darkness that swallows the
+  // light around it (gets thicker the closer it is to you)
+  function drawGoblinDarkness() {
+    for (var i = 0; i < run.fish.length; i++) {
+      var f = run.fish[i];
+      if (!(f.isBoss && f.def && f.def.shape === "goblin")) continue;
+      var gx = f.x - cam.x, gy = f.y - cam.y;
+      var r = 150 + f.size * 8 + Math.sin(run.time * 1.5) * 14;
+      var g = ctx.createRadialGradient(gx, gy, 8, gx, gy, r);
+      g.addColorStop(0, "rgba(2,3,6,0.92)");
+      g.addColorStop(0.55, "rgba(2,3,6,0.6)");
+      g.addColorStop(1, "rgba(2,3,6,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(gx, gy, r, 0, 7); ctx.fill();
+    }
+  }
   function drawTrap() {
     if (!run.trap || !run.trap.active || run.trap.r <= 0) return;
     var x = run.trap.x - cam.x, y = run.trap.y - cam.y, r = run.trap.r;
@@ -2394,24 +2418,25 @@
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, W, H);
     }
-    // Torch: a bright beam projected in the direction you face (cuts the gloom)
+    // Torch: a bright beam projected in the direction you're steering (cuts the gloom)
     if (state.items.torch) {
-      var dir = run.diver.face < 0 ? -1 : 1, reach = 320, halfW = 130;
+      var reach = 320, halfW = 130;
+      var aim = Math.atan2(run.aimY || 0, run.aimX != null ? run.aimX : (run.diver.face < 0 ? -1 : 1));
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
-      var tipx = dx + dir * reach;
-      var lg = ctx.createLinearGradient(dx, dy, tipx, dy);
+      ctx.translate(dx, dy); ctx.rotate(aim);
+      var lg = ctx.createLinearGradient(0, 0, reach, 0);
       lg.addColorStop(0, "rgba(255,244,200,0.42)");
       lg.addColorStop(1, "rgba(255,244,200,0)");
       ctx.fillStyle = lg;
       ctx.beginPath();
-      ctx.moveTo(dx, dy - 6);
-      ctx.lineTo(dx, dy + 6);
-      ctx.lineTo(tipx, dy + halfW);
-      ctx.lineTo(tipx, dy - halfW);
+      ctx.moveTo(0, -6);
+      ctx.lineTo(0, 6);
+      ctx.lineTo(reach, halfW);
+      ctx.lineTo(reach, -halfW);
       ctx.closePath(); ctx.fill();
-      drawGlow(dx + dir * 18, dy, 50, "#fff4c8", 0.5); // bright lamp at the source
       ctx.restore();
+      drawGlow(dx + Math.cos(aim) * 18, dy + Math.sin(aim) * 18, 50, "#fff4c8", 0.5); // bright lamp at the source
     }
   }
 
@@ -2941,6 +2966,16 @@
   // distinctive birds (owls, cranes, herons, storks) use their own sprite;
   // generic "bird"-shape ones keep the lively procedural flap
   function birdUsesSprite(def) { return def.shape && def.shape !== "bird"; }
+  // draw a sprite bird with a wing-flap (vertical squash/stretch) so every
+  // bird visibly beats its wings rather than gliding stiffly
+  function drawFlapBird(arch, x, y, opts, phase) {
+    var s = 1 + Math.sin(phase) * 0.2;
+    ctx.save();
+    ctx.translate(x, y - Math.abs(Math.sin(phase)) * 2); // tiny bob with the beat
+    ctx.scale(1, s);
+    SPRITES.draw(ctx, arch, 0, 0, opts);
+    ctx.restore();
+  }
   function drawBirds() {
     for (var i = 0; i < run.birds.length; i++) {
       var b = run.birds[i];
@@ -2950,7 +2985,7 @@
       var SC = Math.max(2, Math.round(th / 7));
       var flip = run.diver.x < b.x;
       if (b.shiny) drawGlow(x, y, th * 1.1, "#fff0a0", 0.4);
-      if (birdUsesSprite(b.def)) SPRITES.draw(ctx, SPRITES.archetypeForShape(b.def.shape), x, y, { color: b.def.color, accent: b.def.accent, shiny: b.shiny, flip: flip, targetH: th + 8 });
+      if (birdUsesSprite(b.def)) drawFlapBird(SPRITES.archetypeForShape(b.def.shape), x, y, { color: b.def.color, accent: b.def.accent, shiny: b.shiny, flip: flip, targetH: th + 8 }, b.phase * 5);
       else drawBirdPixel(ctx, x, y, SC, b.def.color, b.phase, flip);
       if (b.shiny && Math.sin(run.time * 3 + b.phase) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2); }
       ctx.fillStyle = b.shiny ? "#ffe66d" : D.RARITY[b.def.rarity].color;
@@ -2988,7 +3023,7 @@
     if (f.def.bird) {
       var bglow = fishGlow(f);
       if (bglow) drawGlow(x, y, th * 0.95, bglow.color, bglow.alpha);
-      if (birdUsesSprite(f.def)) SPRITES.draw(ctx, SPRITES.archetypeForShape(f.def.shape), x, y, { color: f.def.color, accent: f.def.accent, shiny: f.shiny, flip: !flip, targetH: th + 8 });
+      if (birdUsesSprite(f.def)) drawFlapBird(SPRITES.archetypeForShape(f.def.shape), x, y, { color: f.def.color, accent: f.def.accent, shiny: f.shiny, flip: !flip, targetH: th + 8 }, f.phase * 5);
       else { var bSC = Math.max(2, Math.round((14 + f.def.size * 4) / 7)); drawBirdPixel(ctx, x, y, bSC, f.def.color, f.phase * 4, !flip); }
       return; // labels handled by drawFishLabels()
     }
@@ -3127,11 +3162,18 @@
   // ---------------------------------------------------------------------
   //  Toasts
   // ---------------------------------------------------------------------
+  var _lastToastT = 0;
   function toast(msg, kind, dur) {
     var host = document.getElementById("toasts");
     if (!host) return;
+    // de-clutter: throttle low-priority chatter (plain/"good" notices) so only
+    // important alerts (epic/bad/shiny/secret) come through rapidly
+    var now = Date.now();
+    var lowPri = !kind || kind === "good";
+    if (lowPri && now - _lastToastT < 1500) return;
+    _lastToastT = now;
     // never let toasts blanket the screen: drop the oldest if too many stack up
-    while (host.children && host.children.length >= 4) host.removeChild(host.firstChild);
+    while (host.children && host.children.length >= 3) host.removeChild(host.firstChild);
     // skip exact duplicate of the most recent toast still showing
     if (host.lastChild && host.lastChild.textContent === msg) return;
     var el = document.createElement("div");
@@ -3897,7 +3939,7 @@
     var x = e.x, y = e.y, th = e.th;
     if (e.shiny) drawGlow(x, y, th * 0.9, "#fff0a0", 0.4);
     if (e.kind === "bird") {
-      if (birdUsesSprite(e.def)) SPRITES.draw(ctx, SPRITES.archetypeForShape(e.def.shape), x, y, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, flip: e.vx < 0, targetH: th });
+      if (birdUsesSprite(e.def)) drawFlapBird(SPRITES.archetypeForShape(e.def.shape), x, y, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, flip: e.vx < 0, targetH: th }, (e.phase + aqua.time) * 4);
       else drawBirdPixel(ctx, x, y, Math.max(2, Math.round(th / 7)), e.def.color, e.phase, e.vx < 0);
     } else {
       ctx.save(); ctx.translate(x, y);

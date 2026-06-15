@@ -440,7 +440,7 @@
     { id: "rainbowparrot", name: "Rainbow Parrotfish", area: "prism", rarity: "epic", size: 4, value: 1800, minDepth: 200, color: "#36d6a0", accent: "#ff7ad0", rainbow: true, shape: "parrotfish" },
     // Prism birds (varied time)
     { id: "lorikeet",   name: "Rainbow Lorikeet", area: "prism", bird: true, day: true, rarity: "uncommon", size: 1, value: 240, color: "#2a8ac0", accent: "#ff5b3a", shape: "songbird", seedCost: 600 },
-    { id: "sunbird",    name: "Sunbird",      area: "prism", bird: true, rarity: "rare", size: 1, value: 420, color: "#3ac0a0", accent: "#ffcf3a", shape: "bird", seedCost: 900 },
+    { id: "sunbird",    name: "Sunbird",      area: "prism", bird: true, rarity: "rare", size: 1, value: 420, color: "#3ac0a0", accent: "#ffcf3a", shape: "finch", seedCost: 900 },
     // Prism clams (prised with the Shovel) — including a brand-new giant clam
     { id: "rainbowclam",name: "Rainbow Clam", area: "prism", creature: true, tool: "shovel", dropsPearl: true, rarity: "uncommon", size: 2, value: 360, color: "#ff7ad0", accent: "#7afcff", shape: "clam" },
     { id: "colossalclam", name: "Colossal Clam", area: "prism", creature: true, tool: "shovel", dropsPearl: true, rarity: "epic", size: 3, value: 1600, color: "#2fd0c0", accent: "#fff0f6", shape: "ammonite" },
@@ -612,8 +612,8 @@
     { id: "cormorant", name: "Cormorant",    area: "kelp",  bird: true, rarity: "common",   size: 2, value: 95,  color: "#3a4048", shape: "seabird", seedCost: 300 },
     { id: "osprey",    name: "Osprey",       area: "kelp",  bird: true, rarity: "rare",     size: 2, value: 340, color: "#7a6650", shape: "raptor", seedCost: 700 },
     { id: "petrel",    name: "Storm Petrel", area: "trench", bird: true, rarity: "uncommon", size: 1, value: 170, color: "#4a4f57", shape: "gull", seedCost: 500 },
-    { id: "albatross", name: "Albatross",    area: "trench", bird: true, rarity: "rare",     size: 3, value: 440, color: "#e2e8ee", shape: "bird", seedCost: 900 },
-    { id: "aurorafinch",name: "Aurora Finch",area: "sanctuary", bird: true, rarity: "rare", size: 1, value: 520, color: "#7affd0", shape: "bird", seedCost: 1200 },
+    { id: "albatross", name: "Albatross",    area: "trench", bird: true, rarity: "rare",     size: 3, value: 440, color: "#e2e8ee", shape: "albatross", seedCost: 900 },
+    { id: "aurorafinch",name: "Aurora Finch",area: "sanctuary", bird: true, rarity: "rare", size: 1, value: 520, color: "#7affd0", shape: "finch", seedCost: 1200 },
     { id: "starswift", name: "Star Swift",   area: "sanctuary", bird: true, rarity: "epic", size: 1, value: 950, color: "#b58bff", shape: "gull", seedCost: 2000 },
 
     // ======== Arctic Shelf ========
@@ -645,7 +645,7 @@
     { id: "trilobite",  name: "Trilobite",    area: "ancient", creature: true, rarity: "common",   size: 1, value: 90,   color: "#7a5a3a", shape: "trilobite" },
     { id: "ammonite",   name: "Ammonite",     area: "ancient", creature: true, rarity: "uncommon", size: 2, value: 240,  color: "#a08a5a", shape: "ammonite" },
     { id: "archaeopteryx", name: "Archaeopteryx", area: "ancient", bird: true, rarity: "uncommon", size: 1, value: 260, color: "#6a5a3a", shape: "songbird", seedCost: 600 },
-    { id: "pteranodon", name: "Pteranodon",   area: "ancient", bird: true, rarity: "rare", size: 3, value: 700, color: "#8a6a4a", shape: "bird", seedCost: 1500 },
+    { id: "pteranodon", name: "Pteranodon",   area: "ancient", bird: true, rarity: "rare", size: 3, value: 700, color: "#8a6a4a", shape: "pteranodon", seedCost: 1500 },
     { id: "ancientlev", name: "Ancient Leviathan", area: "ancient", rarity: "mythic", size: 10, value: 16000, minDepth: 800, color: "#6a5326", accent: "#ffd24a", trim: "#9f7bff", shape: "ancientlev", secret: true,
       hint: "The first and largest serpent, fossilised legends say it still hunts the abyss floor (below 800m).", condition: { minDepth: 800 } },
 

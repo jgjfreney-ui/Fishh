@@ -1239,6 +1239,33 @@
       "......bBBBBBBb......",
       ".......F....F......",
     ],
+    albatross: [
+      "FFFF................FFFF",
+      "..FFFFFb..........bFFFFF.",
+      "....FFFbBBBBBBBBBBbFFF...",
+      ".......bBLLLLLLLLBBbEPG..",
+      ".......bBBBBBBBBBBBBBPGG.",
+      "........bBBBBBBBBBb......",
+      ".........F.......F.......",
+    ],
+    finch: [
+      "....AA.....",
+      "...FbBBb...",
+      "..FFbBBBEPG",
+      "..FbBLLBBPG",
+      "...bBBBBb..",
+      "....bBBb...",
+      "...A.FF.A..",
+    ],
+    pteranodon: [
+      "...........AAA....",
+      "FF........bBBBb...",
+      ".FFFb....bBBBEPMM.",
+      "..FFFbBBBBBBBBPMMM",
+      "...FFFbBBBBBBb....",
+      "....FFb...bBF.....",
+      ".......FF..F......",
+    ],
     snail: [
       ".............A..A.",
       ".............A..A.",
@@ -1599,6 +1626,7 @@
     koi: "koi", salmon: "salmon", leatherback: "leatherback", macaw: "macaw",
     cinderboss: "cinderboss", magmawyrm: "wyrm", stonetitan: "stonetitan", steed: "steed",
     gull: "gull", duck: "duck", songbird: "songbird", raptor: "raptor", seabird: "seabird",
+    albatross: "albatross", finch: "finch", pteranodon: "pteranodon",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
