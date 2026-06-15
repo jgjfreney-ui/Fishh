@@ -688,6 +688,18 @@
       "f..bbBBBBbb...",
       "....FFFF.....",
     ],
+    snail: [
+      ".............A..A.",
+      ".............A..A.",
+      "...bbbbb....bbb...",
+      "..bBLLLBBb.bBBBb..",
+      ".bBLbbbLBBbBBBBEP.",
+      ".bBLbBbLBBBBBBBBPM",
+      ".bBLbbbLBBBBBBBBb.",
+      "..bBLLLBBBBBBBBb..",
+      "...bbBBBBBBBBBb...",
+      "....AAAAAAAAAA....",
+    ],
     flatfish: [
       "....E.E.......",
       "..bBBBBBBBBBb.",
@@ -923,7 +935,7 @@
     skeletonshark: "skeletonshark", bacteriawhale: "bacteriawhale", crocodile: "crocodile",
     kaiju: "kaiju", wallpaperfish: "wallpaperfish", cctv: "cctv", clam: "clam",
     clownfish: "clownfish", codfish: "codfish", puffer: "puffer", perch: "perch",
-    mackerel: "mackerel", sardine: "sardine", guppy: "guppy", trout: "trout", goby: "goby",
+    mackerel: "mackerel", sardine: "sardine", guppy: "guppy", trout: "trout", goby: "goby", snail: "snail",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 

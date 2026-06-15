@@ -188,6 +188,30 @@
       o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.6); t += 0.12;
     }
   }
+  // night-on-the-water ambience for the menu: chirping crickets + the odd owl
+  function ambCricket() {
+    if (!ctx) return; var t = ctx.currentTime, reps = 3 + ((Math.random() * 4) | 0);
+    for (var i = 0; i < reps; i++) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square"; o.frequency.value = 4200 + Math.random() * 600;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.012, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.04); t += 0.06;
+    }
+  }
+  function ambOwl() {
+    if (!ctx) return; var t = ctx.currentTime;
+    function hoot(tt, f0) {
+      var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+      o.type = "sine"; o.frequency.setValueAtTime(f0, tt); o.frequency.linearRampToValueAtTime(f0 * 0.92, tt + 0.3);
+      lp.type = "lowpass"; lp.frequency.value = 700;
+      g.gain.setValueAtTime(0.0001, tt); g.gain.linearRampToValueAtTime(0.06, tt + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.42);
+      o.connect(lp); lp.connect(g); g.connect(master); o.start(tt); o.stop(tt + 0.5);
+    }
+    var base = 300 + Math.random() * 60;
+    hoot(t, base); hoot(t + 0.55, base * 0.96); // classic two-note "hoo... hoo"
+  }
+  function ambNightMenu() { ambCricket(); if (Math.random() < 0.35) ambOwl(); }
+
   var AMB = {
     coral:  { fn: ambBubble, min: 1500, max: 4000 },
     river:  { fn: ambBubble, min: 2000, max: 5000 },
@@ -208,7 +232,9 @@
     oilrig: { fn: ambBubble, min: 2500, max: 6000 },
   };
   function scheduleAmb() {
-    var a = AMB[mode]; if (!a) return;
+    var a = AMB[mode];
+    if (mode === "menu" && curNight) a = { fn: ambNightMenu, min: 1400, max: 3600 }; // crickets + owls at night
+    if (!a) return;
     ambTimer = setTimeout(function () { if (!muted) a.fn(); scheduleAmb(); }, a.min + Math.random() * (a.max - a.min));
   }
 
@@ -291,7 +317,7 @@
     toggleMute: function () { this.setMuted(!muted); return muted; },
     isMuted: function () { return muted; },
     playArea: function (a, night) { this.resume(); startTrack(a, night); },
-    playMenu: function () { this.resume(); startTrack("menu"); },
+    playMenu: function (night) { this.resume(); startTrack("menu", night); },
     playBoss: function () { this.resume(); startTrack("boss"); },
     playBlob: function () { this.resume(); startTrack("blob"); },
     stopAll: function () { clearSchedule(); cfgCur = null; mode = null; },

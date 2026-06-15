@@ -291,8 +291,8 @@
     { id: "prismstar",  name: "Prism Star",   area: "sanctuary", creature: true, rarity: "epic", size: 1, value: 760, color: "#7affd0", shape: "starfish" },
     // +1 more creature per area (varying rarity)
     { id: "hermitcrab", name: "Hermit Crab",  area: "coral", creature: true, rarity: "rare",      size: 1, value: 320,  color: "#c98a5a", shape: "crab" },
-    { id: "riversnail", name: "River Snail",  area: "river", creature: true, rarity: "common",    size: 1, value: 45,   color: "#7a6a4a", shape: "urchin" },
-    { id: "abalone",    name: "Abalone",      area: "kelp",  creature: true, rarity: "uncommon",  size: 1, value: 150,  color: "#8a7a9a", shape: "urchin" },
+    { id: "riversnail", name: "River Snail",  area: "river", creature: true, rarity: "common",    size: 1, value: 45,   color: "#7a6a4a", shape: "snail" },
+    { id: "abalone",    name: "Abalone",      area: "kelp",  creature: true, rarity: "uncommon",  size: 1, value: 150,  color: "#8a7a9a", shape: "snail" },
     { id: "seacucumber",name: "Sea Cucumber", area: "trench", creature: true, rarity: "rare",     size: 2, value: 380,  color: "#6a4a5a", shape: "bug" },
     { id: "voidstar",   name: "Void Star",    area: "sanctuary", creature: true, rarity: "legendary", size: 1, value: 1800, color: "#9f7bff", shape: "starfish" },
     // ---- Clams: prised open with a SHOVEL; some hide a pearl ----
@@ -304,7 +304,7 @@
     { id: "cavefish",   name: "Blind Cavefish", area: "secretcave", rarity: "common",   size: 1, value: 140,  minDepth: 0, color: "#e8dcd0", shape: "fish" },
     { id: "ghostshrimp",name: "Ghost Shrimp",   area: "secretcave", creature: true, rarity: "rare",      size: 1, value: 360,  color: "#cfe0e8", shape: "bug" },
     { id: "cavecrab",   name: "Cave Crab",      area: "secretcave", creature: true, rarity: "uncommon",  size: 2, value: 300,  color: "#7a5a4a", shape: "crab" },
-    { id: "glowsnail",  name: "Glow Snail",     area: "secretcave", creature: true, rarity: "epic",      size: 1, value: 900,  color: "#8affc0", shape: "urchin" },
+    { id: "glowsnail",  name: "Glow Snail",     area: "secretcave", creature: true, rarity: "epic",      size: 1, value: 900,  color: "#8affc0", shape: "snail" },
 
     // ======== Nocturnal fish (ONLY appear on night dives) — 2 per area ========
     { id: "lanterneye",  name: "Lantern-eye",      area: "coral",   night: true, rarity: "rare",  size: 2, value: 360,  minDepth: 60,  color: "#2a6a7a", accent: "#7afcff", shape: "lanternjaw" },
@@ -360,19 +360,21 @@
     { id: "redcrane",   name: "Red-Crowned Crane", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 820, color: "#f0f4f6", accent: "#e0556a", shape: "bird", seedCost: 1600 },
     { id: "oilgull",    name: "Slick Gull",     area: "oilrig",  bird: true, rarity: "uncommon", size: 2, value: 360, color: "#3a342a", accent: "#caa14a", shape: "bird", seedCost: 700 },
     { id: "cometdove",  name: "Comet Dove",     area: "sanctuary", bird: true, rarity: "epic", size: 1, value: 1400, color: "#cfe6ff", accent: "#ff8be0", shape: "bird", seedCost: 2400 },
-    { id: "cowrie",     name: "Cowrie Snail",   area: "coral",   creature: true, day: true, rarity: "common", size: 1, value: 70, color: "#f0d8c0", accent: "#caa15a", shape: "urchin" },
+    { id: "cowrie",     name: "Cowrie Snail",   area: "coral",   creature: true, day: true, rarity: "common", size: 1, value: 70, color: "#f0d8c0", accent: "#caa15a", shape: "snail" },
     { id: "mayflynymph",name: "Mayfly Nymph",   area: "river",   creature: true, night: true, rarity: "uncommon", size: 1, value: 150, color: "#5a6a4a", accent: "#aed080", shape: "bug" },
     { id: "seaslug",    name: "Sea Slug",       area: "kelp",    creature: true, night: true, rarity: "uncommon", size: 1, value: 180, color: "#c84a8a", accent: "#ffd24a", shape: "slug" },
     { id: "krillswarm", name: "Krill",          area: "arctic",  creature: true, day: true, rarity: "common", size: 1, value: 90, color: "#e09a8a", accent: "#fff0e0", shape: "bug" },
     { id: "trilobug",   name: "Trilobite",      area: "ancient", creature: true, rarity: "uncommon", size: 1, value: 220, color: "#6a5a3a", accent: "#caa15a", shape: "trilobite" },
     { id: "goosebarnacle",name: "Goose Barnacle", area: "opensea", creature: true, day: true, rarity: "uncommon", size: 1, value: 200, color: "#cfd6dc", accent: "#3a4a55", shape: "urchin" },
     { id: "tubeworm",   name: "Tube Worm",      area: "trench",  creature: true, rarity: "rare", size: 2, value: 380, color: "#e0533a", accent: "#fff0e0", shape: "slug" },
-    { id: "forestsnail",name: "Grove Snail",    area: "forest",  creature: true, night: true, rarity: "common", size: 1, value: 110, color: "#6a5a3a", accent: "#aed080", shape: "urchin" },
+    { id: "forestsnail",name: "Grove Snail",    area: "forest",  creature: true, night: true, rarity: "common", size: 1, value: 110, color: "#6a5a3a", accent: "#aed080", shape: "snail" },
     { id: "swampleech", name: "Leech",          area: "swamp",   creature: true, night: true, rarity: "uncommon", size: 1, value: 160, color: "#3a2a2a", accent: "#7a3a3a", shape: "slug" },
     { id: "bonelouse",  name: "Bone Louse",     area: "boneyard",creature: true, rarity: "uncommon", size: 1, value: 260, color: "#ded6c2", accent: "#8a8474", shape: "bug" },
     { id: "sakurashrimp",name: "Sakura Shrimp", area: "japan",   creature: true, rarity: "rare", size: 1, value: 340, color: "#ffb0c4", accent: "#fff0f4", shape: "lobster" },
     { id: "rustmite",   name: "Rust Mite",      area: "oilrig",  creature: true, day: true, rarity: "common", size: 1, value: 150, color: "#8a5a3a", accent: "#caa14a", shape: "bug" },
-    { id: "novasnail",  name: "Nova Snail",     area: "sanctuary", creature: true, night: true, rarity: "rare", size: 1, value: 700, color: "#9f7bff", accent: "#fff3b0", shape: "urchin" },
+    { id: "novasnail",  name: "Nova Snail",     area: "sanctuary", creature: true, night: true, rarity: "rare", size: 1, value: 700, color: "#9f7bff", accent: "#fff3b0", shape: "snail" },
+    { id: "barnowl",    name: "Barn Owl",       area: "forest",  bird: true, night: true, rarity: "rare", size: 2, value: 540, color: "#e8dcc8", accent: "#caa15a", shape: "owl", seedCost: 1000 },
+    { id: "tawnyowl",   name: "Tawny Owl",      area: "swamp",   bird: true, night: true, rarity: "rare", size: 2, value: 560, color: "#8a6a4a", accent: "#e0c0a0", shape: "owl", seedCost: 1000 },
 
     // ======== Sunken Grove (forest) ========
     { id: "grovefish",  name: "Grovefish",    area: "forest", rarity: "common",   size: 1, value: 60,  minDepth: 0,   color: "#6cae4a", shape: "goby" },

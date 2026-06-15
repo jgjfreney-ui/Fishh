@@ -1313,7 +1313,7 @@
     saveGame();
     scene = "boat";
     showBoat();
-    if (window.AUDIO) AUDIO.playMenu();
+    if (window.AUDIO) AUDIO.playMenu(state && state.nextNight);
   }
 
   // ---------------------------------------------------------------------
@@ -2194,7 +2194,7 @@
   // ----- Start screen (save slots) -----
   function showStart() {
     scene = "start";
-    if (window.AUDIO) AUDIO.playMenu(); // carries menu ambience once audio is awake
+    if (window.AUDIO) AUDIO.playMenu(state && state.nextNight); // carries menu ambience once audio is awake
     var saves = listSaves();
     var html = '<div class="panel start-panel">';
     html += '<h1>🌊 Deep Sea Diver 🐙</h1>';
@@ -2262,7 +2262,7 @@
   function enterBoat() {
     closeOverlay("modal");
     scene = "boat";
-    if (window.AUDIO) { AUDIO.setMuted(state.settings.muted); AUDIO.playMenu(); }
+    if (window.AUDIO) { AUDIO.setMuted(state.settings.muted); AUDIO.playMenu(state && state.nextNight); }
     showBoat();
   }
 
@@ -2351,6 +2351,7 @@
     if (state.items.stopwatch) bind("daynight", function () {
       state.nextNight = !state.nextNight; saveGame();
       toast(state.nextNight ? "Stopwatch set to 🌙 Night" : "Stopwatch set to ☀️ Day", "good", 1200);
+      if (window.AUDIO) AUDIO.playMenu(state.nextNight); // swap to/from night ambience
       showBoat();
     });
     bind("btn-sell", sellAll);
@@ -2671,7 +2672,7 @@
     aqua = null;
     document.getElementById("aqua-ui").style.display = "none";
     scene = "boat";
-    if (window.AUDIO) AUDIO.playMenu();
+    if (window.AUDIO) AUDIO.playMenu(state && state.nextNight);
     showBoat();
   }
   function aquaNav(dir) {
@@ -2832,7 +2833,7 @@
   function exitHome() {
     document.getElementById("home-ui").style.display = "none";
     scene = "boat";
-    if (window.AUDIO) AUDIO.playMenu();
+    if (window.AUDIO) AUDIO.playMenu(state && state.nextNight);
     showBoat();
   }
 
@@ -3337,7 +3338,7 @@
     html += '</div>';
     ov.innerHTML = html;
     ov.classList.add("open");
-    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(state && state.nextNight); showBoat(); });
     saveGame();
   }
 
@@ -3360,7 +3361,7 @@
     ov.innerHTML = html;
     ov.classList.add("open");
     bind("btn-resume", function () { resumeDive(); });
-    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(state && state.nextNight); showBoat(); });
     saveGame();
   }
 
@@ -3399,7 +3400,7 @@
     ov.innerHTML = html;
     ov.classList.add("open");
     bind("btn-resume", function () { resumeDive(); });
-    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(); showBoat(); });
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(state && state.nextNight); showBoat(); });
     saveGame();
   }
 
@@ -3717,7 +3718,7 @@
         AUDIO.resume();
         if (state && state.settings) AUDIO.setMuted(state.settings.muted);
         if (scene === "dive" && run) AUDIO.playArea(run.area, run.night);
-        else AUDIO.playMenu();
+        else AUDIO.playMenu(state && state.nextNight);
         window.removeEventListener("pointerdown", firstGesture);
         window.removeEventListener("keydown", firstGesture);
       };
