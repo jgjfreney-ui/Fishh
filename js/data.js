@@ -558,7 +558,7 @@
     // ======== The Backrooms (secret) ========
     { id: "wallpaperfish", name: "Wallpaper Fish", area: "backrooms", rarity: "common", size: 2, value: 200, minDepth: 0, color: "#d8c468", accent: "#b8a038", shape: "wallpaperfish" },
     { id: "weircorejelly", name: "Weirdcore Jelly", area: "backrooms", rarity: "uncommon", size: 3, value: 360, minDepth: 20, color: "#c8b84a", accent: "#fff6a0", shape: "glowjelly" },
-    { id: "bacteriaurchin", name: "Bacteria Urchin", area: "backrooms", rarity: "uncommon", size: 2, value: 320, minDepth: 40, color: "#9aa83a", accent: "#dfff6a", shape: "urchin" },
+    { id: "bacteriaurchin", name: "Bacteria Blob", area: "backrooms", rarity: "uncommon", size: 2, value: 320, minDepth: 40, color: "#c8b88a", accent: "#9aa83a", shape: "bacteria" },
     { id: "hazmatshark", name: "Hazmat Shark", area: "backrooms", rarity: "epic", size: 6, value: 2400, minDepth: 120, color: "#e0c83a", accent: "#1a1a1a", shape: "shark" },
     { id: "poolnoodle", name: "Pool Noodle Eel", area: "backrooms", rarity: "rare", size: 3, value: 520, minDepth: 80, color: "#4ad0e0", accent: "#ffffff", shape: "eel" },
     { id: "cctvfish",   name: "CCTV Fish",    area: "backrooms", rarity: "mythic", size: 2, value: 4000, minDepth: 0, color: "#7a8a90", accent: "#ff4040", shape: "cctv", secret: true,
