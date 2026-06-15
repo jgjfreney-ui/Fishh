@@ -612,6 +612,62 @@
     { id: "cratecrab",  name: "Crate Crab",    area: "flooded", creature: true, rarity: "uncommon", size: 2, value: 420, color: "#6a5a4a", accent: "#caa15a", shape: "crab", shy: true },
     { id: "goblinshark", name: "Goblin Shark", area: "flooded", areaBoss: true, rarity: "mythic", size: 13, value: 38000, minDepth: 200, color: "#caa0b0", accent: "#e25a7a", shape: "goblin", hp: 7, reward: "", jawLunge: true },
 
+    // ---- secretcave: extra catchables (parity / more content) ----
+    { id: "hollowperch", name: "Hollow Perch", area: "secretcave", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#9277cd", accent: "#dca7e7", shape: "perch" },
+    { id: "palegoby", name: "Pale Goby", area: "secretcave", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#b290ba", accent: "#cac9e6", shape: "goby" },
+    { id: "blindsardine", name: "Blind Sardine", area: "secretcave", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#9e7bb6", accent: "#b8bffd", shape: "sardine" },
+    { id: "cavetrout", name: "Cave Trout", area: "secretcave", rarity: "common", size: 2, value: 312, minDepth: 0, color: "#827db9", accent: "#d6bfe6", shape: "trout" },
+    { id: "hollowminnow", name: "Hollow Minnow", area: "secretcave", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#b292bb", accent: "#c1ccff", shape: "guppy" },
+    { id: "paleclown", name: "Pale Clown", area: "secretcave", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#a371d8", accent: "#d8bde6", shape: "clownfish" },
+    { id: "blindmackerel", name: "Blind Mackerel", area: "secretcave", rarity: "uncommon", size: 2, value: 686, minDepth: 40, color: "#8c70d7", accent: "#e9acf5", shape: "mackerel" },
+    { id: "cavecod", name: "Cave Cod", area: "secretcave", rarity: "uncommon", size: 2, value: 686, minDepth: 40, color: "#9877d6", accent: "#bac8f6", shape: "codfish" },
+    // ---- backrooms: extra catchables (parity / more content) ----
+    { id: "yellowedperch", name: "Yellowed Perch", area: "backrooms", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#dfdc77", accent: "#eee0a9", shape: "perch" },
+    { id: "liminalgoby", name: "Liminal Goby", area: "backrooms", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#e0d058", accent: "#fae0a7", shape: "goby" },
+    { id: "buzzingsardine", name: "Buzzing Sardine", area: "backrooms", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#e9ac70", accent: "#e6ff91", shape: "sardine" },
+    { id: "damptrout", name: "Damp Trout", area: "backrooms", rarity: "common", size: 2, value: 312, minDepth: 0, color: "#dbd36e", accent: "#feff98", shape: "trout" },
+    { id: "yellowedminnow", name: "Yellowed Minnow", area: "backrooms", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#d9cd69", accent: "#faed93", shape: "guppy" },
+    // ---- swamp: extra catchables (parity / more content) ----
+    { id: "boggoby", name: "Bog Goby", area: "swamp", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#90794a", accent: "#d5c353", shape: "goby" },
+    { id: "murksardine", name: "Murk Sardine", area: "swamp", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#82813f", accent: "#c3ec63", shape: "sardine" },
+    { id: "mangrovetrout", name: "Mangrove Trout", area: "swamp", rarity: "common", size: 2, value: 312, minDepth: 0, color: "#8c8a30", accent: "#cab855", shape: "trout" },
+    { id: "reedminnow", name: "Reed Minnow", area: "swamp", rarity: "common", size: 1, value: 233, minDepth: 0, color: "#7e8828", accent: "#d4c957", shape: "guppy" },
+    // ---- boneyard: extra catchables (parity / more content) ----
+    { id: "bonegoby", name: "Bone Goby", area: "boneyard", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#d2c49a", accent: "#987eb8", shape: "goby" },
+    { id: "fossilsardine", name: "Fossil Sardine", area: "boneyard", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#d6ceca", accent: "#a6ae9c", shape: "sardine" },
+    { id: "marrowtrout", name: "Marrow Trout", area: "boneyard", rarity: "common", size: 2, value: 504, minDepth: 0, color: "#c8d6ae", accent: "#9499ad", shape: "trout" },
+    { id: "paleminnow", name: "Pale Minnow", area: "boneyard", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#e6c79c", accent: "#a37f99", shape: "guppy" },
+    // ---- pirate: extra catchables (parity / more content) ----
+    { id: "cursedperch", name: "Cursed Perch", area: "pirate", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#ccb158", accent: "#c8a792", shape: "perch" },
+    { id: "brinygoby", name: "Briny Goby", area: "pirate", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#da9857", accent: "#e8cf98", shape: "goby" },
+    { id: "galleonsardine", name: "Galleon Sardine", area: "pirate", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#ca975b", accent: "#dcdc8e", shape: "sardine" },
+    { id: "salttrout", name: "Salt Trout", area: "pirate", rarity: "common", size: 2, value: 504, minDepth: 0, color: "#c4864b", accent: "#daae8b", shape: "trout" },
+    // ---- japan: extra catchables (parity / more content) ----
+    { id: "sakuraperch", name: "Sakura Perch", area: "japan", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#cb5851", accent: "#f0ebd6", shape: "perch" },
+    { id: "koigoby", name: "Koi Goby", area: "japan", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#cc685d", accent: "#fcd3fb", shape: "goby" },
+    { id: "roninsardine", name: "Ronin Sardine", area: "japan", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#e33e58", accent: "#ffd3e7", shape: "sardine" },
+    { id: "jademinnow", name: "Jade Minnow", area: "japan", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#d57156", accent: "#ffd5fb", shape: "guppy" },
+    // ---- prism: extra catchables (parity / more content) ----
+    { id: "prismperch", name: "Prism Perch", area: "prism", rarity: "common", size: 1, value: 251, minDepth: 0, color: "#ff6fe1", accent: "#78f6ff", shape: "perch" },
+    { id: "neongoby", name: "Neon Goby", area: "prism", rarity: "common", size: 1, value: 251, minDepth: 0, color: "#ff76c2", accent: "#67e5ee", shape: "goby" },
+    { id: "opalsardine", name: "Opal Sardine", area: "prism", rarity: "common", size: 1, value: 251, minDepth: 0, color: "#ec6cde", accent: "#6ce0ff", shape: "sardine" },
+    // ---- storm: extra catchables (parity / more content) ----
+    { id: "stormgoby", name: "Storm Goby", area: "storm", rarity: "common", size: 1, value: 431, minDepth: 0, color: "#838389", accent: "#93c6e3", shape: "goby" },
+    { id: "thundersardine", name: "Thunder Sardine", area: "storm", rarity: "common", size: 1, value: 431, minDepth: 0, color: "#5778a0", accent: "#9adbff", shape: "sardine" },
+    { id: "galetrout", name: "Gale Trout", area: "storm", rarity: "common", size: 2, value: 576, minDepth: 0, color: "#6266aa", accent: "#b9d4ff", shape: "trout" },
+    // ---- oilrig: extra catchables (parity / more content) ----
+    { id: "rustperch", name: "Rust Perch", area: "oilrig", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#d7b05d", accent: "#e67b55", shape: "perch" },
+    { id: "dieseltrout", name: "Diesel Trout", area: "oilrig", rarity: "common", size: 2, value: 504, minDepth: 0, color: "#dfbc59", accent: "#ff8137", shape: "trout" },
+    { id: "slickminnow", name: "Slick Minnow", area: "oilrig", rarity: "common", size: 1, value: 377, minDepth: 0, color: "#c79e47", accent: "#e97c46", shape: "guppy" },
+    // ---- mountain: extra catchables (parity / more content) ----
+    { id: "ridgesardine", name: "Ridge Sardine", area: "mountain", rarity: "common", size: 1, value: 413, minDepth: 0, color: "#87819e", accent: "#b7d1ee", shape: "sardine" },
+    { id: "alpineminnow", name: "Alpine Minnow", area: "mountain", rarity: "common", size: 1, value: 413, minDepth: 0, color: "#7885a7", accent: "#d9c7d8", shape: "guppy" },
+    // ---- olympus: extra catchables (parity / more content) ----
+    { id: "gildedperch", name: "Gilded Perch", area: "olympus", rarity: "common", size: 1, value: 809, minDepth: 0, color: "#e3e867", accent: "#ffddab", shape: "perch" },
+    { id: "divinegoby", name: "Divine Goby", area: "olympus", rarity: "common", size: 1, value: 809, minDepth: 0, color: "#ffc562", accent: "#ffe4bb", shape: "goby" },
+    // ---- ashen: extra catchables (parity / more content) ----
+    { id: "cinderperch", name: "Cinder Perch", area: "ashen", rarity: "common", size: 1, value: 413, minDepth: 0, color: "#dc4236", accent: "#f39444", shape: "perch" },
+    { id: "ashgoby", name: "Ash Goby", area: "ashen", rarity: "common", size: 1, value: 413, minDepth: 0, color: "#db5715", accent: "#eab43d", shape: "goby" },
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
     { id: "pelican",   name: "Pelican",      area: "coral", bird: true, rarity: "uncommon", size: 2, value: 130, color: "#d8c2a0", shape: "duck", seedCost: 400 },
