@@ -166,9 +166,11 @@
     run.oilrig = null;
     if (loc.birdPool || loc.creaturePool || loc.airArea) return;
     var floor = loc.maxDepth * PXPM;
-    var n = 2 + (Math.random() * 2 | 0);
+    var n = 3 + (Math.random() * 3 | 0);
     for (var i = 0; i < n; i++) {
-      run.cages.push({ x: 200 + Math.random() * (loc.worldWidth - 400), y: floor - 18 - Math.random() * 40, opened: false, hasKey: false });
+      // cages now drift at all depths — snagged on ledges, mid-water, not just the floor
+      var cy = 120 + Math.random() * (floor - 160);
+      run.cages.push({ x: 160 + Math.random() * (loc.worldWidth - 320), y: cy, opened: false, hasKey: false, bob: Math.random() * 6 });
     }
     if (loc.id === "opensea") {
       // the key cage, bottom-right corner
@@ -196,6 +198,7 @@
       def: def, x: x, y: run.floorY - 8,
       vx: (Math.random() < 0.5 ? -1 : 1) * (12 + Math.random() * 10),
       phase: Math.random() * 6, shiny: Math.random() < shinyChance(run.area), size: def.size,
+      hasPearl: !!def.dropsPearl && Math.random() < 0.5, // predetermined: a visible pearl when open
     });
   }
 
@@ -919,14 +922,16 @@
     var hasNet = netR > 0;
     for (var ci = run.creatures.length - 1; ci >= 0; ci--) {
       var c = run.creatures[ci];
-      c.phase += dt * 5;
+      c.phase += dt * (c.def.shape === "clam" ? 1.4 : 5);
       if (!c.def.tool) c.x += c.vx * dt;   // clams stay put
       c.y = run.floorY - 8 + Math.sin(c.phase) * 1.2;
       if (c.x < -60 || c.x > loc.worldWidth + 60) { run.creatures.splice(ci, 1); continue; }
       var cdx = diver.x - c.x, cdy = diver.y - c.y, cdist = Math.hypot(cdx, cdy);
-      if (c.def.tool === "shovel") {            // clams: prised open with the Shovel
+      if (c.def.tool === "shovel") {            // clams: prised open with the Shovel — only while OPEN
+        var clamOpen = Math.sin(c.phase) > 0.1;
         if (state.items.shovel) {
-          if (cdist < 55 && catchCreature(c)) { startNetFx(c, 55); if (c.def.dropsPearl) dropPearl(c); run.creatures.splice(ci, 1); }
+          if (clamOpen && cdist < 55 && catchCreature(c)) { startNetFx(c, 55); if (c.hasPearl) dropPearl(c); run.creatures.splice(ci, 1); }
+          else if (!clamOpen && cdist < 50 && run.time - (run.netHint || -99) > 6) { run.netHint = run.time; toast("Wait for the clam to open...", "bad", 1400); }
         } else if (cdist < 60 && run.time - (run.netHint || -99) > 12) {
           run.netHint = run.time; toast("Buy a ⛏️ Shovel (Shop → Tools) to pry open clams!", "bad", 2400);
         }
@@ -1007,8 +1012,8 @@
           if (state.items.sledgehammer) {
             cg.opened = true;
             if (window.AUDIO) AUDIO.rumble();
-            // burst of treasure
-            for (var bt = 0; bt < 3 + (Math.random() * 3 | 0); bt++) {
+            // a small burst of treasure (no longer a jackpot)
+            for (var bt = 0; bt < 1 + (Math.random() * 2 | 0); bt++) {
               var pdef = D.TREASURES[(Math.random() * 7) | 0]; // common-ish loot
               run.treasures.push({ def: pdef, x: cg.x + (Math.random() - 0.5) * 40, y: cg.y - 14 - Math.random() * 24, phase: Math.random() * 6 });
             }
@@ -1210,7 +1215,6 @@
 
   var CLAM_PEARL = null;
   function dropPearl(c) {
-    if (Math.random() > 0.55) return; // not every clam has one
     if (!CLAM_PEARL) { for (var i = 0; i < D.TREASURES.length; i++) if (D.TREASURES[i].id === "clampearl") CLAM_PEARL = D.TREASURES[i]; }
     if (!CLAM_PEARL) return;
     var mult = itemOn("necklace") ? 2 : 1;
@@ -1626,14 +1630,25 @@
     if (!run.cages) return;
     for (var i = 0; i < run.cages.length; i++) {
       var cg = run.cages[i]; if (cg.opened) continue;
-      var x = cg.x - cam.x, y = cg.y - cam.y;
+      var bob = Math.sin(run.time * 1.1 + (cg.bob || 0)) * 3;
+      var x = cg.x - cam.x, y = cg.y - cam.y + bob;
       if (x < -50 || x > W + 50 || y < -50 || y > H + 50) continue;
-      ctx.fillStyle = "#6a6258"; ctx.fillRect(x - 18, y - 24, 36, 28);     // frame
-      ctx.fillStyle = "#3a342c"; ctx.fillRect(x - 14, y - 20, 28, 22);     // dark interior
-      ctx.fillStyle = "#ffcf3a"; for (var b = 0; b < 3; b++) ctx.fillRect(x - 8 + b * 8, y - 16, 3, 3); // loot glint
-      ctx.strokeStyle = "#8a8278"; ctx.lineWidth = 2;                       // bars
-      for (var bx = -14; bx <= 14; bx += 7) { ctx.beginPath(); ctx.moveTo(x + bx, y - 22); ctx.lineTo(x + bx, y + 2); ctx.stroke(); }
-      if (cg.hasKey) { ctx.fillStyle = "#ffe14d"; ctx.font = "12px sans-serif"; ctx.textAlign = "center"; ctx.fillText("🔒", x, y - 28); }
+      // a rusty iron crate: chunky corner posts, cross bars, padlock + loot glint
+      var rust = "#7a5a3a", iron = "#5a5048", dark = "#2a241c";
+      ctx.fillStyle = dark; ctx.fillRect(x - 17, y - 21, 34, 38);          // interior
+      ctx.fillStyle = "#ffcf3a";                                            // treasure glint inside
+      for (var b = 0; b < 3; b++) { if (Math.sin(run.time * 2 + b + (cg.bob || 0)) > 0) ctx.fillRect(x - 9 + b * 8, y + 4 + (b % 2) * 4, 3, 3); }
+      ctx.strokeStyle = iron; ctx.lineWidth = 2;                            // vertical bars
+      for (var bx = -12; bx <= 12; bx += 8) { ctx.beginPath(); ctx.moveTo(x + bx, y - 21); ctx.lineTo(x + bx, y + 17); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(x - 17, y - 4); ctx.lineTo(x + 17, y - 4); ctx.stroke(); // cross bar
+      ctx.strokeStyle = rust; ctx.lineWidth = 4;                            // rusty frame
+      ctx.strokeRect(x - 17, y - 21, 34, 38);
+      ctx.fillStyle = rust; [[-17, -21], [13, -21], [-17, 13], [13, 13]].forEach(function (p) { ctx.fillRect(x + p[0], y + p[1], 4, 8); ctx.fillRect(x + p[0], y + p[1], 8, 4); }); // corner brackets
+      // padlock
+      ctx.fillStyle = cg.hasKey ? "#ffe14d" : "#9aa6b0";
+      ctx.fillRect(x - 4, y - 2, 8, 7); ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y - 2, 3, Math.PI, 0); ctx.stroke();
+      if (cg.hasKey) drawGlow(x, y, 26, "#ffe14d", 0.35);
     }
   }
   function drawOilRig() {
@@ -1711,6 +1726,25 @@
       rg.addColorStop(1, "rgba(0,0,10," + a + ")");
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, W, H);
+    }
+    // Torch: a bright beam projected in the direction you face (cuts the gloom)
+    if (state.items.torch) {
+      var dir = run.diver.face < 0 ? -1 : 1, reach = 320, halfW = 130;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      var tipx = dx + dir * reach;
+      var lg = ctx.createLinearGradient(dx, dy, tipx, dy);
+      lg.addColorStop(0, "rgba(255,244,200,0.42)");
+      lg.addColorStop(1, "rgba(255,244,200,0)");
+      ctx.fillStyle = lg;
+      ctx.beginPath();
+      ctx.moveTo(dx, dy - 6);
+      ctx.lineTo(dx, dy + 6);
+      ctx.lineTo(tipx, dy + halfW);
+      ctx.lineTo(tipx, dy - halfW);
+      ctx.closePath(); ctx.fill();
+      drawGlow(dx + dir * 18, dy, 50, "#fff4c8", 0.5); // bright lamp at the source
+      ctx.restore();
     }
   }
 
@@ -1979,6 +2013,38 @@
     return null;
   }
 
+  // a hinged clam that opens (openAmt 0..1); shows a pearl inside when open
+  function drawClam(x, y, th, color, accent, openAmt, hasPearl, shiny) {
+    var w = th * 0.9, hh = th * 0.42, lip = mix(color, "#000000", 0.35), inner = mix(color, "#ffffff", 0.6);
+    var gap = openAmt * hh * 0.9;
+    // bottom shell
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(x | 0, (y + 1) | 0, w / 2, hh / 2, 0, 0, Math.PI); ctx.fill();
+    ctx.fillStyle = inner;
+    ctx.beginPath(); ctx.ellipse(x | 0, (y + 1) | 0, w / 2 - 2, hh / 2 - 2, 0, 0, Math.PI); ctx.fill();
+    // the open gap reveals the inside (+ pearl)
+    if (hasPearl && openAmt > 0.25) {
+      var pr = Math.max(2, th * 0.13);
+      ctx.fillStyle = "#fff0f6"; ctx.beginPath(); ctx.arc(x | 0, (y - gap * 0.4) | 0, pr, 0, 7); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect((x - pr * 0.3) | 0, (y - gap * 0.4 - pr * 0.3) | 0, 2, 2);
+      if (Math.sin(run.time * 4) > 0.5) drawGlow(x, y - gap * 0.4, pr * 2.2, "#ffd6e6", 0.4);
+    }
+    // top shell, hinged open
+    ctx.save();
+    ctx.translate(x, y - 1);
+    ctx.rotate(-openAmt * 0.5);
+    ctx.fillStyle = lip;
+    ctx.beginPath(); ctx.ellipse(0, -gap * 0.5, w / 2, hh / 2, 0, Math.PI, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.ellipse(0, -gap * 0.5 - 1, w / 2 - 2, hh / 2 - 1, 0, Math.PI, Math.PI * 2); ctx.fill();
+    // ribs
+    ctx.strokeStyle = accent || "#ffffff"; ctx.globalAlpha = 0.4; ctx.lineWidth = 1;
+    for (var r = -2; r <= 2; r++) { ctx.beginPath(); ctx.moveTo(r * w * 0.12, -gap * 0.5); ctx.lineTo(r * w * 0.18, -gap * 0.5 - hh / 2 + 1); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+    if (shiny && Math.sin(run.time * 3) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fillRect((x + w * 0.3) | 0, (y - hh * 0.3) | 0, 2, 2); }
+  }
+
   // sea-floor creatures (crawling, caught with the net)
   function drawCreatures() {
     var noNet = netSize() <= 0;
@@ -1990,6 +2056,8 @@
       var arch = SPRITES.archetypeForShape(c.def.shape);
       var biolum = c.shiny || c.def.area === "sanctuary";
       if (biolum) drawGlow(x, y, th * 0.9, c.shiny ? "#fff0a0" : c.def.color, c.shiny ? 0.4 : 0.22);
+      // clams: a hinged shell that opens & closes, with a pearl visible when open
+      if (c.def.shape === "clam") { drawClam(x, y, th, c.def.color, c.def.accent, Math.max(0, Math.sin(c.phase)), c.hasPearl, c.shiny); continue; }
       // movement animation: crabs/lobsters/bugs scuttle (little hops); starfish
       // & urchins barely move (slow drift/rotate)
       var sh = c.def.shape, hop = 0, rot = 0;
@@ -2526,6 +2594,11 @@
       + '<p>Smash open locked <b>cages</b> on the sea floor — they\'re packed with treasure.</p></div>'
       + '<div class="si-buy">' + (hasHammer ? '<span class="maxed">✓</span>'
         : '<button data-buytool="sledgehammer:8000" ' + (state.money < 8000 ? 'disabled' : '') + '>$8,000</button>') + '</div></div>';
+    var hasTorch = !!state.items.torch;
+    html += '<div class="shop-item"><div class="si-info"><b>🔦 Torch</b>' + (hasTorch ? ' <span class="lvl">✓ Owned</span>' : '')
+      + '<p>Casts a bright <b>beam of light</b> in the direction you face — pierces the gloom of the deep and dark caves.</p></div>'
+      + '<div class="si-buy">' + (hasTorch ? '<span class="maxed">✓</span>'
+        : '<button data-buytool="torch:9000" ' + (state.money < 9000 ? 'disabled' : '') + '>$9,000</button>') + '</div></div>';
     var hasShovel = !!state.items.shovel;
     html += '<div class="shop-item"><div class="si-info"><b>⛏️ Shovel</b>' + (hasShovel ? ' <span class="lvl">✓ Owned</span>' : '')
       + '<p>Pry <b>clams</b> off the sea bed — some hold a precious <b>pearl</b>.</p></div>'
@@ -2636,7 +2709,8 @@
         var p = b.getAttribute("data-buytool").split(":"), id = p[0], cost = +p[1];
         if (state.items[id] || state.money < cost) return;
         state.money -= cost; state.items[id] = true; saveGame();
-        toast((id === "sledgehammer" ? "🔨 Sledgehammer" : "⛏️ Shovel") + " acquired!", "good", 1800); showShop();
+        var nm = id === "sledgehammer" ? "🔨 Sledgehammer" : id === "shovel" ? "⛏️ Shovel" : "🔦 Torch";
+        toast(nm + " acquired!", "good", 1800); showShop();
       };
     });
     ov.querySelectorAll("[data-buystopwatch]").forEach(function (b) {
@@ -3679,6 +3753,9 @@
     if (state.items.stopwatch) html += row("⏱️ Tide Stopwatch", "pick day or night");
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
     if (state.items.goggles) html += row("🥽 Wide-View Goggles", "see further");
+    if (state.items.torch) html += row("🔦 Torch", "beam of light");
+    if (state.items.sledgehammer) html += row("🔨 Sledgehammer", "smash cages");
+    if (state.items.shovel) html += row("⛏️ Shovel", "pry clams");
     var seedTotal = 0; for (var s in state.seeds) seedTotal += state.seeds[s];
     html += row("🌾 Bird seeds", seedTotal);
     html += row("🍀 Rarity Charms", "×" + state.charms.rarity);
