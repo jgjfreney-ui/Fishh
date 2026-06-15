@@ -274,7 +274,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "tree", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire", pirate: "spire", ashen: "spire", mountain: "spire", olympus: "bigcrystal", flooded: "spire" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "fossil", opensea: "bigkelp", cave: "spire", cloud: "bigcrystal", forest: "tree", swamp: "bigkelp", boneyard: "bones", backrooms: "spire", japan: "bigcoral", secretcave: "bigcrystal", oilrig: "pipe", prism: "bigcoral", storm: "spire", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "bigcrystal", flooded: "container" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -362,6 +362,73 @@
           var by = topY + (cb % 3) * 16 + Math.cos(cb * 1.3) * 8;
           ctx.beginPath(); ctx.arc(bx, by, 24 * fl.w, 0, 7); ctx.fill();
         }
+      } else if (fl.type === "bones") {
+        // a giant ribcage rising from the seabed
+        ctx.globalAlpha = 0.5; ctx.strokeStyle = fl.color; ctx.lineWidth = Math.max(3, 5 * fl.w);
+        var spineX = x, baseY = floorScreenY, topY = floorScreenY - fl.h;
+        ctx.beginPath(); ctx.moveTo(spineX, baseY); ctx.lineTo(spineX, topY); ctx.stroke();
+        for (var rb = 0; rb < 5; rb++) {
+          var ry = topY + (rb / 5) * fl.h, rw = (28 - rb * 3) * fl.w;
+          ctx.beginPath(); ctx.moveTo(spineX, ry); ctx.quadraticCurveTo(spineX - rw, ry + 10, spineX - rw * 0.7, ry + 26); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(spineX, ry); ctx.quadraticCurveTo(spineX + rw, ry + 10, spineX + rw * 0.7, ry + 26); ctx.stroke();
+        }
+      } else if (fl.type === "pipe") {
+        // rusted industrial standpipe with flanges + a valve wheel
+        ctx.globalAlpha = 0.55; ctx.fillStyle = fl.color;
+        var pw = 12 * fl.w;
+        ctx.fillRect(Math.round(x - pw / 2), Math.round(floorScreenY - fl.h), Math.round(pw), Math.round(fl.h));
+        ctx.fillStyle = mix(fl.color, "#000", 0.3);
+        for (var fg = 0; fg < fl.h; fg += 40) ctx.fillRect(Math.round(x - pw / 2 - 3), Math.round(floorScreenY - fg - 6), Math.round(pw + 6), 5);
+        ctx.strokeStyle = mix(fl.color, "#ff7a3a", 0.4); ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(x, floorScreenY - fl.h, 9 * fl.w, 0, 7); ctx.stroke(); // valve
+      } else if (fl.type === "mast") {
+        // a broken galleon mast with a crossbeam and tattered sail
+        ctx.globalAlpha = 0.5; ctx.fillStyle = fl.color;
+        var mw = 8 * fl.w;
+        ctx.fillRect(Math.round(x - mw / 2), Math.round(floorScreenY - fl.h), Math.round(mw), Math.round(fl.h));
+        ctx.fillRect(Math.round(x - 30 * fl.w), Math.round(floorScreenY - fl.h * 0.78), Math.round(60 * fl.w), 5); // yard
+        ctx.fillStyle = "rgba(220,210,180,0.25)"; // ragged sail
+        ctx.beginPath(); ctx.moveTo(x - 26 * fl.w, floorScreenY - fl.h * 0.76);
+        ctx.lineTo(x + 26 * fl.w, floorScreenY - fl.h * 0.76);
+        ctx.lineTo(x + 18 * fl.w, floorScreenY - fl.h * 0.44);
+        ctx.lineTo(x - 12 * fl.w, floorScreenY - fl.h * 0.5); ctx.closePath(); ctx.fill();
+      } else if (fl.type === "lavavent") {
+        // a black chimney with a molten glowing crown + smoke
+        ctx.globalAlpha = 0.6; ctx.fillStyle = mix(fl.color, "#000", 0.4);
+        ctx.beginPath(); ctx.moveTo(x - 22 * fl.w, floorScreenY); ctx.lineTo(x - 8 * fl.w, floorScreenY - fl.h);
+        ctx.lineTo(x + 8 * fl.w, floorScreenY - fl.h); ctx.lineTo(x + 22 * fl.w, floorScreenY); ctx.closePath(); ctx.fill();
+        var ventY = floorScreenY - fl.h;
+        drawGlow(x, ventY, 16 * fl.w, "#ff5b1a", 0.5 + 0.2 * Math.sin(run.time * 3 + fl.sway));
+        ctx.fillStyle = "rgba(255,120,40,0.6)"; ctx.fillRect(Math.round(x - 8 * fl.w), Math.round(ventY - 2), Math.round(16 * fl.w), 4);
+      } else if (fl.type === "crag") {
+        // jagged layered mountain crag
+        ctx.globalAlpha = 0.6; ctx.fillStyle = fl.color;
+        ctx.beginPath(); ctx.moveTo(x - 30 * fl.w, floorScreenY);
+        ctx.lineTo(x - 10 * fl.w, floorScreenY - fl.h * 0.7);
+        ctx.lineTo(x, floorScreenY - fl.h);
+        ctx.lineTo(x + 12 * fl.w, floorScreenY - fl.h * 0.6);
+        ctx.lineTo(x + 30 * fl.w, floorScreenY); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "rgba(255,255,255,0.16)"; // snow/light cap
+        ctx.beginPath(); ctx.moveTo(x - 6 * fl.w, floorScreenY - fl.h * 0.82); ctx.lineTo(x, floorScreenY - fl.h); ctx.lineTo(x + 7 * fl.w, floorScreenY - fl.h * 0.78); ctx.closePath(); ctx.fill();
+      } else if (fl.type === "container") {
+        // a leaning stack of shipping containers
+        ctx.globalAlpha = 0.55;
+        var ccols = ["#b14a3a", "#3a72a0", "#caa14a", "#4a8a5a"];
+        var rows = Math.max(2, Math.round(fl.h / 26));
+        for (var cr = 0; cr < rows; cr++) {
+          ctx.fillStyle = ccols[(cr + (x | 0)) % ccols.length];
+          var off = Math.sin(cr * 0.8 + fl.sway) * 6 * fl.w;
+          ctx.fillRect(Math.round(x - 24 * fl.w + off), Math.round(floorScreenY - (cr + 1) * 26), Math.round(48 * fl.w), 24);
+          ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(Math.round(x - 24 * fl.w + off), Math.round(floorScreenY - (cr + 1) * 26), Math.round(48 * fl.w), 3);
+        }
+      } else if (fl.type === "fossil") {
+        // a giant coiled ammonite fossil half-buried in the floor
+        ctx.globalAlpha = 0.5; ctx.strokeStyle = fl.color; ctx.lineWidth = Math.max(3, 4 * fl.w);
+        var fcx = x, fcy = floorScreenY - fl.h * 0.5, R0 = fl.h * 0.45;
+        ctx.beginPath();
+        for (var a2 = 0; a2 < 18; a2++) { var ang = a2 * 0.5, rr = R0 * (1 - a2 / 22); var pxc = fcx + Math.cos(ang) * rr, pyc = fcy + Math.sin(ang) * rr; if (a2 === 0) ctx.moveTo(pxc, pyc); else ctx.lineTo(pxc, pyc); }
+        ctx.stroke();
+        ctx.lineWidth = 1.5; for (var rib = 0; rib < 10; rib++) { var ang2 = rib * 0.6, rr2 = R0 * (1 - rib / 14); ctx.beginPath(); ctx.moveTo(fcx + Math.cos(ang2) * rr2 * 0.6, fcy + Math.sin(ang2) * rr2 * 0.6); ctx.lineTo(fcx + Math.cos(ang2) * rr2, fcy + Math.sin(ang2) * rr2); ctx.stroke(); }
       } else { // spire
         ctx.globalAlpha = 0.6;
         ctx.beginPath();
