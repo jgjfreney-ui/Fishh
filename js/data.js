@@ -180,9 +180,9 @@
     { id: "cod",        name: "Cod",         area: "coral", rarity: "common",   size: 1, value: 22,  minDepth: 0,   color: "#bda079", shape: "codfish" },
     { id: "seabass",    name: "Sea Bass",    area: "coral", rarity: "common",   size: 1, value: 26,  minDepth: 20,  color: "#8fa6b0", shape: "perch" },
     { id: "angelfish",  name: "Angelfish",   area: "coral", rarity: "uncommon", size: 1, value: 70,  minDepth: 40,  color: "#ffd84a", shape: "tang" },
-    { id: "parrotfish", name: "Parrotfish",  area: "coral", rarity: "uncommon", size: 2, value: 95,  minDepth: 60,  color: "#36d6a0", shape: "fish" },
+    { id: "parrotfish", name: "Parrotfish",  area: "coral", rarity: "uncommon", size: 2, value: 95,  minDepth: 60,  color: "#36d6a0", shape: "parrotfish" },
     { id: "pufferfish", name: "Pufferfish",  area: "coral", rarity: "uncommon", size: 2, value: 110, minDepth: 80,  color: "#c8d24a", shape: "puffer" },
-    { id: "lionfish",   name: "Lionfish",    area: "coral", rarity: "rare",     size: 2, value: 240, minDepth: 120, color: "#e0533a", shape: "fish" },
+    { id: "lionfish",   name: "Lionfish",    area: "coral", rarity: "rare",     size: 2, value: 240, minDepth: 120, color: "#e0533a", shape: "lionfish" },
     { id: "seaturtle",  name: "Sea Turtle",  area: "coral", rarity: "rare",     size: 3, value: 320, minDepth: 100, color: "#4f9e5e", shape: "turtle" },
     { id: "reefshark",  name: "Reef Shark",  area: "coral", rarity: "epic",     size: 4, value: 900, minDepth: 180, color: "#7d93a3", shape: "shark" },
 
@@ -196,14 +196,14 @@
     { id: "giantsquid", name: "Giant Squid", area: "kelp", rarity: "epic",     size: 5, value: 1300, minDepth: 360, color: "#d06a5a", shape: "squid" },
 
     // ---- Open water (appears in coral/kelp/trench mid depths) ----
-    { id: "tuna",       name: "Bluefin Tuna", area: "kelp",   rarity: "rare",     size: 3, value: 300,  minDepth: 120, color: "#3a6fb0", shape: "longfish" },
+    { id: "tuna",       name: "Bluefin Tuna", area: "kelp",   rarity: "rare",     size: 3, value: 300,  minDepth: 120, color: "#3a6fb0", shape: "tuna" },
     { id: "swordfish",  name: "Swordfish",    area: "trench", rarity: "rare",     size: 4, value: 420,  minDepth: 120, color: "#4a6678", shape: "sword" },
     { id: "manta",      name: "Manta Ray",    area: "trench", rarity: "epic",     size: 5, value: 1100, minDepth: 220, color: "#2c3e57", shape: "ray" },
     { id: "hammerhead", name: "Hammerhead",   area: "trench", rarity: "epic",     size: 5, value: 1250, minDepth: 300, color: "#6e8290", shape: "hammer" },
 
     // ---- Sunken Trench (deep) ----
     { id: "lanternfish", name: "Lanternfish",  area: "trench", rarity: "common",   size: 1, value: 40,   minDepth: 100, color: "#7fa0c0", shape: "lantern" },
-    { id: "hatchetfish", name: "Hatchetfish",  area: "trench", rarity: "uncommon", size: 1, value: 120,  minDepth: 200, color: "#cfd6e0", shape: "round" },
+    { id: "hatchetfish", name: "Hatchetfish",  area: "trench", rarity: "uncommon", size: 1, value: 120,  minDepth: 200, color: "#cfd6e0", shape: "hatchetfish" },
     { id: "anglerfish",  name: "Anglerfish",   area: "trench", rarity: "uncommon", size: 2, value: 160,  minDepth: 300, color: "#283b2f", shape: "angler" },
     { id: "viperfish",   name: "Viperfish",    area: "trench", rarity: "rare",     size: 2, value: 380,  minDepth: 400, color: "#3a4a55", shape: "eel" },
     { id: "gulpereel",   name: "Gulper Eel",   area: "trench", rarity: "rare",     size: 3, value: 460,  minDepth: 500, color: "#241f33", shape: "eel" },
@@ -225,7 +225,7 @@
     { id: "damselfish", name: "Damselfish",   area: "coral", rarity: "common",   size: 1, value: 24,  minDepth: 0,   color: "#3a7bd5", shape: "guppy" },
     { id: "butterflyfish", name: "Butterflyfish", area: "coral", rarity: "uncommon", size: 1, value: 72, minDepth: 30, color: "#ffcf3a", shape: "tang" },
     { id: "moorishidol", name: "Moorish Idol", area: "coral", rarity: "uncommon", size: 1, value: 90,  minDepth: 50,  color: "#f0e6c8", shape: "tang" },
-    { id: "triggerfish", name: "Triggerfish",  area: "coral", rarity: "rare",     size: 2, value: 230, minDepth: 90,  color: "#2f8f7a", shape: "fish" },
+    { id: "triggerfish", name: "Triggerfish",  area: "coral", rarity: "rare",     size: 2, value: 230, minDepth: 90,  color: "#2f8f7a", shape: "triggerfish" },
     { id: "sandtiger",  name: "Sand Tiger Shark", area: "coral", rarity: "epic",  size: 4, value: 1000, minDepth: 150, color: "#9aa6ad", shape: "shark" },
 
     // ---- Kelp Forest ----
@@ -236,15 +236,15 @@
     { id: "sunfish",    name: "Ocean Sunfish", area: "kelp", rarity: "epic",     size: 6, value: 1500, minDepth: 220, color: "#9fb4c4", shape: "round" },
 
     // ---- Sunken Trench ----
-    { id: "barreleye",  name: "Barreleye",     area: "trench", rarity: "uncommon", size: 1, value: 150, minDepth: 250, color: "#2a3a44", shape: "round", glow: true },
+    { id: "barreleye",  name: "Barreleye",     area: "trench", rarity: "uncommon", size: 1, value: 150, minDepth: 250, color: "#2a3a44", shape: "barreleye", glow: true },
     { id: "blackdragon",name: "Black Dragonfish", area: "trench", rarity: "rare",  size: 2, value: 400, minDepth: 450, color: "#241f33", shape: "eel", glow: true },
     { id: "dumbo",      name: "Dumbo Octopus", area: "trench", rarity: "rare",     size: 3, value: 480, minDepth: 520, color: "#c06a8a", shape: "octopus" },
-    { id: "fangtooth",  name: "Fangtooth",     area: "trench", rarity: "rare",     size: 1, value: 360, minDepth: 600, color: "#3a3a44", shape: "round" },
+    { id: "fangtooth",  name: "Fangtooth",     area: "trench", rarity: "rare",     size: 1, value: 360, minDepth: 600, color: "#3a3a44", shape: "fangtooth" },
     { id: "oarfish",    name: "Giant Oarfish", area: "trench", rarity: "legendary",size: 8, value: 5600, minDepth: 700, color: "#cfd6e0", shape: "eel" },
 
     // ---- Starlight Sanctuary ----
     { id: "moonfish",   name: "Moonfish",      area: "sanctuary", rarity: "common",   size: 1, value: 64,  minDepth: 0,   color: "#cfe6ff", shape: "round" },
-    { id: "cometfish",  name: "Comet Fish",    area: "sanctuary", rarity: "uncommon", size: 2, value: 160, minDepth: 60,  color: "#9fd8ff", shape: "fish" },
+    { id: "cometfish",  name: "Comet Fish",    area: "sanctuary", rarity: "uncommon", size: 2, value: 160, minDepth: 60,  color: "#9fd8ff", shape: "guppy" },
     { id: "astraljelly",name: "Astral Jelly",  area: "sanctuary", rarity: "rare",     size: 1, value: 540, minDepth: 140, color: "#c46bff", shape: "jelly" },
     { id: "solarray",   name: "Solar Ray",     area: "sanctuary", rarity: "epic",     size: 5, value: 1500, minDepth: 320, color: "#ffd86b", shape: "ray" },
     { id: "voidwhale",  name: "Void Whale",    area: "sanctuary", rarity: "legendary",size: 8, value: 6400, minDepth: 520, color: "#2a2350", shape: "whale" },
@@ -252,9 +252,9 @@
     // ======== River Run (zone built later — fish data is ready) ========
     { id: "rivertrout", name: "River Trout",   area: "river", rarity: "common",   size: 1, value: 26,  minDepth: 0,   color: "#8a9a5a", shape: "fish" },
     { id: "perch",      name: "Perch",         area: "river", rarity: "common",   size: 1, value: 30,  minDepth: 10,  color: "#5a7a3a", shape: "fish" },
-    { id: "salmon",     name: "Salmon",        area: "river", rarity: "uncommon", size: 2, value: 90,  minDepth: 20,  color: "#e07a6a", shape: "fish" },
-    { id: "catfish",    name: "Catfish",       area: "river", rarity: "uncommon", size: 2, value: 110, minDepth: 40,  color: "#6a5a4a", shape: "fish" },
-    { id: "pike",       name: "Pike",          area: "river", rarity: "rare",     size: 3, value: 260, minDepth: 60,  color: "#4a6a4a", shape: "longfish" },
+    { id: "salmon",     name: "Salmon",        area: "river", rarity: "uncommon", size: 2, value: 90,  minDepth: 20,  color: "#e07a6a", shape: "trout" },
+    { id: "catfish",    name: "Catfish",       area: "river", rarity: "uncommon", size: 2, value: 110, minDepth: 40,  color: "#6a5a4a", shape: "catfish" },
+    { id: "pike",       name: "Pike",          area: "river", rarity: "rare",     size: 3, value: 260, minDepth: 60,  color: "#4a6a4a", shape: "pike" },
     { id: "rivereel",   name: "River Eel",     area: "river", rarity: "rare",     size: 2, value: 300, minDepth: 80,  color: "#5c6a3a", shape: "eel" },
     { id: "sturgeon",   name: "Sturgeon",      area: "river", rarity: "epic",     size: 5, value: 900, minDepth: 100, color: "#7a8a6a", shape: "fish" },
 
@@ -348,18 +348,18 @@
     // ======== Diurnal fish (ONLY appear on day dives) — 2 per area ========
     { id: "sunbasker",   name: "Sun Basker",     area: "coral",   day: true, rarity: "uncommon", size: 2, value: 200, minDepth: 0,  color: "#ffd24a", accent: "#fff3b0", shape: "tang" },
     { id: "daygoby",     name: "Dawn Goby",      area: "coral",   day: true, rarity: "common",   size: 1, value: 90,  minDepth: 0,  color: "#ff9a4a", accent: "#fff0c0", shape: "fish" },
-    { id: "sunperch",    name: "Sun Perch",      area: "river",   day: true, rarity: "uncommon", size: 1, value: 180, minDepth: 0,  color: "#f0b53a", accent: "#fff0c0", shape: "fish" },
+    { id: "sunperch",    name: "Sun Perch",      area: "river",   day: true, rarity: "uncommon", size: 1, value: 180, minDepth: 0,  color: "#f0b53a", accent: "#fff0c0", shape: "perch" },
     { id: "glintminnow", name: "Glint Minnow",   area: "river",   day: true, rarity: "common",   size: 1, value: 80,  minDepth: 0,  color: "#9fe0c0", accent: "#ffffff", shape: "longfish" },
-    { id: "kelpdarter",  name: "Kelp Darter",    area: "kelp",    day: true, rarity: "rare",     size: 2, value: 360, minDepth: 40, color: "#6cae4a", accent: "#dfffb0", shape: "longfish" },
+    { id: "kelpdarter",  name: "Kelp Darter",    area: "kelp",    day: true, rarity: "rare",     size: 2, value: 360, minDepth: 40, color: "#6cae4a", accent: "#dfffb0", shape: "pike" },
     { id: "sunwrasse",   name: "Sun Wrasse",     area: "kelp",    day: true, rarity: "uncommon", size: 1, value: 210, minDepth: 20, color: "#ffb24a", accent: "#fff0c0", shape: "tang" },
-    { id: "icebasker",   name: "Ice Basker",     area: "arctic",  day: true, rarity: "rare",     size: 3, value: 420, minDepth: 40, color: "#cdeeff", accent: "#ffffff", shape: "fish" },
-    { id: "snowjack",    name: "Snow Jack",      area: "arctic",  day: true, rarity: "uncommon", size: 2, value: 240, minDepth: 20, color: "#dfeef7", accent: "#bcd0dc", shape: "longfish" },
+    { id: "icebasker",   name: "Ice Basker",     area: "arctic",  day: true, rarity: "rare",     size: 3, value: 420, minDepth: 40, color: "#cdeeff", accent: "#ffffff", shape: "perch" },
+    { id: "snowjack",    name: "Snow Jack",      area: "arctic",  day: true, rarity: "uncommon", size: 2, value: 240, minDepth: 20, color: "#dfeef7", accent: "#bcd0dc", shape: "mackerel" },
     { id: "sundialfish", name: "Sundial Fish",   area: "ancient", day: true, rarity: "rare",     size: 3, value: 460, minDepth: 80, color: "#c79a52", accent: "#ffe14d", shape: "coelacanth" },
     { id: "amberray",    name: "Amber Ray",      area: "ancient", day: true, rarity: "epic",     size: 4, value: 1100,minDepth: 150,color: "#d8a24a", accent: "#fff0c0", shape: "ray" },
-    { id: "sunfintuna",  name: "Sunfin Tuna",    area: "opensea", day: true, rarity: "rare",     size: 4, value: 520, minDepth: 80, color: "#3a8fd0", accent: "#ffe14d", shape: "longfish" },
+    { id: "sunfintuna",  name: "Sunfin Tuna",    area: "opensea", day: true, rarity: "rare",     size: 4, value: 520, minDepth: 80, color: "#3a8fd0", accent: "#ffe14d", shape: "tuna" },
     { id: "goldenmola",  name: "Golden Mola",    area: "opensea", day: true, rarity: "epic",     size: 5, value: 1300,minDepth: 120,color: "#e0b24a", accent: "#fff3b0", shape: "moonfish" },
     { id: "glarefish",   name: "Glare Fish",     area: "trench",  day: true, rarity: "rare",     size: 2, value: 480, minDepth: 300,color: "#7fa0c0", accent: "#ffffff", shape: "lantern" },
-    { id: "prismcod",    name: "Prism Cod",      area: "trench",  day: true, rarity: "uncommon", size: 2, value: 260, minDepth: 200,color: "#bcd0e0", accent: "#fff0c0", shape: "fish" },
+    { id: "prismcod",    name: "Prism Cod",      area: "trench",  day: true, rarity: "uncommon", size: 2, value: 260, minDepth: 200,color: "#bcd0e0", accent: "#fff0c0", shape: "codfish" },
     { id: "solartang",   name: "Solar Tang",     area: "sanctuary", day: true, rarity: "epic",   size: 2, value: 1500,minDepth: 100,color: "#ffd24a", accent: "#fff3b0", shape: "tang" },
     { id: "dawnstar",    name: "Dawn Starfish",  area: "sanctuary", day: true, rarity: "rare",    size: 2, value: 640, minDepth: 60, color: "#ffb24a", accent: "#fff0c0", shape: "starfish" },
 
@@ -401,9 +401,9 @@
     { id: "mandarinfish", name: "Mandarinfish", area: "prism", rarity: "common",   size: 1, value: 200, minDepth: 0,   color: "#2a8ac0", accent: "#ff9a3a", shape: "fish" },
     { id: "neontetra",  name: "Neon Tetra",   area: "prism", rarity: "common",   size: 1, value: 160, minDepth: 0,   color: "#2fd0e0", accent: "#ff3a6a", shape: "guppy" },
     { id: "royalgramma",name: "Royal Gramma", area: "prism", rarity: "uncommon", size: 1, value: 280, minDepth: 20,  color: "#9a3ad0", accent: "#ffe14d", shape: "tang" },
-    { id: "flamewrasse",name: "Flame Wrasse", area: "prism", rarity: "uncommon", size: 2, value: 320, minDepth: 40,  color: "#ff5b3a", accent: "#ffe14d", shape: "fish" },
+    { id: "flamewrasse",name: "Flame Wrasse", area: "prism", rarity: "uncommon", size: 2, value: 320, minDepth: 40,  color: "#ff5b3a", accent: "#ffe14d", shape: "tang" },
     { id: "regalangel", name: "Regal Angelfish", area: "prism", rarity: "rare",  size: 2, value: 520, minDepth: 80,  color: "#ffcf3a", accent: "#2a6ac0", shape: "tang" },
-    { id: "harlequin",  name: "Harlequin Tusk", area: "prism", rarity: "rare",   size: 3, value: 620, minDepth: 120, color: "#3ac0a0", accent: "#ff5b3a", shape: "fish" },
+    { id: "harlequin",  name: "Harlequin Tusk", area: "prism", rarity: "rare",   size: 3, value: 620, minDepth: 120, color: "#3ac0a0", accent: "#ff5b3a", shape: "triggerfish" },
     { id: "rainbowparrot", name: "Rainbow Parrotfish", area: "prism", rarity: "epic", size: 4, value: 1800, minDepth: 200, color: "#36d6a0", accent: "#ff7ad0", rainbow: true, shape: "fish" },
     // Prism birds (varied time)
     { id: "lorikeet",   name: "Rainbow Lorikeet", area: "prism", bird: true, day: true, rarity: "uncommon", size: 1, value: 240, color: "#2a8ac0", accent: "#ff5b3a", shape: "bird", seedCost: 600 },
@@ -420,7 +420,7 @@
     // ======== Sunken Grove (forest) ========
     { id: "grovefish",  name: "Grovefish",    area: "forest", rarity: "common",   size: 1, value: 60,  minDepth: 0,   color: "#6cae4a", shape: "goby" },
     { id: "mossback",   name: "Mossback Turtle", area: "forest", rarity: "uncommon", size: 3, value: 280, minDepth: 40, color: "#4f7a3a", shape: "turtle" },
-    { id: "branchpike", name: "Branch Pike",  area: "forest", rarity: "uncommon", size: 2, value: 220, minDepth: 30,  color: "#7a6a3a", shape: "longfish" },
+    { id: "branchpike", name: "Branch Pike",  area: "forest", rarity: "uncommon", size: 2, value: 220, minDepth: 30,  color: "#7a6a3a", shape: "pike" },
     { id: "canopyray",  name: "Canopy Ray",   area: "forest", rarity: "rare",     size: 4, value: 540, minDepth: 120, color: "#5a8a4a", shape: "ray" },
     { id: "willoweel",  name: "Willow Eel",   area: "forest", rarity: "rare",     size: 3, value: 480, minDepth: 180, color: "#3a6a3a", shape: "eel" },
     { id: "ancientcarp",name: "Ancient Carp", area: "forest", rarity: "epic",     size: 5, value: 1500,minDepth: 300, color: "#8a9a4a", shape: "fish" },
@@ -430,7 +430,7 @@
     // ======== Mangrove Swamp ========
     { id: "swamppike",  name: "Swamp Pike",   area: "swamp", rarity: "common",   size: 2, value: 70,  minDepth: 0,   color: "#5a6a3a", shape: "perch" },
     { id: "gar",        name: "Alligator Gar",area: "swamp", rarity: "uncommon", size: 3, value: 260, minDepth: 30,  color: "#6a5a3a", shape: "eel" },
-    { id: "bullfrogfish",name: "Bullfrog Fish",area: "swamp", rarity: "uncommon", size: 2, value: 200, minDepth: 0,  color: "#6a8a3a", shape: "round" },
+    { id: "bullfrogfish",name: "Bullfrog Fish",area: "swamp", rarity: "uncommon", size: 2, value: 200, minDepth: 0,  color: "#6a8a3a", shape: "puffer" },
     { id: "snapper",    name: "Snapping Turtle", area: "swamp", rarity: "rare", size: 3, value: 420, minDepth: 60,   color: "#3a4a2a", shape: "turtle" },
     { id: "mudcat",     name: "Mud Catfish",  area: "swamp", rarity: "rare",     size: 3, value: 480, minDepth: 120, color: "#4a3a2a", shape: "catfish" },
     { id: "swampgator", name: "Baby Gator",   area: "swamp", rarity: "epic",     size: 5, value: 1400,minDepth: 200, color: "#3a4a28", shape: "crocodile" },
@@ -450,7 +450,7 @@
     // ======== Stormy Seas ========
     { id: "stormjack", name: "Storm Jack",    area: "storm", rarity: "common",   size: 2, value: 180, minDepth: 0,   color: "#5a6a7a", accent: "#cfe0ff", shape: "longfish" },
     { id: "rainfish",  name: "Rainfish",      area: "storm", rarity: "common",   size: 1, value: 150, minDepth: 0,   color: "#7a8a9a", accent: "#dfeaff", shape: "fish" },
-    { id: "thunderfish",name: "Thunderfish",  area: "storm", rarity: "uncommon", size: 2, value: 360, minDepth: 40,  color: "#3a4a6a", accent: "#7afcff", shape: "fish" },
+    { id: "thunderfish",name: "Thunderfish",  area: "storm", rarity: "uncommon", size: 2, value: 360, minDepth: 40,  color: "#3a4a6a", accent: "#7afcff", shape: "perch" },
     { id: "galeray",   name: "Gale Ray",      area: "storm", rarity: "rare",     size: 4, value: 620, minDepth: 100, color: "#46506a", accent: "#9fd0ff", shape: "ray" },
     { id: "tempesteel",name: "Tempest Eel",   area: "storm", rarity: "rare",     size: 3, value: 560, minDepth: 150, color: "#2a3a5a", accent: "#7afcff", shape: "eel" },
     { id: "maelshark", name: "Maelstrom Shark", area: "storm", rarity: "epic",   size: 6, value: 2400, minDepth: 250, color: "#3a4452", accent: "#bcd6ff", shape: "shark" },
@@ -463,7 +463,7 @@
     // ======== Drowned Cove (secret pirate location) ========
     { id: "cutlassfish", name: "Cutlassfish",  area: "pirate", rarity: "common",   size: 2, value: 200, minDepth: 0,   color: "#b0b6bc", accent: "#ffcf3a", shape: "longfish" },
     { id: "doubloonfish", name: "Doubloon Fish", area: "pirate", rarity: "common",  size: 1, value: 220, minDepth: 0,   color: "#e0b24a", accent: "#fff3b0", shape: "round" },
-    { id: "ghostfish",   name: "Ghostfish",     area: "pirate", rarity: "uncommon", size: 2, value: 380, minDepth: 40,  color: "#9fd0c8", accent: "#ffffff", shape: "fish" },
+    { id: "ghostfish",   name: "Ghostfish",     area: "pirate", rarity: "uncommon", size: 2, value: 380, minDepth: 40,  color: "#9fd0c8", accent: "#ffffff", shape: "guppy" },
     { id: "corsaireel",  name: "Corsair Eel",   area: "pirate", rarity: "rare",     size: 3, value: 620, minDepth: 120, color: "#3a4a3a", accent: "#caa15a", shape: "eel" },
     { id: "pirateshark", name: "Plunderer Shark", area: "pirate", rarity: "epic",   size: 6, value: 2600, minDepth: 250, color: "#3a3a42", accent: "#ffcf3a", shape: "shark" },
     { id: "ghostwhale",  name: "Wraith Galleon Whale", area: "pirate", rarity: "legendary", size: 9, value: 7200, minDepth: 450, color: "#5a6470", accent: "#cfe0c8", shape: "whale" },
@@ -484,10 +484,10 @@
 
     // ======== Hidden Coast (secret, Japanese) ========
     { id: "koi",        name: "Koi",          area: "japan", rarity: "common",   size: 1, value: 120, minDepth: 0,   color: "#ff7a3a", accent: "#ffffff", shape: "fish" },
-    { id: "nishikigoi", name: "Nishikigoi",   area: "japan", rarity: "uncommon", size: 2, value: 280, minDepth: 0,   color: "#ff9a4a", accent: "#ffffff", shape: "fish" },
+    { id: "nishikigoi", name: "Nishikigoi",   area: "japan", rarity: "uncommon", size: 2, value: 280, minDepth: 0,   color: "#ff9a4a", accent: "#ffffff", shape: "trout" },
     { id: "tai",        name: "Red Tai",      area: "japan", rarity: "uncommon", size: 2, value: 240, minDepth: 20,  color: "#e0556a", accent: "#ffd6e0", shape: "tang" },
-    { id: "katsuo",     name: "Katsuo",       area: "japan", rarity: "rare",     size: 3, value: 420, minDepth: 60,  color: "#3a6fb0", shape: "longfish" },
-    { id: "ryukin",     name: "Ryukin",       area: "japan", rarity: "rare",     size: 2, value: 460, minDepth: 30,  color: "#ff5b3a", accent: "#ffe14d", shape: "round" },
+    { id: "katsuo",     name: "Katsuo",       area: "japan", rarity: "rare",     size: 3, value: 420, minDepth: 60,  color: "#3a6fb0", shape: "tuna" },
+    { id: "ryukin",     name: "Ryukin",       area: "japan", rarity: "rare",     size: 2, value: 460, minDepth: 30,  color: "#ff5b3a", accent: "#ffe14d", shape: "moonfish" },
     { id: "tairyu",     name: "Tatsu Dragon", area: "japan", rarity: "epic",     size: 6, value: 2200, minDepth: 200, color: "#c0423a", accent: "#ffd24a", shape: "dragon" },
     { id: "japcrab",    name: "Heikegani Crab", area: "japan", creature: true, rarity: "uncommon", size: 2, value: 300, color: "#b0503a", shape: "crab" },
     { id: "ornatestork",name: "Ornate Stork", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 880, color: "#f0f4f6", accent: "#e0556a", shape: "stork", seedCost: 1800 },
@@ -558,7 +558,7 @@
     { id: "mahimahi",  name: "Mahi-Mahi",    area: "opensea", rarity: "common",   size: 2, value: 90,  minDepth: 0,   color: "#3ad0a0", shape: "longfish" },
     { id: "flyingfish",name: "Flying Fish",  area: "opensea", rarity: "common",   size: 1, value: 70,  minDepth: 0,   color: "#5fb0e0", shape: "longfish" },
     { id: "skipjack",  name: "Skipjack Tuna", area: "opensea", rarity: "common",  size: 2, value: 100, minDepth: 30,  color: "#3a6fb0", shape: "longfish" },
-    { id: "wahoo",     name: "Wahoo",        area: "opensea", rarity: "uncommon", size: 3, value: 240, minDepth: 80,  color: "#4a7a9a", shape: "longfish" },
+    { id: "wahoo",     name: "Wahoo",        area: "opensea", rarity: "uncommon", size: 3, value: 240, minDepth: 80,  color: "#4a7a9a", shape: "mackerel" },
     { id: "opah",      name: "Opah",         area: "opensea", rarity: "uncommon", size: 3, value: 320, minDepth: 100, color: "#e0533a", shape: "tang" },
     { id: "bluemarlin",name: "Blue Marlin",  area: "opensea", rarity: "rare",     size: 5, value: 700, minDepth: 160, color: "#2a4a8a", shape: "sword" },
     { id: "whaleshark",name: "Whale Shark",  area: "opensea", rarity: "epic",     size: 9, value: 2400, minDepth: 250, color: "#4a6a7a", shape: "shark" },
