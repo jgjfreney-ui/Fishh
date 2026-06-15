@@ -24,7 +24,7 @@
       upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, ancient: false, opensea: false, trench: false,
-               prism: false, forest: false, swamp: false, boneyard: false, backrooms: false, japan: false, secretcave: false,
+               prism: false, forest: false, swamp: false, boneyard: false, storm: false, backrooms: false, japan: false, secretcave: false,
                oilrig: false, cave: false, cloud: false, sanctuary: false },
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
@@ -223,6 +223,7 @@
     secretcave:{ plants: ["crystal", "vent", "rock"], plantColors: ["#9fffd0", "#8a7ad0", "#5a4a6a"], rock: "#141019", floor: "#08060c" },
     oilrig:    { plants: ["vent", "rock", "rock"], plantColors: ["#caa14a", "#6a6258", "#3a3320"], rock: "#2a2418", floor: "#100c06" },
     prism:     { plants: ["coral", "coral", "anemone"], plantColors: ["#ff5b9f", "#ffcf3a", "#3ad0e0", "#9a3ad0", "#36d6a0", "#ff7a3a"], rock: "#3a4a8a", floor: "#2a4a8a" },
+    storm:     { plants: ["kelp", "rock", "rock"], plantColors: ["#3a5a4a", "#46506a", "#2a3a4a"], rock: "#2a3340", floor: "#161e28" },
   };
 
   function generateDecor(loc) {
@@ -245,7 +246,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "bigkelp", kelp: "bigkelp", trench: "spire", sanctuary: "bigcrystal", arctic: "bigcrystal", ancient: "spire", opensea: "spire", cave: "spire", cloud: "bigcrystal", forest: "bigkelp", swamp: "bigkelp", boneyard: "spire", backrooms: "spire", japan: "bigcoral", secretcave: "spire", oilrig: "spire", prism: "bigcoral", storm: "spire" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -1399,6 +1400,9 @@
     // Ornate Ocean: red torii gates in the haze + drifting cherry-blossom petals
     if (loc.id === "japan") drawJapanAtmos(loc);
 
+    // Storm: forks of lightning + screen flashes (reusable wherever loc.storm)
+    if (loc.storm) drawStorm(loc);
+
     // nocturnal tint over the whole scene
     if (run.night) { ctx.fillStyle = "rgba(8,12,42,0.5)"; ctx.fillRect(0, 0, W, H); }
 
@@ -1457,6 +1461,34 @@
     }
     ctx.globalAlpha = 1;
     ctx.restore();
+  }
+
+  // reusable storm weather: occasional lightning bolt + bright flash + thunder
+  function makeBolt() {
+    var x = 80 + Math.random() * (W - 160), pts = [{ x: x, y: 0 }], y = 0;
+    while (y < 240) { y += 14 + Math.random() * 20; x += (Math.random() - 0.5) * 50; pts.push({ x: x, y: y }); }
+    return pts;
+  }
+  function drawStorm(loc) {
+    if (run.stormNext == null) run.stormNext = run.time + 1.5 + Math.random() * 4;
+    if (run.time > run.stormNext) {
+      run.stormFlash = 1; run.stormBolt = makeBolt();
+      run.stormNext = run.time + 2.5 + Math.random() * 6;
+      if (window.AUDIO) AUDIO.rumble();
+    }
+    if (run.stormFlash > 0) {
+      ctx.fillStyle = "rgba(214,226,255," + (run.stormFlash * 0.45).toFixed(3) + ")";
+      ctx.fillRect(0, 0, W, H);
+      if (run.stormBolt && run.stormFlash > 0.4) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(245,250,255,0.95)"; ctx.lineWidth = 3; ctx.lineJoin = "round";
+        ctx.shadowColor = "#bcd6ff"; ctx.shadowBlur = 12;
+        ctx.beginPath();
+        for (var i = 0; i < run.stormBolt.length; i++) { var p = run.stormBolt[i]; if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y); }
+        ctx.stroke(); ctx.restore();
+      }
+      run.stormFlash -= 0.05;
+    }
   }
 
   // red torii gates standing in the haze + falling pink petals (Ornate Ocean)
@@ -1620,8 +1652,9 @@
     ctx.save();
     ctx.globalCompositeOperation = "lighter";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
+    var chop = loc.storm ? 7 : 2; // stormy seas churn with big choppy swells
     for (var x = 0; x < W; x += 6) {
-      var wy = surfaceY + Math.sin((x + cam.x) * 0.05 + run.time * 1.6) * 2;
+      var wy = surfaceY + Math.sin((x + cam.x) * 0.05 + run.time * 1.6) * chop + (loc.storm ? Math.sin((x + cam.x) * 0.13 + run.time * 3.2) * 4 : 0);
       ctx.fillRect(x, wy - 1, 6, 2);
     }
     ctx.restore();

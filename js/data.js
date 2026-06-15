@@ -94,6 +94,13 @@
       shinyBonus: 0, unlocked: false, cost: 290000,
       sky: { top: "#8a96a4", bottom: "#cdd6de" },
     },
+    storm: {
+      id: "storm", name: "Stormy Seas", tint: "#6a7a9a", storm: true,
+      blurb: "Black thunderheads, towering swells and forks of lightning — only the bold dive here.",
+      maxDepth: 700, worldWidth: 2800, topColor: "#2a3a4a", deepColor: "#060a14",
+      shinyBonus: 0.06, unlocked: false, cost: 330000,
+      sky: { top: "#262a36", bottom: "#454c5e" },
+    },
     backrooms: {
       id: "backrooms", name: "The Backrooms", tint: "#d8c84a", secret: true,
       blurb: "You weren't supposed to find this. Endless damp yellow rooms, humming lights, water that shouldn't be here.",
@@ -432,6 +439,19 @@
     { id: "wraithwhale",name: "Wraith Whale", area: "boneyard", rarity: "legendary",size: 9, value: 6500, minDepth: 600, color: "#cfd6dc", shape: "whale" },
     { id: "bonecrab",   name: "Bone Crab",    area: "boneyard", creature: true, rarity: "uncommon", size: 2, value: 280, color: "#ded6c2", shape: "crab" },
     { id: "skeletonshark", name: "Skeleton Shark", area: "boneyard", areaBoss: true, rarity: "mythic", size: 13, value: 22000, minDepth: 300, color: "#f2eede", accent: "#cfc6b0", shape: "skeletonshark", hp: 5, reward: "" },
+
+    // ======== Stormy Seas ========
+    { id: "stormjack", name: "Storm Jack",    area: "storm", rarity: "common",   size: 2, value: 180, minDepth: 0,   color: "#5a6a7a", accent: "#cfe0ff", shape: "longfish" },
+    { id: "rainfish",  name: "Rainfish",      area: "storm", rarity: "common",   size: 1, value: 150, minDepth: 0,   color: "#7a8a9a", accent: "#dfeaff", shape: "fish" },
+    { id: "thunderfish",name: "Thunderfish",  area: "storm", rarity: "uncommon", size: 2, value: 360, minDepth: 40,  color: "#3a4a6a", accent: "#7afcff", shape: "fish" },
+    { id: "galeray",   name: "Gale Ray",      area: "storm", rarity: "rare",     size: 4, value: 620, minDepth: 100, color: "#46506a", accent: "#9fd0ff", shape: "ray" },
+    { id: "tempesteel",name: "Tempest Eel",   area: "storm", rarity: "rare",     size: 3, value: 560, minDepth: 150, color: "#2a3a5a", accent: "#7afcff", shape: "eel" },
+    { id: "maelshark", name: "Maelstrom Shark", area: "storm", rarity: "epic",   size: 6, value: 2400, minDepth: 250, color: "#3a4452", accent: "#bcd6ff", shape: "shark" },
+    { id: "stormwhale",name: "Storm Whale",   area: "storm", rarity: "legendary",size: 9, value: 6800, minDepth: 400, color: "#2e3848", accent: "#9fd0ff", shape: "whale" },
+    { id: "stormcrab", name: "Storm Crab",    area: "storm", creature: true, rarity: "uncommon", size: 2, value: 280, color: "#4a5566", accent: "#9fd0ff", shape: "crab" },
+    { id: "stormpetrel2", name: "Storm Albatross", area: "storm", bird: true, rarity: "rare", size: 3, value: 700, color: "#3a4452", accent: "#dfeaff", shape: "bird", seedCost: 1200 },
+    { id: "stormgull", name: "Squall Gull",   area: "storm", bird: true, night: true, rarity: "uncommon", size: 2, value: 360, color: "#5a6470", accent: "#cfe0ff", shape: "bird", seedCost: 700 },
+    { id: "leviathanking", name: "The Leviathan King", area: "storm", areaBoss: true, rarity: "mythic", size: 14, value: 34000, minDepth: 250, color: "#2a3a5a", accent: "#9fd0ff", shape: "leviathanking", hp: 6, reward: "" },
 
     // ======== The Backrooms (secret) ========
     { id: "wallpaperfish", name: "Wallpaper Fish", area: "backrooms", rarity: "common", size: 2, value: 200, minDepth: 0, color: "#d8c468", accent: "#b8a038", shape: "wallpaperfish" },

@@ -759,6 +759,18 @@
       "..bbBbBBBb....",
       ".b.b.b.b......",
     ],
+    leviathanking: [
+      "..........A.A.A...........",
+      ".........AAAAAAA.........",
+      "........bBBBBBBBb........",
+      "f......bBBBBBBBBBBBb.....",
+      "f...bBBBBBBBBBBBBBBBBEPb.",
+      "fbBBBBBBBLLLLLLBBBBBBBPMW",
+      "f...bBBBBBBBBBBBBBBBBb...",
+      "f......bBBbBBBBbBBb......",
+      "..AAbBBbA....AbBBbAA.....",
+      ".....bb........bb.......",
+    ],
     dragon: [
       ".................AA.....",
       ".....A.....A...bBBbEPb.",
@@ -1011,7 +1023,7 @@
     clownfish: "clownfish", codfish: "codfish", puffer: "puffer", perch: "perch",
     mackerel: "mackerel", sardine: "sardine", guppy: "guppy", trout: "trout", goby: "goby", snail: "snail",
     hermitcrab: "hermitcrab", crane: "crane", heron: "heron", stork: "stork",
-    dragon: "dragon", seadragon: "seadragon",
+    dragon: "dragon", seadragon: "seadragon", leviathanking: "leviathanking",
   };
   function archetypeForShape(shape) { return SHAPE_MAP[shape] || "fish"; }
 
