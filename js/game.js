@@ -4785,6 +4785,30 @@
     ctx.strokeStyle = "rgba(200,230,255,0.5)"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, W - 8, H - 8);
   }
 
+  // area-accurate background scenery painted on the tank's back wall (#66)
+  function drawAquaBackProps(loc, d, top, floorY) {
+    var pc = d.plantColors || ["#3fa34d"], base = mix(pc[0], loc.deepColor, 0.5);
+    ctx.save(); ctx.globalAlpha = 0.55;
+    // cave ceiling: stalactites hang from the top
+    if (loc.caveArea) {
+      ctx.fillStyle = mix(d.rock || "#2a2620", "#000", 0.2);
+      ctx.fillRect(0, top, W, 8);
+      for (var sx = 16; sx < W; sx += 46) { ctx.beginPath(); ctx.moveTo(sx - 6, top + 6); ctx.lineTo(sx + 6, top + 6); ctx.lineTo(sx, top + 18 + (sx % 24)); ctx.closePath(); ctx.fill(); }
+    }
+    // volcano: red glow band near the surface
+    if (loc.sky && loc.sky.volcano) { ctx.globalAlpha = 0.3; drawGlow(W / 2, top + 8, W * 0.6, "#ff4a1a", 0.5); ctx.globalAlpha = 0.55; }
+    // pyramids in the desert / grotto
+    if (loc.pyramids) { ctx.fillStyle = "rgba(150,120,60,0.5)"; for (var p = 0; p < 2; p++) { var px = W * (0.28 + p * 0.42); ctx.beginPath(); ctx.moveTo(px, floorY - 80); ctx.lineTo(px - 70, floorY); ctx.lineTo(px + 70, floorY); ctx.closePath(); ctx.fill(); } }
+    // trees for the grove / jungle
+    if (loc.id === "forest" || loc.id === "jungle") {
+      for (var t = 0; t < 4; t++) { var tx = 50 + t * (W / 4); ctx.fillStyle = mix("#2a1c10", loc.deepColor, 0.4); ctx.fillRect(tx - 4, floorY - 90, 8, 90); ctx.fillStyle = base; ctx.beginPath(); ctx.arc(tx, floorY - 92, 26, 0, 7); ctx.fill(); }
+    } else {
+      // generic tall background flora silhouettes
+      ctx.fillStyle = base;
+      for (var f = 0; f < 6; f++) { var fx = 30 + f * (W / 6); var fh = 50 + (fx * 7 % 50); ctx.fillRect(fx - 4, floorY - fh, 8, fh); }
+    }
+    ctx.restore();
+  }
   function renderAquarium() {
     if (aqua.focus) { renderAquaFocus(); return; }
     var loc = D.LOCATIONS[aqua.area], floorY = H - 56, top = 54;
@@ -4806,6 +4830,7 @@
     ctx.fillStyle = wg; ctx.fillRect(0, top, W, floorY - top);
     ctx.fillStyle = "rgba(255,255,255,0.25)"; ctx.fillRect(0, top - 2, W, 3);
     var d = DECOR[aqua.area] || DECOR.coral;
+    drawAquaBackProps(loc, d, top, floorY); // area-accurate background scenery (#66)
     ctx.fillStyle = d.floor; ctx.fillRect(0, floorY, W, H - floorY);
     // gravel plants + area-relevant props — denser & richer with each enclosure upgrade
     var lvl = aquaLevel(aqua.area);
