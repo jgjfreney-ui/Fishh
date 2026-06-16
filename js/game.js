@@ -101,7 +101,7 @@
   // Night-Vision Goggles active: night reads as day
   function nightVisionOn() { return !!(run && run.night && state.items.goggles && state.nightVision); }
   // the boss-reward gear that can be toggled on/off
-  var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown"];
+  var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown", "nullzone"];
   function anyBossItemOn() { for (var i = 0; i < BOSS_ITEMS.length; i++) if (itemOn(BOSS_ITEMS[i])) return true; return false; }
   function creatureValueMult() { return itemOn("crabcrown") ? 2 : 1; } // Spider Crab Crown = creatures worth ×2
   function reelMul() { return up("reel"); }
@@ -240,6 +240,10 @@
     }
   }
   function jewelCount() { var n = 0; for (var k in state.jewels) if (state.jewels[k]) n++; return n; }
+  // Captain Carp surfaces once you've caught each piece of furniture 10x
+  function furnitureComplete() {
+    return (state.counts.chairsnail || 0) >= 10 && (state.counts.tableturtle || 0) >= 10 && (state.counts.lampsquid || 0) >= 10;
+  }
 
   function spawnCreature(initial) {
     var loc = D.LOCATIONS[run.area];
@@ -1037,6 +1041,7 @@
     toast(def.fromSmoke ? "🔥 " + def.name + " ERUPTS from the smoke and seizes you — HARPOON IT! 🔱"
                         : id === "cavernwyrm" ? "🐉 " + def.name + " UNCOILS from the abyss — HARPOON IT! 🔱"
                         : id === "assfish" ? "🐡 In the pitch dark, the " + def.name + " drifts up — HARPOON IT! 🔱"
+                        : id === "captaincarp" ? "🐟 " + def.name + " SURFACES in a fury — HARPOON IT! 🔱"
                         : "☠️ The chest bursts open — " + def.name + " RISES! Harpoon it! 🔱", "epic", 5000);
   }
 
@@ -1168,7 +1173,12 @@
     diver.vx += (tvx - diver.vx) * resp;
     diver.vy += (tvy - diver.vy) * resp;
     if (Math.abs(diver.vx) < 1.5 && Math.abs(diver.vy) < 1.5 && len <= 0.001) { diver.vx = diver.vy = 0; }
-    diver.x = clamp(diver.x + diver.vx * dt, 12, loc.worldWidth - 12);
+    diver.x = diver.x + diver.vx * dt;
+    // Null Zone: swim off one side of the world and reappear on the other
+    if (itemOn("nullzone")) {
+      if (diver.x < -10) diver.x = loc.worldWidth - 12;
+      else if (diver.x > loc.worldWidth + 10) diver.x = 12;
+    } else diver.x = clamp(diver.x, 12, loc.worldWidth - 12);
     // Roc Feather lets you breach up into the sky to grab birds (not in the cloud area, which is already sky)
     var minY = (itemOn("rocfeather") && !loc.airArea) ? -340 : 0;
     diver.y = clamp(diver.y + diver.vy * dt, minY, loc.maxDepth * PXPM);
@@ -1315,6 +1325,8 @@
       } else if (run.area === "japan" && state.hints.mechakaiju && state.areaBossCaught.rigtitan
                  && state.areaBossCaught.kaiju && !state.mechakaijuCaught) {
         spawnSecretBoss("mechakaiju");          // wakes only after the Kaiju AND Rig Titan fall
+      } else if (run.area === "backrooms" && !state.captaincarpCaught && furnitureComplete()) {
+        spawnSecretBoss("captaincarp");         // the furious carp surfaces for revenge
       } else {
         var ab = areaBossForArea(run.area);
         if (ab) spawnAreaBoss(ab);
@@ -1818,7 +1830,7 @@
 
   // ===== Boss combat AI: charge, grab + O2 drain (wiggle out), kaiju breath =====
   function updateBossAI(boss, dt, diver) {
-    if (boss.mode == null) { boss.mode = "roam"; boss.atkT = 3 + Math.random() * 3; boss.modeT = 0; }
+    if (boss.mode == null) { boss.mode = "roam"; boss.atkT = (boss.def.aggressive ? 1.2 : 3) + Math.random() * (boss.def.aggressive ? 1.2 : 3); boss.modeT = 0; }
     boss.face = diver.x < boss.x ? -1 : 1;
     var isKaiju = boss.def.id === "kaiju" || boss.def.id === "leviathanking" || boss.def.id === "mechakaiju";
     if (boss.hitFlash > 0) { boss.atkT = Math.max(boss.atkT, 1.0); } // don't attack mid-flinch
@@ -1864,7 +1876,7 @@
     } else if (boss.mode === "grab" && run.grab && run.grab.boss === boss) {
       boss.modeT -= dt;
       boss.x = diver.x + boss.face * (18 + boss.size); boss.baseY = diver.y; boss.y = diver.y;
-      run.oxygen -= (7 + totalBossesBeaten() * 0.7) * dt;  // the "wiggle tax" — grip drains more air the more bosses you've beaten
+      run.oxygen -= (7 + totalBossesBeaten() * 0.7 + (boss.def.aggressive ? 10 : 0)) * dt;  // the "wiggle tax" — grip drains air (Captain Carp drains a LOT)
       // wiggle free: strong steering input builds the meter — the Diver's Knife saws you out faster
       var input = (joy.active ? joy.mag : 0) + (keys["a"] || keys["d"] || keys["w"] || keys["s"] || keys["arrowleft"] || keys["arrowright"] || keys["arrowup"] || keys["arrowdown"] ? 1 : 0);
       run.grab.wig += input * dt * 0.9 * (D.UPGRADES.knife ? up("knife") : 1);
@@ -2009,7 +2021,7 @@
     if (window.AUDIO) AUDIO.rumble();
   }
   function endBossAttack(boss) {
-    boss.mode = "roam"; boss.atkT = 2.3 + Math.random() * 2.4; run.bossBeam = null;
+    boss.mode = "roam"; boss.atkT = (boss.def.aggressive ? 1.0 : 2.3) + Math.random() * (boss.def.aggressive ? 1.2 : 2.4); run.bossBeam = null;
   }
 
   // Kaiju Breath: fire a blue beam in your facing/aim direction that bags fish
@@ -2077,6 +2089,7 @@
     state.stats.earned += pay;
     if (def.reward === "serpenteye") state.items.serpenteye = true;
     else if (def.reward === "kaijubreath") state.items.kaijubreath = true;
+    else if (def.reward === "nullzone") state.items.nullzone = true;
     var bi = run.fish.indexOf(boss); if (bi >= 0) run.fish.splice(bi, 1);
     saveGame();
     setTimeout(function () { showSecretBossEnding(def, pay); }, 700);
@@ -5188,6 +5201,7 @@
     { id: "crabcrown",    name: "Spider Crab Crown",   effect: "Every sea creature you catch is worth DOUBLE.", reward: "crabcrown", toggle: true },
     { id: "kaijubreath",  name: "Kaiju Breath",        effect: "Tap 🔵 in a dive to fire a beam that vacuums up fish.", reward: "kaijubreath", toggle: false },
     { id: "serpenteye",   name: "Eye of the Serpent",  effect: "Golden coin chests wash up in every dive site.", reward: "serpenteye", toggle: false },
+    { id: "nullzone",     name: "Null Zone",           effect: "Swim off the RIGHT edge of the world and reappear on the LEFT (and vice versa).", reward: "nullzone", toggle: true },
   ];
   function bossForReward(rk) {
     for (var i = 0; i < D.FISH.length; i++) if (D.FISH[i].reward === rk && (D.FISH[i].areaBoss || D.FISH[i].secretBoss)) return D.FISH[i];
