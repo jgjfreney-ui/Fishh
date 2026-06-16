@@ -616,7 +616,7 @@
     { id: "tai",        name: "Red Tai",      area: "japan", rarity: "uncommon", size: 2, value: 240, minDepth: 20,  color: "#e0556a", accent: "#ffd6e0", shape: "tang" },
     { id: "katsuo",     name: "Katsuo",       area: "japan", rarity: "rare",     size: 3, value: 420, minDepth: 60,  color: "#3a6fb0", shape: "tuna" },
     { id: "ryukin",     name: "Ryukin",       area: "japan", rarity: "rare",     size: 2, value: 460, minDepth: 30,  color: "#ff5b3a", accent: "#ffe14d", shape: "moonfish" },
-    { id: "tairyu",     name: "Tatsu Dragon", area: "japan", rarity: "epic",     size: 6, value: 2200, minDepth: 200, color: "#c0423a", accent: "#ffd24a", shape: "dragon" },
+    { id: "tairyu",     name: "Magical Dragon", area: "japan", legendary: true, rarity: "mythic", size: 7, value: 9000, minDepth: 200, color: "#c0423a", accent: "#ffd24a", trim: "#5bf0ff", shape: "firedragon" },
     { id: "japcrab",    name: "Heikegani Crab", area: "japan", creature: true, rarity: "uncommon", size: 2, value: 300, color: "#b0503a", shape: "crab" },
     { id: "ornatestork",name: "Ornate Stork", area: "japan", bird: true, day: true, rarity: "rare", size: 3, value: 880, color: "#f0f4f6", accent: "#e0556a", shape: "stork", seedCost: 1800 },
     { id: "kaiju",      name: "The Kaiju",    area: "japan", areaBoss: true, rarity: "mythic", size: 14, value: 30000, minDepth: 250, color: "#2f4a3a", accent: "#6affc0", shape: "kaiju", hp: 6, reward: "kaijubreath" },

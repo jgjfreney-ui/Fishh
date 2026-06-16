@@ -1631,6 +1631,12 @@
       }
     }
 
+    // --- Cargo ships dump all ten pieces of loot the moment you reach them ---
+    for (var cwk = 0; cwk < run.wrecks.length; cwk++) {
+      var cwr = run.wrecks[cwk];
+      if (cwr.type === "cargo" && !cwr.dumped && Math.hypot(cwr.x - diver.x, cwr.y - diver.y) < cwr.w * 0.6 + 50) dumpCargo(cwr);
+    }
+
     // --- The Oil Rig (Open Sea): approach with the Cage Key to open the way ---
     if (run.oilrig && !state.areas.oilrig) {
       if (Math.hypot(run.oilrig.x - diver.x, run.oilrig.y - diver.y) < 90) {
@@ -1709,31 +1715,43 @@
 
   // per-dive loot budget by wreck type (cargo ships are huge — 10 treasures)
   function wreckCap(w) { return w.type === "cargo" ? 10 : w.type === "yacht" ? 6 : 4; }
-  function maybeSpawnTreasure() {
-    if (run.wrecks.length === 0) return;
-    // only wrecks that still have loot left this dive
-    var live = run.wrecks.filter(function (w) { return (w.looted || 0) < wreckCap(w); });
-    if (live.length === 0) return;
-    var wreck = live[(Math.random() * live.length) | 0];
+  // roll one treasure appropriate to a wreck's type + depth
+  function rollWreckLoot(wreck) {
     var df = depthFactor(wreck.y, D.LOCATIONS[run.area]);
     var isPlane = wreck.type === "plane", isYacht = wreck.type === "yacht", isCargo = wreck.type === "cargo";
-    // ship: regular loot. plane/yacht: regular + a chance at their exclusive
-    // (richer) treasures. rare+ loot is now genuinely rare.
     var pool = D.TREASURES.filter(function (tt) {
-      if (tt.plane) return isPlane && Math.random() < 0.5;   // plane-only loot
-      if (tt.yacht) return isYacht && Math.random() < 0.55;  // yacht-only luxury loot
-      if (tt.cargo) return isCargo && Math.random() < 0.6;   // cargo containers from cargo ships
+      if (tt.plane) return isPlane && Math.random() < 0.5;
+      if (tt.yacht) return isYacht && Math.random() < 0.55;
+      if (tt.cargo) return isCargo && Math.random() < 0.6;
       var ro = D.RARITY[tt.rarity].order;
-      if (ro >= 3) return Math.random() < (0.04 + df * 0.18) * (isYacht ? 2.2 : isCargo ? 1.4 : 1); // rare+ much rarer
+      if (ro >= 3) return Math.random() < (0.04 + df * 0.18) * (isYacht ? 2.2 : isCargo ? 1.4 : 1);
       if (ro === 2) return Math.random() < (0.18 + df * 0.4);
-      return Math.random() < 0.9; // common/uncommon are the bread and butter
+      return Math.random() < 0.9;
     });
     if (pool.length === 0) pool = D.TREASURES.filter(function (tt) { return !tt.plane && !tt.yacht && !tt.cargo; });
-    var def = pool[(Math.random() * pool.length) | 0];
+    return pool[(Math.random() * pool.length) | 0];
+  }
+  // #1: a cargo ship spills ALL ten pieces of loot at once when you reach it
+  function dumpCargo(wreck) {
+    wreck.dumped = true;
+    var cap = wreckCap(wreck);
+    for (var k = 0; k < cap; k++) {
+      run.treasures.push({ def: rollWreckLoot(wreck), x: wreck.x + (Math.random() - 0.5) * wreck.w, y: wreck.y - 10 - Math.random() * 50, phase: Math.random() * 6 });
+    }
+    wreck.looted = cap;
+    if (!wreck.credited) { wreck.credited = true; markCargoSearched(); }
+    toast("📦 The cargo hold bursts open — ten pieces of loot spill out!", "good", 2400);
+    if (window.AUDIO) AUDIO.rumble();
+  }
+  function maybeSpawnTreasure() {
+    if (run.wrecks.length === 0) return;
+    // cargo ships dump all at once (not trickled), so exclude them here
+    var live = run.wrecks.filter(function (w) { return w.type !== "cargo" && (w.looted || 0) < wreckCap(w); });
+    if (live.length === 0) return;
+    var wreck = live[(Math.random() * live.length) | 0];
     wreck.looted = (wreck.looted || 0) + 1; // count it toward this wreck's loot budget
-    if (isCargo && wreck.looted >= wreckCap(wreck) && !wreck.credited) { wreck.credited = true; markCargoSearched(); }
     run.treasures.push({
-      def: def, x: wreck.x + (Math.random() - 0.5) * wreck.w, y: wreck.y - 10 - Math.random() * 30, phase: Math.random() * 6,
+      def: rollWreckLoot(wreck), x: wreck.x + (Math.random() - 0.5) * wreck.w, y: wreck.y - 10 - Math.random() * 30, phase: Math.random() * 6,
     });
   }
   // fully stripping a cargo ship builds toward the hidden Flooded Freighter
