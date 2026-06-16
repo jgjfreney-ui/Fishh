@@ -3040,6 +3040,19 @@
     ctx.beginPath(); ctx.arc(x, y, mr, 0, 7); ctx.stroke();
     var moving = Math.abs(run.diver.vx) + Math.abs(run.diver.vy) > 5;
     var kick = run.time * (moving ? 11 : 3.5);
+    // Camo Suit: tint the diver to the surrounding water and render faint so you
+    // melt into the background (a little less faint while you're moving)
+    if (state.diver.suit === "camo") {
+      var loc = D.LOCATIONS[run.area];
+      var bg = mix(loc.topColor, loc.deepColor, depthFactor(run.diver.y, loc));
+      var camoOpts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look,
+        suit: bg, suitAccent: mix(bg, "#ffffff", 0.12), suitTrim: mix(bg, "#ffffff", 0.2), camoSkin: bg };
+      ctx.save();
+      ctx.globalAlpha = moving ? 0.34 : 0.16;
+      drawDiverPixel(ctx, x, y, 3, run.diver.face < 0 ? -1 : 1, camoOpts, kick);
+      ctx.restore();
+      return;
+    }
     drawDiverPixel(ctx, x, y, 3, run.diver.face < 0 ? -1 : 1, state.diver, kick);
   }
 
@@ -3110,8 +3123,9 @@
   // face: 1 right / -1 left · opts: state.diver · kick: animation phase
   function drawDiverPixel(ctx2, cx, cy, SC, face, opts, kick) {
     opts = opts || {};
-    var skin = SKIN_TONES[opts.skin != null ? opts.skin : 2] || SKIN_TONES[2];
+    var skin = opts.camoSkin || SKIN_TONES[opts.skin != null ? opts.skin : 2] || SKIN_TONES[2];
     var suit = opts.suit || "#1f7d9c";
+    if (suit === "camo") suit = "#46584a"; // safe fallback if drawn raw (e.g. aquarium)
     var suitD = mix(suit, "#000000", 0.4);
     var hair = opts.hair != null ? HAIR_COLORS[opts.hair] : HAIR_COLORS[0];
     var fin = mix(suit, "#000000", 0.25);
@@ -4430,6 +4444,14 @@
       : state.diver.suit;
     var suitAcc = diverPreviewSuit ? diverPreviewSuit.accent : state.diver.suitAccent;
     var suitTri = diverPreviewSuit ? (diverPreviewSuit.trim || suitTrimFor(suitCol, suitAcc)) : state.diver.suitTrim;
+    // Camo Suit preview: blend the diver into the preview water
+    var isCamo = suitCol === "camo" || (diverPreviewSuit && diverPreviewSuit.camo);
+    if (isCamo) {
+      var bg = "#1a4868";
+      var opts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look, suit: bg, suitAccent: mix(bg, "#fff", 0.12), suitTrim: mix(bg, "#fff", 0.2), camoSkin: bg };
+      p.save(); p.globalAlpha = 0.3; drawDiverPixel(p, c.width / 2, c.height / 2, 6, 1, opts, t * 7); p.restore();
+      return;
+    }
     var opts = { skin: state.diver.skin, hair: state.diver.hair, look: state.diver.look, suit: suitCol, suitAccent: suitAcc, suitTrim: suitTri };
     drawDiverPixel(p, c.width / 2, c.height / 2, 6, 1, opts, t * 7);
   }
@@ -4476,6 +4498,11 @@
       list.push({ key: "b_" + s.id, name: beaten ? s.name : "???", color: beaten ? s.color : "#1a1622", accent: beaten ? s.accent : "#4a4060", trim: beaten ? (s.trim || suitTrimFor(s.color, s.accent)) : "#6a5a8a", owned: beaten,
         lockReason: beaten ? null : "Defeat this boss", group: "Boss suits" });
     });
+    // Reward: the Camo Suit — unlocked once EVERY other costume is collected.
+    // It seamlessly blends the diver into whatever background you're diving.
+    var allOwned = list.every(function (s) { return s.owned; });
+    list.push({ key: "r_camo", name: allOwned ? "Camo Suit" : "???", color: "camo", accent: "camo", trim: "camo",
+      owned: allOwned, camo: true, lockReason: allOwned ? null : "Collect EVERY other costume to unlock", group: "Reward" });
     return list;
   }
 
@@ -4522,17 +4549,18 @@
     html += '</div>';
 
     // Wetsuits, grouped, each labelled with its name
-    ["Wetsuits", "Location suits", "Secret suits", "Boss suits"].forEach(function (grp) {
+    ["Wetsuits", "Location suits", "Secret suits", "Boss suits", "Reward"].forEach(function (grp) {
       html += '<h3>' + grp + '</h3><div class="suit-grid">';
       diverSuitList.filter(function (s) { return s.group === grp; }).forEach(function (s) {
         var sel = state.diver.suit === s.color && s.owned;
+        var chipBg = s.camo ? 'linear-gradient(135deg,#3a5a4a,#6a7a5a 40%,#8a9a7a 60%,#4a5a4a)' : s.color;
         html += '<button class="suit-cell ' + (sel ? 'sel' : '') + (s.owned ? '' : ' locked') + '" data-suitpick="' + s.key + '">'
-          + '<span class="suit-chip" style="background:' + s.color + '">' + (s.owned ? '' : '<span class="lock">🔒</span>') + '</span>'
+          + '<span class="suit-chip" style="background:' + chipBg + '">' + (s.owned ? '' : '<span class="lock">🔒</span>') + '</span>'
           + '<span class="suit-label">' + s.name + '</span></button>';
       });
       html += '</div>';
     });
-    html += '<p class="tiny">Location suits unlock as you reach each area. Secret suits unlock when you catch that area\'s secret fish. Boss suits unlock when you defeat each boss.</p>';
+    html += '<p class="tiny">Location suits unlock as you reach each area. Secret suits unlock when you catch that area\'s secret fish. Boss suits unlock when you defeat each boss. The <b>Camo Suit</b> is the reward for collecting them ALL — it blends you into the background.</p>';
     html += '</div>';
 
     ov.innerHTML = html;
