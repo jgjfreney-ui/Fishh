@@ -46,6 +46,7 @@
       lastArea: "coral",
       settings: { muted: false, musicMuted: false, sfxMuted: false },
       diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", suitTrim: "#bfe9ff", hair: 0, look: "short" },
+      buddy: null,       // a mini fish companion {id, shiny} that follows you everywhere
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
       itemsOff: {},     // itemId -> true means owned but toggled OFF (boss gear)
@@ -2279,6 +2280,7 @@
     for (var f = 0; f < run.fish.length; f++) drawFishEntity(run.fish[f]);
     drawBubbles();
     drawDiver();
+    drawBuddy();
     drawHarpoons();
     drawPebbles();
     drawBossBeam();
@@ -3253,6 +3255,22 @@
     ctx.restore();
   }
 
+  // a mini fish/creature/bird companion (chosen in the Collection) that trails you
+  function drawBuddy() {
+    if (!state.buddy) return;
+    var def = D.FISH_BY_ID[state.buddy.id]; if (!def) return;
+    var face = run.diver.face < 0 ? -1 : 1;
+    var tx = run.diver.x - face * 28, ty = run.diver.y + 12 + Math.sin(run.time * 2.2) * 5;
+    if (run.buddyX == null) { run.buddyX = tx; run.buddyY = ty; }
+    run.buddyX += (tx - run.buddyX) * 0.14; run.buddyY += (ty - run.buddyY) * 0.14;
+    var x = run.buddyX - cam.x, y = run.buddyY - cam.y;
+    var flip = (tx - run.buddyX) < 0; // face the way it's swimming
+    var th = 14;
+    if (state.buddy.shiny) drawGlow(x, y, th, "#fff0a0", 0.4);
+    var arch = SPRITES.archetypeForShape(def.shape);
+    if (def.bird) drawFlapBird(arch, x, y, { color: def.color, accent: def.accent, shiny: state.buddy.shiny, flip: flip, targetH: th }, run.time * 5);
+    else SPRITES.draw(ctx, arch, x, y, { color: def.color, accent: def.accent, shiny: state.buddy.shiny, flip: flip, targetH: th });
+  }
   function drawDiver() {
     var x = run.diver.x - cam.x, y = run.diver.y - cam.y;
     // magnet field — soft pulsing aura
@@ -4634,6 +4652,12 @@
           var bossKind = (f.isKraken || f.isBlob) ? '🦑 Legendary Boss' : f.secretBoss ? '⭐ Secret Boss' : '⚔️ Area Boss';
           html += '<div class="coll-meta">' + (found ? '✓ Defeated! · ' + bossKind : '🔒 ' + bossKind) + '</div>';
         }
+        // take a mini version of this fish along as a companion (shiny if you're in shiny view)
+        if (found) {
+          var isBuddy = state.buddy && state.buddy.id === f.id && !!state.buddy.shiny === !!showShiny;
+          html += '<button class="coll-buddy' + (isBuddy ? ' on' : '') + '" data-buddy="' + f.id + ':' + (showShiny ? 1 : 0) + '">'
+            + (isBuddy ? '🐾 Following' : '🐾 Take with me') + '</button>';
+        }
         html += '</div>';
       });
       html += '</div>';
@@ -4654,6 +4678,17 @@
       var o = document.getElementById("shop");
       if (o) { o.scrollTop = 0; var cs = o.querySelector(".collection-scroll"); if (cs) cs.scrollTop = 0; }
     };
+    ov.querySelectorAll("[data-buddy]").forEach(function (b) {
+      b.onclick = function () {
+        var p = b.getAttribute("data-buddy").split(":"), id = p[0], shiny = p[1] === "1";
+        if (state.buddy && state.buddy.id === id && !!state.buddy.shiny === shiny) { state.buddy = null; toast("Companion sent home.", "good", 1200); }
+        else { state.buddy = { id: id, shiny: shiny }; toast("🐾 " + (shiny ? "✦ " : "") + D.FISH_BY_ID[id].name + " is now your companion!", "good", 1600); }
+        saveGame();
+        var o = document.getElementById("shop"), sp = o ? o.scrollTop : 0, cs = o ? o.querySelector(".collection-scroll") : null, csp = cs ? cs.scrollTop : 0;
+        showCollection();
+        o = document.getElementById("shop"); if (o) o.scrollTop = sp; cs = o ? o.querySelector(".collection-scroll") : null; if (cs) cs.scrollTop = csp;
+      };
+    });
   }
 
   // ----- Diver customization -----
