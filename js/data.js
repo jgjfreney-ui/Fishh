@@ -474,12 +474,13 @@
     { id: "canopyray",  name: "Canopy Ray",   area: "forest", rarity: "rare",     size: 4, value: 540, minDepth: 120, color: "#5a8a4a", shape: "ray" },
     { id: "willoweel",  name: "Willow Eel",   area: "forest", rarity: "rare",     size: 3, value: 480, minDepth: 180, color: "#3a6a3a", shape: "eel" },
     { id: "ancientcarp",name: "Ancient Carp", area: "forest", rarity: "epic",     size: 5, value: 1500,minDepth: 300, color: "#8a9a4a", shape: "fish" },
+    { id: "elkeel",     name: "Elk Eel",       area: "forest", rarity: "rare",     size: 3, value: 880, minDepth: 120, color: "#5a7a3a", accent: "#caa15a", shape: "antlereel" },
     { id: "dappletrout",name: "Dapple Trout", area: "forest", rarity: "common",   size: 2, value: 120, minDepth: 20,  color: "#7aa84a", accent: "#d8e0a0", shape: "trout" },
     { id: "rootperch",  name: "Root Perch",   area: "forest", rarity: "uncommon", size: 2, value: 200, minDepth: 60,  color: "#5a7a3a", accent: "#caa15a", shape: "perch" },
     { id: "bramblemack",name: "Bramble Mackerel", area: "forest", rarity: "uncommon", size: 2, value: 260, minDepth: 100, color: "#4a8a5a", accent: "#bfe0a0", shape: "mackerel" },
     { id: "gladecatfish", name: "Glade Catfish", area: "forest", rarity: "rare",   size: 3, value: 620, minDepth: 180, color: "#6a5a3a", accent: "#9fd05a", shape: "catfish" },
     { id: "grovebeetle",name: "Grove Beetle", area: "forest", creature: true, rarity: "common", size: 1, value: 90, color: "#4a6a2a", accent: "#9fd05a", shape: "insect" },
-    { id: "grovewarden",name: "Grove Warden", area: "forest", areaBoss: true, rarity: "mythic", size: 12, value: 14000, minDepth: 200, color: "#3a5a2a", accent: "#9fe0a0", shape: "mosasaur", hp: 4, reward: "" },
+    { id: "grovewarden",name: "Grove Giant",  area: "forest", areaBoss: true, rarity: "mythic", size: 12, value: 14000, minDepth: 200, color: "#3a5a2a", accent: "#5aa83a", shape: "grovegiant", hp: 4, reward: "" },
 
     // ======== Mangrove Swamp ========
     { id: "swamppike",  name: "Swamp Pike",   area: "swamp", rarity: "common",   size: 2, value: 70,  minDepth: 0,   color: "#5a6a3a", shape: "perch" },
@@ -527,7 +528,7 @@
     { id: "ridgecrab",  name: "Ridge Crab",   area: "mountain", creature: true, rarity: "uncommon", size: 2, value: 300, color: "#6a7280", accent: "#cfe0ee", shape: "crab" },
     { id: "crageagle",  name: "Crag Eagle",   area: "mountain", bird: true, day: true, rarity: "rare", size: 3, value: 760, color: "#5a4a3a", accent: "#e0c0a0", shape: "raptor", seedCost: 1400 },
     { id: "alpinetern", name: "Alpine Tern",  area: "mountain", bird: true, rarity: "uncommon", size: 1, value: 220, color: "#eef3f7", accent: "#5a8ac0", shape: "gull", seedCost: 500 },
-    { id: "stonetitan", name: "Stone Titan",  area: "mountain", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 250, color: "#5a6470", accent: "#cfe0ee", shape: "stonetitan", hp: 6, reward: "" },
+    { id: "stonetitan", name: "The Rocky Grouper", area: "mountain", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 250, color: "#6a6458", accent: "#9fae8a", shape: "grouper", hp: 6, reward: "" },
 
     // ======== Olympus Aerie (secret, reached from the mountain peak) ========
     { id: "auruscarp",  name: "Aureus Carp",  area: "olympus", rarity: "common",   size: 2, value: 400, minDepth: 0,   color: "#ffd24a", accent: "#fff3b0", shape: "koi" },
@@ -574,6 +575,7 @@
 
     // ======== The Backrooms (secret) ========
     { id: "wallpaperfish", name: "Wallpaper Fish", area: "backrooms", rarity: "common", size: 2, value: 200, minDepth: 0, color: "#d8c468", accent: "#b8a038", shape: "wallpaperfish" },
+    { id: "misremsquid", name: "Misremembered Squid", area: "backrooms", rarity: "rare", size: 2, value: 900, minDepth: 0, color: "#cfd0c8", accent: "#b0b8d0", shape: "clione" },
     { id: "weircorejelly", name: "Weirdcore Jelly", area: "backrooms", rarity: "uncommon", size: 3, value: 360, minDepth: 20, color: "#c8b84a", accent: "#fff6a0", shape: "glowjelly" },
     { id: "bacteriaurchin", name: "Bacteria Blob", area: "backrooms", rarity: "uncommon", size: 2, value: 320, minDepth: 40, color: "#c8b88a", accent: "#9aa83a", shape: "bacteria" },
     { id: "hazmatshark", name: "Hazmat Shark", area: "backrooms", rarity: "epic", size: 6, value: 2400, minDepth: 120, color: "#e0c83a", accent: "#1a1a1a", shape: "shark" },
@@ -700,7 +702,7 @@
     { id: "dunesnail", name: "Dune Snail",    area: "desert", creature: true, rarity: "common", size: 1, value: 110, color: "#c8a860", accent: "#8a6a3a", shape: "snail" },
     { id: "seavulture", name: "Sea Vulture",  area: "desert", bird: true, rarity: "uncommon", size: 2, value: 420, color: "#7a6a52", accent: "#caa15a", shape: "raptor", seedCost: 700 },
     { id: "sandlark",  name: "Sand Lark",     area: "desert", bird: true, rarity: "common", size: 1, value: 200, color: "#d8c890", accent: "#fff0b0", shape: "finch", seedCost: 400 },
-    { id: "dunetitan", name: "The Dune Titan", area: "desert", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 200, color: "#b8985a", accent: "#5a4a2a", shape: "dunkle", hp: 6, reward: "" },
+    { id: "dunetitan", name: "The Sand Cobra", area: "desert", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 200, color: "#c8a85a", accent: "#3a2a14", shape: "cobra", hp: 6, reward: "" },
 
     // ======== Ancient Grotto (secret pyramid; gemstone-themed catchables) ========
     { id: "rubyfish",   name: "Ruby Fish",     area: "grotto", rarity: "common",   size: 2, value: 400, minDepth: 0,   color: "#e23b5a", accent: "#ff9ab0", shape: "round" },
@@ -767,6 +769,7 @@
 
     // ======== Open Sea ========
     { id: "mahimahi",  name: "Mahi-Mahi",    area: "opensea", rarity: "common",   size: 2, value: 90,  minDepth: 0,   color: "#3ad0a0", shape: "mahimahi" },
+    { id: "moonlightray", name: "Moonlight Ray", area: "opensea", night: true, rarity: "rare", size: 4, value: 1400, minDepth: 0, color: "#cfd8f0", accent: "#eaf2ff", shape: "ray", glow: true },
     { id: "flyingfish",name: "Flying Fish",  area: "opensea", rarity: "common",   size: 1, value: 70,  minDepth: 0,   color: "#5fb0e0", shape: "flyingfish" },
     { id: "skipjack",  name: "Skipjack Tuna", area: "opensea", rarity: "common",  size: 2, value: 100, minDepth: 30,  color: "#3a6fb0", shape: "longfish" },
     { id: "wahoo",     name: "Wahoo",        area: "opensea", rarity: "uncommon", size: 3, value: 240, minDepth: 80,  color: "#4a7a9a", shape: "mackerel" },

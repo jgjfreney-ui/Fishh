@@ -287,6 +287,17 @@
       "F.....FF........FF.......",
       "......FF........FF.......",
     ],
+    // Grove Giant — a mosasaur draped in moss (A = moss tufts on its back)
+    grovegiant: [
+      "F....AA...AAbBAABBBb..AA..",
+      "FFF.A.AbbBBBBBBBBBBBBBBb.A",
+      "FFbbBBBBBBBBBBBBBBBBBBBBEP",
+      "FFbBBBLLLLLLLLLLLLLLBBMMMM",
+      "FFbbBBBBBBBBBBBBBBBBBBBBEP",
+      "FFF...AbbBBBBBBBBBBBBBBb..",
+      "F.....FF...AA...FF.......",
+      "......FF........FF.......",
+    ],
     armored: [
       "f....bBBBBb..AAAAAA..",
       "ff.bBBBBBBBAAAAAAAAA.",
@@ -962,6 +973,38 @@
       "fbBBBBBBBBBBBBBBBBBBBb..",
       "..bbBBBBbbb..bbBBBBbb...",
       "....bbb........bbb......",
+    ],
+    // antlered eel — branching antlers on the head (reusable antler motif)
+    antlereel: [
+      "...............A.A.A....",
+      "............A.AbBbA.A...",
+      "f...........bBBBBBBEPb..",
+      "fbBBBBBBBBBBBBBBBBBBBMW.",
+      "fbBBBLLLLLLLLLLLLLLBBb..",
+      "fbBBBBBBBBBBBBBBBBBBb...",
+      ".F.....................",
+    ],
+    // sand cobra — flared hood, fanged maw, coiling body
+    cobra: [
+      "................A...A....",
+      "...............bBBBBBb...",
+      "fb............bBBBBBBBBb.",
+      "f.bBb........bBBBBEPBBBb.",
+      "..bBBBbbb..bBBBBBBBBMWW..",
+      "....bBBBBBbBBBLLLBBBb....",
+      ".....bBBBBBBBBBBBBBb.....",
+      ".......AbBBBBBBbA........",
+    ],
+    // giant rocky grouper — fat body, huge gaping mouth
+    grouper: [
+      ".......bbBBBBBbb.....",
+      "....bBBBBBBBBBBBBb...",
+      "..bBBBBBBBBBBBBBBBEPb",
+      "FFbBBBBLLLLLLBBBBBMWW",
+      "FFbBBBBBBBBBBBBBBBMWW",
+      "..bBBBBBBBBBBBBBBBb.",
+      "...FbBBBBBBBBBBBBb..",
+      ".....bbBBBBBBBbb....",
     ],
     // gharial — slender long-snouted crocodilian, scaly ridged back
     gharial: [
@@ -1664,7 +1707,7 @@
     octopus: "octopus", jelly: "jelly", seahorse: "seahorse", otter: "otter",
     angler: "angler", lantern: "lantern", kraken: "kraken", blob: "blob",
     crab: "crab", lobster: "lobster", starfish: "starfish", urchin: "urchin", bug: "bug",
-    narwhal: "narwhal", coelacanth: "coelacanth", mosasaur: "mosasaur", armored: "armored", insect: "insect", bacteria: "bacteria",
+    narwhal: "narwhal", coelacanth: "coelacanth", mosasaur: "mosasaur", armored: "armored", insect: "insect", bacteria: "bacteria", grovegiant: "grovegiant",
     trilobite: "trilobite", ammonite: "ammonite", tang: "tang", flatfish: "flatfish",
     dolphin: "dolphin", clione: "clione",
     orca: "orca", manowar: "manowar", siphonophore: "siphonophore", megalodon: "megalodon",
@@ -1686,7 +1729,7 @@
     davyjones: "davyjones", rigtitan: "rigtitan", oarfish: "oarfish", deeplev: "deeplev",
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
-    dunkle: "dunkle", assfish: "assfish", gharial: "gharial",
+    dunkle: "dunkle", assfish: "assfish", gharial: "gharial", cobra: "cobra", grouper: "grouper", antlereel: "antlereel",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",
