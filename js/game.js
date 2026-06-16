@@ -3610,6 +3610,21 @@
     var items = (state && state.items) || {};
     R(-8 - finLen, -2 + legTop, finLen, 1, trim);     // fin trim (third colour)
     R(-8 - finLen, 5 + legBot, finLen, 1, trim);      // lower fin trim
+    // inventory upgrade = a backpack that grows bigger each level (#27/#70)
+    var inv = up.inventory || 0;
+    if (inv > 0) {
+      var bw = 2 + Math.min(4, inv), bh = 3 + Math.min(5, inv);
+      R(-7 - bw, -1, bw, bh, suitD);                    // pack body grows with level
+      R(-7 - bw, -1, bw, 1, mix(suit, "#fff", 0.25));   // top flap
+      R(-7 - bw, -1 + bh - 1, bw, 1, "#2c2620");        // base strap
+      R(-6, -1, 1, bh, trim);                           // shoulder strap to the pack
+    }
+    if (up.reel > 1) { R(6, 3, 2, 2, "#2a2f36"); R(7, 3, 1, 1, "#caa15a"); R(6, 4, 1, 1, "#caa15a"); } // reel motor on the hip
+    if (up.fins > 0) { R(-8 - finLen, -1 + legTop, 1, 1, mix(trim, "#fff", 0.5)); } // brighter fin tips with fins
+    if (up.trap > 0) { R(-5, 1, 2, 1, "#9aa6b0"); R(-5, 0, 1, 1, "#5cd0ff"); } // folded deploy-net on the belt
+    if (up.hammer > 0) { R(6, -1, 1, 4, "#5a4632"); R(5, -2, 3, 2, "#7a7a82"); } // sledgehammer head
+    if (up.shovel > 0) { R(7, 0, 1, 4, "#5a4632"); R(6, -1, 3, 2, "#9aa6b0"); } // shovel blade
+    if (up.sling > 0) { R(4, -1, 1, 3, "#5a4632"); R(3, -1, 1, 1, "#caa15a"); R(5, -1, 1, 1, "#caa15a"); } // slingshot Y
     if (up.net > 0) { R(5, 3, 3, 1, "#9aa6b0"); R(8, 2, 1, 1, "#5cd0ff"); }            // wrist magnet
     if (up.scoop > 0) { R(-6, -6, 1, 5, "#caa15a"); R(-8, -8, 5, 3, mix(suit, "#fff", 0.5)); R(-8, -8, 5, 1, "#caa15a"); } // net on the back
     if (up.suit >= D.UPGRADES.suit.levels.length - 1) { R(-4, 0, 9, 1, "#ffd24a"); }  // maxed suit gold trim
