@@ -2271,7 +2271,7 @@
     // the open sky never goes dark; the cavern is extra gloomy
     var darkness = loc.airArea ? 0 : depthFactor(run.diver.y, loc);
     // caves are moody-dark but never blinding (capped so you can always see to play)
-    if (loc.caveArea) darkness = Math.min(0.7, darkness + 0.2);
+    if (loc.caveArea) darkness = Math.min(0.5, darkness * 0.5 + 0.25);
     if (run.night && !nvOn) darkness = Math.min(0.95, darkness + (loc.airArea ? 0.3 : 0.4)); // nocturnal gloom
 
     // --- background, lighting & scenery ---
@@ -3055,9 +3055,11 @@
     var gog = state.items.goggles ? 260 : 0;      // goggles substantially widen your view
     // FOV grows with each Dive Light upgrade level (and again with goggles)
     var fov = lightRadius() * 1.5 + gog;
-    // warm dive-light glow that grows useful as it gets darker
+    // caves are dim but you can always see a wide area (never pitch black)
+    if (loc.caveArea) fov += 300;
+    // warm dive-light glow that grows useful as it gets darker (subtle, never blinding)
     if (darkness > 0.2) {
-      drawGlow(dx, dy, 130 + fov, "#ffe7a8", Math.min(0.5, darkness * 0.5));
+      drawGlow(dx, dy, 130 + fov, "#ffe7a8", Math.min(0.26, darkness * 0.3));
     }
     // depth darkness vignette with a clear hole around the diver
     if (darkness > 0.22) {
