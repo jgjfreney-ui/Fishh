@@ -2739,6 +2739,33 @@
     }
     ctx.restore();
   }
+  // a rough rock ceiling hung with stalactites (caves / the Gloom Cavern)
+  function drawCaveCeiling(surfaceY, loc) {
+    var rock = (DECOR[loc.id] && DECOR[loc.id].rock) || "#2a2620";
+    var g = ctx.createLinearGradient(0, 0, 0, surfaceY);
+    g.addColorStop(0, mix(rock, "#000000", 0.45)); g.addColorStop(1, rock);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, surfaceY);
+    // lumpy underside of the ceiling
+    ctx.fillStyle = mix(rock, "#000000", 0.25);
+    for (var b = 0; b < W + 60; b += 60) {
+      var bx = b - (cam.x * 0.3 % 60);
+      ctx.beginPath(); ctx.arc(bx, surfaceY - 6, 34, Math.PI, 0); ctx.fill();
+    }
+    // stalactites hanging down toward the water
+    for (var s = 0; s < 14; s++) {
+      var sx = ((s * 137 - cam.x * 0.3) % (W + 80) + (W + 80)) % (W + 80) - 40;
+      var slen = 24 + ((s * 53) % 60), sw = 8 + (s % 3) * 4;
+      ctx.fillStyle = mix(rock, "#000000", 0.15);
+      ctx.beginPath(); ctx.moveTo(sx - sw, surfaceY * 0.1); ctx.lineTo(sx + sw, surfaceY * 0.1);
+      ctx.lineTo(sx, Math.min(surfaceY - 2, surfaceY * 0.1 + slen)); ctx.closePath(); ctx.fill();
+      // a wet drip glint
+      if (Math.sin(run.time * 1.5 + s) > 0.7) { ctx.fillStyle = "rgba(180,220,255,0.5)"; ctx.fillRect(sx | 0, (Math.min(surfaceY - 2, surfaceY * 0.1 + slen)) | 0, 2, 4); }
+    }
+    // faint waterline shimmer
+    var wb = ctx.createLinearGradient(0, surfaceY, 0, surfaceY + 18);
+    wb.addColorStop(0, "rgba(120,160,200,0.18)"); wb.addColorStop(1, "rgba(120,160,200,0)");
+    ctx.fillStyle = wb; ctx.fillRect(0, surfaceY, W, 18);
+  }
   // boiling dark volcanic cloud cover with a smouldering red horizon glow
   // (used for the Magma Vents; reusable for other volcanic skies)
   function drawVolcanoSky(surfaceY) {
@@ -2780,6 +2807,11 @@
     // Volcano sky: boiling dark clouds with a smouldering red glow on the horizon
     if (sky.volcano) {
       drawVolcanoSky(surfaceY);
+      return;
+    }
+    // Cave sky: a rocky ceiling hung with stalactites instead of open air
+    if (loc.caveArea || sky.cave) {
+      drawCaveCeiling(surfaceY, loc);
       return;
     }
     var g = ctx.createLinearGradient(0, 0, 0, surfaceY);
