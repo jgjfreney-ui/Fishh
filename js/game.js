@@ -25,13 +25,14 @@
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, desert: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
-               oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false, grotto: false, jungle: false },
+               oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false, grotto: false, jungle: false, alien: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
       davyjonesCaught: false,
       openseaClams: 0,       // clams dug in the Open Sea (15 summons the Leatherback)
       leatherbackCaught: false,
       cargoSearched: 0,      // cargo ships fully stripped (5 opens the Flooded Freighter)
       jewels: {},            // red/blue/green/yellow gems collected (4 open the Ancient Grotto)
+      ufoTreasures: 0,       // alien artifacts from crashed UFOs (100 opens the Xeno Planet)
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -306,6 +307,7 @@
     desert:    { plants: ["rock", "coral", "rock"], plantColors: ["#d8c078", "#c8a85a", "#a8884a", "#8a6a3a"], rock: "#a8884a", floor: "#c8a860" },
     grotto:    { plants: ["coral", "crystal", "coral"], plantColors: ["#3ad0e0", "#ffcf3a", "#e23b5a", "#9a5ad0"], rock: "#2a7a8a", floor: "#caa14a" },
     jungle:    { plants: ["kelp", "coral", "kelp"], plantColors: ["#2faf3a", "#3a8a2a", "#6cae4a", "#caa15a"], rock: "#2a4a1a", floor: "#1a3a12" },
+    alien:     { plants: ["crystal", "coral", "crystal"], plantColors: ["#9f7bff", "#3affd0", "#ff5bd0", "#5bf0ff"], rock: "#2a1a4a", floor: "#160a32" },
   };
 
   function generateDecor(loc) {
@@ -328,7 +330,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune", grotto: "obelisk", jungle: "tree" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune", grotto: "obelisk", jungle: "tree", alien: "bigcrystal" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -618,7 +620,8 @@
       var depthFrac = 0.42 + 0.55 * (i / Math.max(1, n - 1)) + (Math.random() - 0.5) * 0.12;
       depthFrac = clamp(depthFrac, 0.3, 0.97);
       var type, roll = Math.random() * (0.4 + depthFrac); // deeper = higher roll = better type
-      if (roll > 0.85) type = "yacht";                 // best: rare luxury yacht (deepest)
+      if (!state.areas.alien && Math.random() < 0.07) type = "ufo"; // rare crashed UFO (alien artifacts)
+      else if (roll > 0.85) type = "yacht";            // best: rare luxury yacht (deepest)
       else if (roll > 0.62) type = "cargo";            // big cargo freighter
       else if (Math.random() < planeChance) type = "plane";
       else type = "ship";
@@ -626,7 +629,7 @@
         type: type,
         x: 200 + Math.random() * (loc.worldWidth - 400),
         y: loc.maxDepth * PXPM * depthFrac,
-        w: type === "cargo" ? 300 + Math.random() * 120 : type === "yacht" ? 200 + Math.random() * 80 : 180 + Math.random() * 120,
+        w: type === "cargo" ? 300 + Math.random() * 120 : type === "yacht" ? 200 + Math.random() * 80 : type === "ufo" ? 150 + Math.random() * 60 : 180 + Math.random() * 120,
         looted: 0,
       });
     }
@@ -1760,12 +1763,14 @@
   }
 
   // per-dive loot budget by wreck type (cargo ships are huge — 10 treasures)
-  function wreckCap(w) { return w.type === "cargo" ? 10 : w.type === "yacht" ? 6 : 4; }
+  function wreckCap(w) { return w.type === "cargo" ? 10 : w.type === "yacht" ? 6 : w.type === "ufo" ? 5 : 4; }
   // roll one treasure appropriate to a wreck's type + depth
   function rollWreckLoot(wreck) {
     var df = depthFactor(wreck.y, D.LOCATIONS[run.area]);
-    var isPlane = wreck.type === "plane", isYacht = wreck.type === "yacht", isCargo = wreck.type === "cargo";
+    var isPlane = wreck.type === "plane", isYacht = wreck.type === "yacht", isCargo = wreck.type === "cargo", isUfo = wreck.type === "ufo";
     var pool = D.TREASURES.filter(function (tt) {
+      if (tt.ufo) return isUfo;                  // crashed UFOs only drop alien artifacts
+      if (isUfo) return false;
       if (tt.plane) return isPlane && Math.random() < 0.5;
       if (tt.yacht) return isYacht && Math.random() < 0.55;
       if (tt.cargo) return isCargo && Math.random() < 0.6;
@@ -1774,7 +1779,7 @@
       if (ro === 2) return Math.random() < (0.18 + df * 0.4);
       return Math.random() < 0.9;
     });
-    if (pool.length === 0) pool = D.TREASURES.filter(function (tt) { return !tt.plane && !tt.yacht && !tt.cargo; });
+    if (pool.length === 0) pool = D.TREASURES.filter(function (tt) { return !tt.plane && !tt.yacht && !tt.cargo && !tt.ufo; });
     return pool[(Math.random() * pool.length) | 0];
   }
   // #1: a cargo ship spills ALL ten pieces of loot at once when you reach it
@@ -2357,7 +2362,14 @@
     run.bagTreasure.push({ id: def.id, value: def.value * mult, name: def.name, color: def.color });
     state.treasures[def.id] = (state.treasures[def.id] || 0) + 1;
     run.floaters.push({ x: tr.x, y: tr.y, text: def.name + (mult > 1 ? " ×2" : ""), color: def.color, life: 1.5 });
-    toast("Treasure recovered: " + def.name + "!", "good", 1600);
+    // alien artifacts build toward the Xeno Planet
+    if (def.ufo && !state.areas.alien) {
+      state.ufoTreasures = (state.ufoTreasures || 0) + 1;
+      if (state.ufoTreasures >= 100) unlockSecretArea("alien", "🛸 Your 100th alien artifact pulses — a wormhole tears open, pulling you to the XENO PLANET! (Now in Change Area.)");
+      else toast("🛸 Alien artifact " + state.ufoTreasures + "/100 — gather 100 to reach the Xeno Planet.", "good", 1800);
+    } else {
+      toast("Treasure recovered: " + def.name + "!", "good", 1600);
+    }
     saveGame();
   }
 
@@ -3284,6 +3296,15 @@
       ctx.beginPath(); ctx.moveTo(-6, 18); ctx.lineTo(38, 50); ctx.lineTo(54, 46); ctx.lineTo(2, 14); ctx.closePath(); ctx.fill(); ctx.stroke();
       // tail fin
       ctx.beginPath(); ctx.moveTo(-hw + 4, 2); ctx.lineTo(-hw - 6, -34); ctx.lineTo(-hw + 16, -2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (wk.type === "ufo") {
+      // crashed flying saucer half-buried in the seabed, lights pulsing
+      var uw = wk.w / 2;
+      ctx.fillStyle = "rgba(120,130,150,0.92)"; ctx.strokeStyle = "rgba(180,200,220,0.9)";
+      ctx.beginPath(); ctx.ellipse(0, 6, uw, 12, 0, 0, 7); ctx.fill(); ctx.stroke(); // saucer disc
+      ctx.fillStyle = "rgba(150,230,255,0.5)"; ctx.beginPath(); ctx.ellipse(0, -2, uw * 0.45, 12, 0, Math.PI, 0); ctx.fill(); // dome
+      var blink = 0.5 + 0.5 * Math.sin(run.time * 4);
+      for (var ul = -uw + 10; ul < uw - 6; ul += 16) { ctx.fillStyle = "rgba(120,255,180," + (0.4 + blink * 0.5).toFixed(2) + ")"; ctx.fillRect(ul, 4, 4, 4); }
+      drawGlow(0, 6, uw, "#7affd0", 0.12 + blink * 0.1);
     } else if (wk.type === "yacht") {
       // sleek capsized luxury yacht — white hull, gold trim, tilted
       var yhw = wk.w / 2;

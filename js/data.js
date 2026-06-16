@@ -134,11 +134,18 @@
       sky: { top: "#d8c890", bottom: "#9fb0e0" },
     },
     jungle: {
-      id: "jungle", name: "Sunken Jungle", tint: "#3aa83a", secret: true, jungle: true,
+      id: "jungle", name: "Emerald Jungle", tint: "#3aa83a", secret: true, jungle: true,
       blurb: "A flooded emerald jungle — shafts of green light pierce a tangle of vines and giant leaves where river monsters lurk.",
       maxDepth: 650, worldWidth: 2800, topColor: "#3a9a4a", deepColor: "#0a2a14",
       shinyBonus: 0, unlocked: false, cost: 0,
       sky: { top: "#bfe8a0", bottom: "#e0f4c0" },
+    },
+    alien: {
+      id: "alien", name: "Xeno Planet", tint: "#9f7bff", secret: true, alien: true, starfield: true,
+      blurb: "An ocean on another world, far beyond the stars — bioluminescent xeno-life drifts through violet water under twin alien moons.",
+      maxDepth: 800, worldWidth: 2800, topColor: "#3a2a6a", deepColor: "#0a0226",
+      shinyBonus: 0.15, unlocked: false, cost: 0,
+      sky: { top: "#1a0a3a", bottom: "#3a2a6a", night: true },
     },
     grotto: {
       id: "grotto", name: "Ancient Grotto", tint: "#3ad0e0", secret: true, pyramids: true,
@@ -794,6 +801,23 @@
     { id: "floodedlux", name: "Opal Fish", area: "flooded", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 76000, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "sword" },
     { id: "trenchlux", name: "Jeweled Fish", area: "trench", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 560000, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "ray" },
     { id: "sanctuarylux", name: "Royal Fish", area: "sanctuary", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 368000, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "sword" },
+    // ======== Xeno Planet (secret; alien ocean unlocked with 100 alien artifacts) ========
+    { id: "voidling",   name: "Voidling",      area: "alien", rarity: "common",   size: 1, value: 600, minDepth: 0,   color: "#6a3ad0", accent: "#bf9aff", shape: "guppy", glow: true },
+    { id: "glowpolyp",  name: "Glow Polyp",    area: "alien", rarity: "common",   size: 1, value: 640, minDepth: 0,   color: "#3affd0", accent: "#bfffe0", shape: "round", glow: true },
+    { id: "stareel",    name: "Star Eel",      area: "alien", rarity: "uncommon", size: 3, value: 1100, minDepth: 80, color: "#9f7bff", accent: "#fff3b0", shape: "eel", glow: true },
+    { id: "nebularay",  name: "Nebula Ray",    area: "alien", rarity: "rare",     size: 4, value: 2400, minDepth: 160, color: "#ff5bd0", accent: "#5bf0ff", shape: "ray", glow: true },
+    { id: "plasmajelly", name: "Plasma Jelly", area: "alien", rarity: "uncommon", size: 3, value: 1200, minDepth: 60, color: "#5bf0ff", accent: "#ffffff", shape: "jelly", glow: true },
+    { id: "crystaldrifter", name: "Crystal Drifter", area: "alien", rarity: "common", size: 1, value: 580, minDepth: 0, color: "#bfeaff", accent: "#ffffff", shape: "clione", glow: true },
+    { id: "xenosquid",  name: "Xeno Squid",    area: "alien", rarity: "rare",     size: 3, value: 2000, minDepth: 120, color: "#7a3ad0", accent: "#3affd0", shape: "squid", glow: true },
+    { id: "probefish",  name: "Probe Fish",    area: "alien", rarity: "uncommon", size: 2, value: 900, minDepth: 40,  color: "#9aa6b0", accent: "#5bf0ff", shape: "fish", glow: true },
+    { id: "gravitytang", name: "Gravity Tang", area: "alien", rarity: "uncommon", size: 2, value: 1000, minDepth: 60, color: "#3a2a6a", accent: "#bf9aff", shape: "tang", glow: true },
+    { id: "quasarshark", name: "Quasar Shark", area: "alien", rarity: "epic",     size: 6, value: 4200, minDepth: 250, color: "#5a2a8a", accent: "#ffcf3a", shape: "shark", glow: true },
+    { id: "xenocrab",   name: "Xeno Crab",     area: "alien", creature: true, rarity: "common", size: 1, value: 500, color: "#7a3ad0", accent: "#3affd0", shape: "crab", glow: true },
+    { id: "voidsnail",  name: "Void Snail",    area: "alien", creature: true, rarity: "common", size: 1, value: 480, color: "#3a2a6a", accent: "#bf9aff", shape: "snail", glow: true },
+    { id: "starflyer",  name: "Star Flyer",    area: "alien", bird: true, rarity: "uncommon", size: 2, value: 1100, color: "#bfeaff", accent: "#ffcf3a", shape: "seabird", seedCost: 1500 },
+    { id: "moonmoth",   name: "Moon Moth",     area: "alien", bird: true, rarity: "common", size: 1, value: 700, color: "#9f7bff", accent: "#fff3b0", shape: "finch", seedCost: 1000 },
+    { id: "alienoverlord", name: "The Overlord", area: "alien", areaBoss: true, rarity: "mythic", size: 14, value: 90000, minDepth: 200, color: "#7a3ad0", accent: "#3affd0", trim: "#ffcf3a", shape: "xenoboss", hp: 9, reward: "" },
+
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
     { id: "pelican",   name: "Pelican",      area: "coral", bird: true, rarity: "uncommon", size: 2, value: 130, color: "#d8c2a0", shape: "duck", seedCost: 400 },
@@ -930,6 +954,10 @@
     { id: "tiara",   name: "Diamond Tiara",  value: 32000, color: "#bfeaff", rarity: "legendary", yacht: true },
     // cargo-ship container (its own bulk loot)
     { id: "container", name: "Cargo Container", value: 900, color: "#c46a3a", rarity: "uncommon", cargo: true },
+    // crashed-UFO loot — collect 100 of these alien artifacts to reach the Xeno Planet
+    { id: "alienorb",  name: "Alien Orb",      value: 1200, color: "#7affd0", rarity: "epic", ufo: true },
+    { id: "xenocrystal", name: "Xeno Crystal", value: 1800, color: "#bf9aff", rarity: "epic", ufo: true },
+    { id: "warpcore",  name: "Warp Core",      value: 4000, color: "#5bf0ff", rarity: "legendary", ufo: true },
   ];
 
   // --- Upgrade tracks ----------------------------------------------------

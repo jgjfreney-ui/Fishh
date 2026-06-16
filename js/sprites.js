@@ -995,6 +995,17 @@
       ".FF.bbBBBBBBBBBBBbb..A..",
       ".......AA....AA........",
     ],
+    // alien overlord — a floating eye-creature with glowing tendrils (Xeno boss)
+    xenoboss: [
+      "....GGGGGGGG....",
+      "..GbBBBBBBBBbG..",
+      ".GbBBEPBBEPBBbG.",
+      "GbBBBBBBBBBBBBBG",
+      "GbBBLLLLLLLLBBBG",
+      ".GbBBBBBBBBBBbG.",
+      "..FGFGFGFGFGFG..",
+      ".F.G.F.G.F.G.F..",
+    ],
     bigfrog: [
       "..bEPBb....bBEPb..",
       ".bBBBBBb..bBBBBBb.",
@@ -1844,7 +1855,7 @@
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
     dunkle: "dunkle", assfish: "assfish", gharial: "gharial", cobra: "cobra", grouper: "grouper", antlereel: "antlereel",
-    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish", magmakaiju: "magmakaiju", frog: "frog", bigfrog: "bigfrog", tadpole: "tadpole",
+    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish", magmakaiju: "magmakaiju", frog: "frog", bigfrog: "bigfrog", tadpole: "tadpole", xenoboss: "xenoboss",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",
