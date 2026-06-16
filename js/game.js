@@ -262,8 +262,10 @@
     var x = initial ? Math.random() * loc.worldWidth : (Math.random() < 0.5 ? -30 : loc.worldWidth + 30);
     run.creatures.push({
       uid: "c" + (Math.random() * 1e9 | 0) + run.time,
-      def: def, x: x, y: run.floorY - 8,
-      vx: (Math.random() < 0.5 ? -1 : 1) * (12 + Math.random() * 10),
+      def: def, x: initial ? x : Math.random() * loc.worldWidth, y: run.floorY - 8,
+      // "furniture" creatures (chair snail, table turtle, lamp squid) sit still
+      // on the floor instead of drifting like swimming fish
+      vx: def.furniture ? 0 : (Math.random() < 0.5 ? -1 : 1) * (12 + Math.random() * 10),
       phase: Math.random() * 6, shiny: Math.random() < shinyChance(run.area), size: def.size,
       hasPearl: !!def.dropsPearl && Math.random() < 0.5, // predetermined: a visible pearl when open
     });
@@ -1416,6 +1418,7 @@
       if (theBoss) updateBossAI(theBoss, dt, diver);
     } else { run.grab = null; run.bossBeam = null; }
     if (run.torpedoes.length) updateTorpedoes(dt, diver, loc);
+    if (state.buddy) updateBuddy(dt);
     if (run.fireballs.length) updateFireballs(dt, diver, loc);
 
     // --- Deploy Net: any fish inside the dropped net is bagged (ignores hold) ---
@@ -3320,15 +3323,46 @@
   }
 
   // a mini fish/creature/bird companion (chosen in the Collection) that trails you
+  // the pet swims off to fetch nearby COMMON/UNCOMMON fish (not birds/creatures/
+  // bosses), brings them in, then returns to your side
+  function updateBuddy(dt) {
+    if (!state.buddy || !run) { return; }
+    var d = run.diver;
+    if (run.buddyX == null) { run.buddyX = d.x - 28; run.buddyY = d.y + 12; }
+    // (re)acquire a fetch target if we don't have a live one
+    var tgt = run.buddyTarget && run.fish.indexOf(run.buddyTarget) >= 0 ? run.buddyTarget : null;
+    if (!tgt && run.bagUsed < inventoryCap()) {
+      var best = null, bd = 220;
+      for (var i = 0; i < run.fish.length; i++) {
+        var f = run.fish[i];
+        if (f.isBoss || f.def.bird || f.def.creature || f.legendary) continue;
+        var ro = D.RARITY[f.def.rarity].order;
+        if (ro > 1) continue; // common/uncommon only
+        if (run.bagUsed + f.def.size > inventoryCap()) continue;
+        var dd = Math.hypot(f.x - run.buddyX, f.y - run.buddyY);
+        if (dd < bd) { bd = dd; best = f; }
+      }
+      tgt = best;
+    }
+    run.buddyTarget = tgt;
+    var tx, ty;
+    if (tgt) { tx = tgt.x; ty = tgt.y; }
+    else { var face = d.face < 0 ? -1 : 1; tx = d.x - face * 28; ty = d.y + 12 + Math.sin(run.time * 2.2) * 5; }
+    var spd = tgt ? 7 : 4;
+    run.buddyX += (tx - run.buddyX) * Math.min(1, spd * dt);
+    run.buddyY += (ty - run.buddyY) * Math.min(1, spd * dt);
+    run.buddyFlip = (tx - run.buddyX) < 0;
+    // reached the target fish -> catch it for you
+    if (tgt && Math.hypot(tgt.x - run.buddyX, tgt.y - run.buddyY) < 18) {
+      catchFish(tgt); run.buddyTarget = null;
+    }
+  }
   function drawBuddy() {
     if (!state.buddy) return;
     var def = D.FISH_BY_ID[state.buddy.id]; if (!def) return;
-    var face = run.diver.face < 0 ? -1 : 1;
-    var tx = run.diver.x - face * 28, ty = run.diver.y + 12 + Math.sin(run.time * 2.2) * 5;
-    if (run.buddyX == null) { run.buddyX = tx; run.buddyY = ty; }
-    run.buddyX += (tx - run.buddyX) * 0.14; run.buddyY += (ty - run.buddyY) * 0.14;
+    if (run.buddyX == null) { run.buddyX = run.diver.x - 28; run.buddyY = run.diver.y + 12; }
     var x = run.buddyX - cam.x, y = run.buddyY - cam.y;
-    var flip = (tx - run.buddyX) < 0; // face the way it's swimming
+    var flip = !!run.buddyFlip;
     var th = 14;
     if (state.buddy.shiny) drawGlow(x, y, th, "#fff0a0", 0.4);
     var arch = SPRITES.archetypeForShape(def.shape);
