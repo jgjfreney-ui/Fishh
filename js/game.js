@@ -47,6 +47,7 @@
       settings: { muted: false, musicMuted: false, sfxMuted: false },
       diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", suitTrim: "#bfe9ff", hair: 0, look: "short" },
       buddy: null,       // a mini fish companion {id, shiny} that follows you everywhere
+      aquaLevels: {},    // areaId -> aquarium enclosure level (0..3); max doubles shiny + unlocks luxury fish
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
       itemsOff: {},     // itemId -> true means owned but toggled OFF (boss gear)
@@ -116,9 +117,13 @@
   function slingShotsMax() { return up("sling"); } // shots per dive (0 = no slingshot)
 
   function rarityCharmTilt() { return state.charms.rarity * D.CHARMS.rarity.perStack; }
+  var AQUA_MAX = 3; // aquarium enclosure levels (0..3)
+  function aquaLevel(area) { return (state.aquaLevels && state.aquaLevels[area]) || 0; }
   function shinyChance(area) {
     var c = D.BASE_SHINY_CHANCE + state.charms.shiny * D.CHARMS.shiny.perStack;
     if (area && D.LOCATIONS[area].shinyBonus) c += D.LOCATIONS[area].shinyBonus;
+    // a MAXED aquarium enclosure doubles the shiny rate in that area
+    if (area && aquaLevel(area) >= AQUA_MAX) c *= 2;
     return Math.min(0.95, c);
   }
 
@@ -679,7 +684,7 @@
       }
       if (!allContent && f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
-      if (f.isKraken || f.isBlob || f.areaBoss || f.secretBoss || f.creature || f.bird) continue;
+      if (f.isKraken || f.isBlob || f.areaBoss || f.secretBoss || f.creature || f.bird || f.luxury) continue;
       if (depthM < f.minDepth) continue;
       if (f.secret) {
         // secrets need a purchased hint + meeting their depth condition
@@ -1260,10 +1265,12 @@
         run.legendTimer = 30 + Math.random() * 45;
         var beaten = defeatedBossDefsForArea(run.area);
         // native legendary fish (e.g. the Golden Gharial) also appear this way
+        var maxedAqua = aquaLevel(run.area) >= AQUA_MAX;
         for (var lgi = 0; lgi < D.FISH.length; lgi++) {
           var lgf = D.FISH[lgi];
-          if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && !lgf.bird && !state.discovered[lgf.id]) beaten.push(lgf);
-          else if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && !lgf.bird && Math.random() < 0.5) beaten.push(lgf);
+          if (lgf.area !== run.area || lgf.areaBoss || lgf.secretBoss || lgf.bird) continue;
+          if (lgf.luxury) { if (maxedAqua && Math.random() < 0.3) beaten.push(lgf); continue; } // rarest of all — only with a maxed enclosure
+          if (lgf.legendary) { if (!state.discovered[lgf.id] || Math.random() < 0.5) beaten.push(lgf); }
         }
         if (beaten.length && run.fish.length < 30 && Math.random() < 0.5) {
           var src = beaten[(Math.random() * beaten.length) | 0];
@@ -4575,6 +4582,28 @@
       if (sh) addAquaEntity(f, true);
     });
     document.getElementById("aqua-title").textContent = D.LOCATIONS[areaId].name + " · " + aqua.entities.length + " here";
+    updateAquaUpgradeBtn();
+  }
+  var AQUA_COSTS = [6000, 24000, 70000]; // level 0->1, 1->2, 2->3
+  function aquaUpgradeCost(area) { var lv = aquaLevel(area); return lv >= AQUA_MAX ? 0 : AQUA_COSTS[lv]; }
+  function updateAquaUpgradeBtn() {
+    var btn = document.getElementById("aqua-upgrade"); if (!btn || !aqua) return;
+    var lv = aquaLevel(aqua.area), cost = aquaUpgradeCost(aqua.area);
+    if (lv >= AQUA_MAX) btn.textContent = "★ Enclosure MAXED · 2× shiny + luxury fish";
+    else btn.textContent = "⬆ Upgrade Enclosure Lv" + lv + "→" + (lv + 1) + " · $" + fmt(cost);
+    btn.disabled = lv >= AQUA_MAX || state.money < cost;
+  }
+  function upgradeAqua() {
+    if (!aqua) return;
+    var area = aqua.area, lv = aquaLevel(area), cost = aquaUpgradeCost(area);
+    if (lv >= AQUA_MAX || state.money < cost) return;
+    state.money -= cost;
+    if (!state.aquaLevels) state.aquaLevels = {};
+    state.aquaLevels[area] = lv + 1; saveGame();
+    toast(state.aquaLevels[area] >= AQUA_MAX
+      ? "★ " + D.LOCATIONS[area].name + " enclosure MAXED! Shiny rate DOUBLED here + a luxury fish now lurks!"
+      : "⬆ Enclosure upgraded to Lv " + state.aquaLevels[area] + " — more props added!", "epic", 3200);
+    updateAquaUpgradeBtn();
   }
   function addAquaEntity(f, shiny) {
     var kind = f.bird ? "bird" : (f.creature ? "creature" : "fish");
@@ -4675,12 +4704,21 @@
     ctx.fillStyle = "rgba(255,255,255,0.25)"; ctx.fillRect(0, top - 2, W, 3);
     var d = DECOR[aqua.area] || DECOR.coral;
     ctx.fillStyle = d.floor; ctx.fillRect(0, floorY, W, H - floorY);
-    // simple gravel plants
-    ctx.fillStyle = d.plantColors ? d.plantColors[0] : "#3fa34d";
-    for (var px = 30; px < W; px += 90) {
-      var hh = 14 + ((px * 7) % 26) + Math.sin(aqua.time + px) * 3;
+    // gravel plants + area-relevant props — denser & richer with each enclosure upgrade
+    var lvl = aquaLevel(aqua.area);
+    var step = 90 - lvl * 18; // more plants per upgrade
+    var pc = d.plantColors || ["#3fa34d"];
+    for (var px = 30; px < W; px += step) {
+      ctx.fillStyle = pc[(px / step | 0) % pc.length];
+      var hh = 14 + ((px * 7) % 26) + lvl * 6 + Math.sin(aqua.time + px) * 3;
       ctx.fillRect(px, floorY - hh, 6, hh);
+      if (lvl >= 1 && px % 2 === 0) ctx.fillRect(px - 3, floorY - hh * 0.6, 5, 4); // rocks
     }
+    // themed props that appear as you upgrade (castle, treasure, bubbler, coral)
+    if (lvl >= 1) { ctx.fillStyle = pc[1] || pc[0]; for (var c = 80; c < W; c += 200) { ctx.beginPath(); ctx.arc(c, floorY - 8, 12, Math.PI, 0); ctx.fill(); } } // coral mounds
+    if (lvl >= 2) { ctx.fillStyle = "#8a8a92"; ctx.fillRect(W * 0.5 - 16, floorY - 40, 32, 40); ctx.fillStyle = "#6a6a72"; ctx.fillRect(W * 0.5 - 6, floorY - 52, 12, 14); } // little castle
+    if (lvl >= 2) { ctx.fillStyle = "rgba(255,255,255,0.5)"; for (var bb = 0; bb < 5; bb++) { var by = floorY - ((aqua.time * 40 + bb * 30) % (floorY - 60)); ctx.fillRect(W * 0.22, by | 0, 2, 2); } } // bubbler
+    if (lvl >= 3) { drawTreasureSprite("coinchest", W * 0.78, floorY - 8, "#ffcf3a"); drawGlow(W * 0.78, floorY - 8, 22, "#ffd24a", 0.3); } // treasure chest
     for (var i = 0; i < aqua.entities.length; i++) drawAquaEntity(aqua.entities[i]);
     if (aqua.diverActive) {
       var moving = Math.abs(aqua.diver.vx) + Math.abs(aqua.diver.vy) > 5;
@@ -5651,6 +5689,7 @@
     bind("aqua-focus", aquaToggleFocus);
     bind("aqua-close", exitAquarium);
     bind("aqua-list", showCollection);
+    bind("aqua-upgrade", upgradeAqua);
     bind("aqua-swim", function () {
       if (!aqua) return;
       aqua.diverActive = !aqua.diverActive;
