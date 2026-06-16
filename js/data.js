@@ -408,7 +408,7 @@
 
     // ---- one nocturnal bird + one nocturnal sea creature (night only) ----
     { id: "nightowl",   name: "Night Owl",      area: "river", bird: true, night: true, rarity: "rare", size: 2, value: 520, color: "#6a5a4a", accent: "#e0d2b0", shape: "owl", seedCost: 800 },
-    { id: "fireflysquid", name: "Firefly Squid", area: "kelp", creature: true, night: true, rarity: "rare", size: 1, value: 420, color: "#3a4a8a", accent: "#7afcff", shape: "clione" },
+    { id: "fireflysquid", name: "Firefly Squid", area: "kelp", creature: true, night: true, rarity: "uncommon", size: 1, value: 420, color: "#3a4a8a", accent: "#7afcff", shape: "clione", glow: true },
 
     // ======== One extra bird + one extra creature per area (varied time) ========
     { id: "coraltern",  name: "Fairy Tern",     area: "coral",   bird: true, rarity: "uncommon", size: 1, value: 160, color: "#eef3f7", accent: "#3a9fd0", shape: "gull", seedCost: 350 },
@@ -832,12 +832,14 @@
       unit: "s",
       levels: [
         { cost: 0,    value: 28 },
-        { cost: 220,  value: 40 },
-        { cost: 700,  value: 55 },
-        { cost: 1900, value: 75 },
-        { cost: 4800, value: 100 },
-        { cost: 11500,value: 135 },
-        { cost: 27000,value: 180 },
+        { cost: 260,  value: 40 },
+        { cost: 840,  value: 55 },
+        { cost: 2300, value: 75 },
+        { cost: 5800, value: 100 },
+        { cost: 13800,value: 135 },
+        { cost: 32400,value: 180 },
+        { cost: 72000,value: 235 },
+        { cost: 155000,value: 300 },
       ],
     },
     fins: {
@@ -846,11 +848,13 @@
       unit: "spd",
       levels: [
         { cost: 0,    value: 170 },
-        { cost: 180,  value: 205 },
-        { cost: 580,  value: 240 },
-        { cost: 1500, value: 280 },
-        { cost: 3900, value: 325 },
-        { cost: 9500, value: 380 },
+        { cost: 220,  value: 205 },
+        { cost: 700,  value: 240 },
+        { cost: 1800, value: 280 },
+        { cost: 4700, value: 325 },
+        { cost: 11400, value: 380 },
+        { cost: 26000, value: 440 },
+        { cost: 60000, value: 510 },
       ],
     },
     net: {
@@ -859,10 +863,12 @@
       unit: "px",
       levels: [
         { cost: 0,    value: 70 },
-        { cost: 300,  value: 95 },
-        { cost: 950,  value: 120 },
-        { cost: 2500, value: 150 },
-        { cost: 6400, value: 190 },
+        { cost: 360,  value: 95 },
+        { cost: 1100,  value: 120 },
+        { cost: 3000, value: 150 },
+        { cost: 7700, value: 190 },
+        { cost: 18000, value: 235 },
+        { cost: 42000, value: 285 },
       ],
     },
     reel: {
@@ -870,24 +876,27 @@
       desc: "Reel caught fish in faster.",
       unit: "x",
       levels: [
-        { cost: 0,    value: 1.0 },
-        { cost: 270,  value: 1.35 },
-        { cost: 820,  value: 1.75 },
-        { cost: 2200, value: 2.25 },
-        { cost: 5600, value: 3.0 },
+        { cost: 0,     value: 1.0 },
+        { cost: 800,   value: 1.35 },
+        { cost: 2600,  value: 1.75 },
+        { cost: 7000,  value: 2.25 },
+        { cost: 18000, value: 3.0 },
+        { cost: 42000, value: 3.8 },
       ],
     },
     inventory: {
-      name: "Cargo Hold",
-      desc: "Total inventory space. Big fish eat more space!",
+      name: "Inventory",
+      desc: "Total inventory space — a bigger backpack. Big fish eat more space!",
       unit: "slots",
       levels: [
         { cost: 0,    value: 8 },
-        { cost: 380,  value: 14 },
-        { cost: 1150, value: 22 },
-        { cost: 3000, value: 34 },
-        { cost: 7400, value: 50 },
-        { cost: 17000,value: 72 },
+        { cost: 460,  value: 14 },
+        { cost: 1400, value: 22 },
+        { cost: 3600, value: 34 },
+        { cost: 8900, value: 50 },
+        { cost: 20400,value: 72 },
+        { cost: 46000,value: 100 },
+        { cost: 100000,value: 140 },
       ],
     },
     suit: {
@@ -896,10 +905,10 @@
       unit: "%O₂",
       levels: [
         { cost: 0,    value: 1.0 },
-        { cost: 600,  value: 0.85 },
-        { cost: 2000, value: 0.72 },
-        { cost: 5200, value: 0.60 },
-        { cost: 13000,value: 0.48 },
+        { cost: 720,  value: 0.85 },
+        { cost: 2400, value: 0.72 },
+        { cost: 6200, value: 0.60 },
+        { cost: 15600,value: 0.48 },
       ],
     },
     light: {
@@ -908,9 +917,9 @@
       unit: "px",
       levels: [
         { cost: 0,    value: 0 },
-        { cost: 450,  value: 120 },
-        { cost: 1500, value: 220 },
-        { cost: 3800, value: 340 },
+        { cost: 540,  value: 120 },
+        { cost: 1800, value: 220 },
+        { cost: 4600, value: 340 },
       ],
     },
     scoop: {
@@ -919,10 +928,10 @@
       unit: "px",
       levels: [
         { cost: 0,    value: 0 },
-        { cost: 1400, value: 55 },
-        { cost: 3400, value: 80 },
-        { cost: 7800, value: 110 },
-        { cost: 16000,value: 145 },
+        { cost: 1700, value: 55 },
+        { cost: 4100, value: 80 },
+        { cost: 9400, value: 110 },
+        { cost: 19200,value: 145 },
       ],
     },
     trap: {
@@ -931,10 +940,10 @@
       unit: "size",
       levels: [
         { cost: 0,     value: 0 },    // none
-        { cost: 4000,  value: 110 },  // small
-        { cost: 12000, value: 170 },  // medium
-        { cost: 30000, value: 240 },  // big
-        { cost: 70000, value: 330 },  // huge
+        { cost: 4800,  value: 110 },  // small
+        { cost: 14400, value: 170 },  // medium
+        { cost: 36000, value: 240 },  // big
+        { cost: 84000, value: 330 },  // huge
       ],
     },
     hammer: {
@@ -943,9 +952,9 @@
       unit: "loot",
       levels: [
         { cost: 0,     value: 0 },   // not owned
-        { cost: 8000,  value: 1 },   // base
-        { cost: 22000, value: 2 },
-        { cost: 55000, value: 3 },
+        { cost: 9600,  value: 1 },   // base
+        { cost: 26400, value: 2 },
+        { cost: 66000, value: 3 },
       ],
     },
     shovel: {
@@ -954,9 +963,9 @@
       unit: "dig",
       levels: [
         { cost: 0,     value: 0 },   // not owned
-        { cost: 6000,  value: 1 },   // base
-        { cost: 18000, value: 2 },
-        { cost: 46000, value: 3 },
+        { cost: 7200,  value: 1 },   // base
+        { cost: 21600, value: 2 },
+        { cost: 55200, value: 3 },
       ],
     },
     sling: {
@@ -965,9 +974,9 @@
       unit: "shots",
       levels: [
         { cost: 0,     value: 0 },   // not owned
-        { cost: 7000,  value: 4 },
-        { cost: 20000, value: 7 },
-        { cost: 48000, value: 11 },
+        { cost: 8400,  value: 4 },
+        { cost: 24000, value: 7 },
+        { cost: 57600, value: 11 },
       ],
     },
     knife: {
@@ -976,9 +985,9 @@
       unit: "x wiggle",
       levels: [
         { cost: 0,     value: 1.0 }, // bare hands
-        { cost: 5000,  value: 1.6 },
-        { cost: 14000, value: 2.3 },
-        { cost: 34000, value: 3.2 },
+        { cost: 6000,  value: 1.6 },
+        { cost: 16800, value: 2.3 },
+        { cost: 40800, value: 3.2 },
       ],
     },
   };

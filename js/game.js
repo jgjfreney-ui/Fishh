@@ -1210,10 +1210,17 @@
       if (sf.area !== run.area && !loc.allContent) continue;
       if (!state.hints[sf.id]) continue;            // still need the hint bought
       if (sf.night && !run.night) continue;
+      // ONCE you've discovered it, it joins the pool but only rarely (a per-dive
+      // roll) instead of appearing every single time you meet its condition
+      if (state.discovered[sf.id]) {
+        if (!run.secretRoll) run.secretRoll = {};
+        if (run.secretRoll[sf.id] === undefined) run.secretRoll[sf.id] = Math.random() < 0.2;
+        if (!run.secretRoll[sf.id]) { run.secretShown[sf.id] = true; continue; }
+      }
       if (secretConditionMet(sf, depthM)) {
         spawnSpecificFish(sf);
         run.secretShown[sf.id] = true;
-        toast("Something rare stirs nearby... ✦", "epic", 1600);
+        toast(state.discovered[sf.id] ? "✦" : "Something rare stirs nearby... ✦", "epic", 1400);
       }
     }
 
@@ -1280,7 +1287,7 @@
       if (itemOn("jellystinger") && !f.isBoss && dist < mRange + 50) { f.fleeing = 0; f.stunned = 0.3; }
       // cargo-full notice: a catchable fish came into range but won't fit
       if (full && !canGrab && !f.isBoss && dist < mRange) {
-        if (run.time - (run.fullHint || -99) > 5) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1500); }
+        if (run.time - (run.fullHint || -99) > 5) { run.fullHint = run.time; toast("Inventory full! Surface to sell.", "bad", 1500); }
       }
       // skittish secrets (e.g. the White Squid) bolt away when you near them —
       // you have to CHASE and corner them for the magnet to grab
@@ -1649,7 +1656,7 @@
     // Shiny Pocket lets shinies through even when the hold is full
     var pocketed = f.shiny && state.items.shinyPocket;
     if (!ignoreCap && run.bagUsed + def.size > inventoryCap() && !pocketed) {
-      if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1400); }
+      if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Inventory full! Surface to sell.", "bad", 1400); }
       f.fleeing = 1.0; // push it away so the magnet doesn't keep grabbing
       return;
     }
@@ -1684,7 +1691,7 @@
     var def = c.def;
     var pocketed = c.shiny && state.items.shinyPocket;
     if (run.bagUsed + def.size > inventoryCap() && !pocketed) {
-      if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Cargo hold full! Surface to sell.", "bad", 1400); }
+      if (run.time - (run.fullHint || -99) > 6) { run.fullHint = run.time; toast("Inventory full! Surface to sell.", "bad", 1400); }
       return false;
     }
     var val = def.value * (c.shiny ? D.SHINY_VALUE_MULT : 1) * creatureValueMult() * areaValueMult(def.area);
@@ -2856,9 +2863,12 @@
   }
 
   function drawWreck(wk) {
+    // a fully-stripped wreck sinks away into the silt and vanishes
+    if ((wk.looted || 0) >= wreckCap(wk)) { wk.fade = Math.min(1, (wk.fade || 0) + 0.02); if (wk.fade >= 1) return; }
     var x = wk.x - cam.x, y = wk.y - cam.y;
     if (x < -wk.w || x > W + wk.w || y < -120 || y > H + 80) return;
     ctx.save();
+    if (wk.fade) ctx.globalAlpha = 1 - wk.fade;
     ctx.translate(x, y);
     ctx.lineWidth = 4;
     if (wk.type === "plane") {
@@ -3846,6 +3856,9 @@
   var shopTab = "gear"; // remembered across re-renders (e.g. after a purchase)
   function showShop() {
     var ov = overlay("shop");
+    // remember the scroll position so a purchase doesn't yank you to the top
+    var prevScroll = 0, oldPanel = ov.querySelector(".panel");
+    if (ov.classList.contains("open") && oldPanel) prevScroll = oldPanel.scrollTop;
     var html = '<div class="panel shop-panel"><div class="panel-head"><h2>🛒 Helpful Shop</h2>'
       + '<div class="money-line">💰 $' + fmt(state.money) + '</div>'
       + '<button class="close" data-close="shop">✕</button></div>';
@@ -4000,6 +4013,7 @@
     html += '</div>';
     ov.innerHTML = html;
     ov.classList.add("open");
+    if (prevScroll) { var np = ov.querySelector(".panel"); if (np) np.scrollTop = prevScroll; }
 
     // tab switching
     ov.querySelectorAll(".tab").forEach(function (t) {
@@ -4376,12 +4390,14 @@
       if (!fishes.length) continue;
       html += '<h3>' + D.LOCATIONS[areaId].name + '</h3><div class="coll-grid">';
       fishes.forEach(function (f) {
-        var special = f.isKraken || f.isBlob || f.areaBoss;
+        var special = f.isKraken || f.isBlob || f.areaBoss || f.secretBoss;
         var found, sh, hidden;
-        if (f.isKraken) { found = state.krakenCaught; sh = state.krakenShiny; hidden = !found; }
-        else if (f.isBlob) { found = state.blobfishCaught; sh = state.blobfishShiny; hidden = !found; }
-        else if (f.areaBoss) { found = !!state.areaBossCaught[f.id]; sh = false; hidden = !found; }
-        else { found = !!state.discovered[f.id]; sh = !!state.shinyFound[f.id]; hidden = f.secret && !found && !state.hints[f.id]; }
+        if (f.isKraken) { found = state.krakenCaught; sh = state.krakenShiny; }
+        else if (f.isBlob) { found = state.blobfishCaught; sh = state.blobfishShiny; }
+        else if (f.areaBoss) { found = !!state.areaBossCaught[f.id]; sh = !!state.shinyFound[f.id]; }
+        else if (f.secretBoss) { found = !!state[f.id + "Caught"]; sh = !!state.shinyFound[f.id]; }
+        else { found = !!state.discovered[f.id]; sh = !!state.shinyFound[f.id]; }
+        hidden = !found; // never reveal a name (or sprite) until you've actually caught/beaten it
         if (!special) { totalAll++; if (found) totalFound++; if (sh) shinyFound++; }
         var showShiny = collShinyView && sh && found;
         html += '<div class="coll-card ' + (found ? 'found' : 'missing') + ' r-' + f.rarity + (REQ[f.id] ? ' required' : '') + '">';
@@ -4394,7 +4410,10 @@
           + (found && !special ? ' · ' + (state.counts[f.id] || 0) + ' caught' : '')
           + (f.creature ? ' · Creature' : (f.bird ? ' · Bird' : '')) + (f.secret ? ' · Secret' : '') + tod + '</div>';
         if (!special) html += '<div class="coll-meta">Size ' + f.size + ' · $' + fmt(f.value) + '</div>';
-        else html += '<div class="coll-meta">' + (found ? 'Defeated!' : (f.areaBoss ? 'Catch every fish here' : 'Needs 100%')) + '</div>';
+        else {
+          var bossKind = (f.isKraken || f.isBlob) ? '🦑 Legendary Boss' : f.secretBoss ? '⭐ Secret Boss' : '⚔️ Area Boss';
+          html += '<div class="coll-meta">' + (found ? '✓ Defeated! · ' + bossKind : '🔒 ' + bossKind) + '</div>';
+        }
         html += '</div>';
       });
       html += '</div>';
