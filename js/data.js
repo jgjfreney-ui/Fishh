@@ -749,7 +749,7 @@
     { id: "sacredibis", name: "Sacred Ibis",   area: "grotto", bird: true, rarity: "uncommon", size: 2, value: 520, color: "#eef2f7", accent: "#1a1a1a", shape: "stork", seedCost: 800 },
     { id: "scarabbeetle", name: "Scarab Beetle", area: "grotto", bird: true, rarity: "common", size: 1, value: 300, color: "#2faf8a", accent: "#ffd24a", shape: "finch", seedCost: 500 },
     { id: "grottoguard", name: "Pharaoh's Guardian", area: "grotto", areaBoss: true, rarity: "mythic", size: 13, value: 44000, minDepth: 200, color: "#c79a2e", accent: "#3ad0e0", trim: "#fff3b0", shape: "manta", hp: 7, reward: "" },
-    { id: "gharial",    name: "Golden Gharial", area: "grotto", legendary: true, rarity: "mythic", size: 8, value: 26000, minDepth: 60, color: "#c79a4e", accent: "#fff3b0", trim: "#3ad0e0", shape: "gharial" },
+    { id: "gharial",    name: "Golden Gharial", area: "grotto", legendary: true, grabber: true, hp: 2, rarity: "mythic", size: 8, value: 26000, minDepth: 60, color: "#c79a4e", accent: "#fff3b0", trim: "#3ad0e0", shape: "gharial" },
 
     // ======== Sunken Jungle (secret; flooded river-monster jungle) ========
     { id: "junglepiranha", name: "Piranha",   area: "jungle", rarity: "common",   size: 1, value: 280, minDepth: 0,   color: "#7a8a3a", accent: "#e25a3a", shape: "triggerfish" },
@@ -760,7 +760,7 @@
     { id: "junglekardinal", name: "Cardinal Tetra",    area: "jungle", rarity: "common",   size: 1, value: 240, minDepth: 0,   color: "#2a8ac0", accent: "#ff3a5a", shape: "guppy", glow: true },
     { id: "jungleangel", name: "Freshwater Angelfish",     area: "jungle", rarity: "uncommon", size: 2, value: 420, minDepth: 30,  color: "#cfd6de", accent: "#3a3a3a", shape: "tang" },
     { id: "junglecat", name: "Jungle Catfish", area: "jungle", rarity: "uncommon", size: 3, value: 480, minDepth: 80, color: "#5a4a3a", accent: "#9fd05a", shape: "catfish" },
-    { id: "alligatorgar", name: "Alligator Gar", area: "jungle", rarity: "rare",  size: 4, value: 1300, minDepth: 180, color: "#4a5a3a", accent: "#caa15a", shape: "pike" },
+    { id: "alligatorgar", name: "Alligator Gar", area: "jungle", grabber: true, hp: 2, rarity: "rare",  size: 4, value: 1300, minDepth: 180, color: "#4a5a3a", accent: "#caa15a", shape: "crocodile" },
     { id: "peacockbass", name: "Peacock Bass", area: "jungle", rarity: "epic",    size: 4, value: 2400, minDepth: 250, color: "#2faf6a", accent: "#ffcf3a", shape: "perch" },
     { id: "junglecrab", name: "Jungle Crab",  area: "jungle", creature: true, rarity: "common", size: 1, value: 200, color: "#7a4a2a", accent: "#9fd05a", shape: "crab" },
     { id: "junglesnail", name: "Apple Snail", area: "jungle", creature: true, rarity: "common", size: 1, value: 160, color: "#caa15a", accent: "#3aa83a", shape: "snail" },

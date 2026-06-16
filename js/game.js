@@ -1402,6 +1402,7 @@
       var fits = run.bagUsed + f.size <= inventoryCap();
       var canGrab = fits || (f.shiny && state.items.shinyPocket);
       if (f.isBoss) { canGrab = false; if (f.hitFlash > 0) f.hitFlash -= dt; } // bosses need harpoons
+      if (f.def.grabber) { canGrab = false; if (f.hitFlash > 0) f.hitFlash -= dt; } // reptiles need harpoons
       // Jelly Stinger: zap nearby fish so they stop fleeing (easy to magnet)
       if (itemOn("jellystinger") && !f.isBoss && dist < mRange + 50) { f.fleeing = 0; f.stunned = 0.3; }
       // cargo-full notice: a catchable fish came into range but won't fit
@@ -1458,7 +1459,7 @@
       var theBoss = null;
       for (var bx2 = 0; bx2 < run.fish.length; bx2++) if (run.fish[bx2].isBoss && run.fish[bx2].hp > 0) { theBoss = run.fish[bx2]; break; }
       if (theBoss) updateBossAI(theBoss, dt, diver);
-    } else { run.grab = null; run.bossBeam = null; }
+    } else { if (!(run.grab && run.grab.fish)) run.grab = null; run.bossBeam = null; updateGrabberFish(dt, diver); }
     if (run.torpedoes.length) updateTorpedoes(dt, diver, loc);
     if (state.buddy) updateBuddy(dt);
     if (run.fireballs.length) updateFireballs(dt, diver, loc);
@@ -1584,7 +1585,7 @@
       var hit = false;
       for (var fi = 0; fi < run.fish.length; fi++) {
         var bo = run.fish[fi];
-        if (!bo.isBoss || bo.hp <= 0) continue;
+        if ((!bo.isBoss && !bo.def.grabber) || (bo.hp != null && bo.hp <= 0)) continue;
         if (Math.hypot(bo.x - hp.x, bo.y - hp.y) < 30 + bo.size * 3) { harpoonHit(bo); hit = true; break; }
       }
       if (hit || hp.life <= 0 || hp.x < -50 || hp.x > loc.worldWidth + 50) run.harpoonFx.splice(hi, 1);
@@ -1892,12 +1893,17 @@
 
   // throw a harpoon at the boss — aim with the joystick, else auto-aim
   function throwHarpoon() {
-    if (!run || !run.bossPresent) return;
+    if (!run) return;
     if (!(state.harpoons > 0)) { toast("No harpoons! Buy some at the Tool Shop.", "bad"); return; }
-    // find the boss
+    // target the boss if present, else the reptile grabbing/nearest you
     var boss = null;
     for (var i = 0; i < run.fish.length; i++) if (run.fish[i].isBoss && run.fish[i].hp > 0) { boss = run.fish[i]; break; }
-    if (!boss) return;
+    if (!boss && run.grab && run.grab.fish) boss = run.grab.fish;
+    if (!boss) {
+      var bd = 1e9;
+      for (var gi = 0; gi < run.fish.length; gi++) { var gf = run.fish[gi]; if (!gf.def.grabber) continue; var dd = Math.hypot(gf.x - run.diver.x, gf.y - run.diver.y); if (dd < bd) { bd = dd; boss = gf; } }
+    }
+    if (!boss) { toast("Nothing to harpoon right now.", "bad", 1200); return; }
     var ax, ay;
     if (joy.active && joy.mag > 0.2) { ax = joy.dx; ay = joy.dy; }   // aimed throw
     else { ax = boss.x - run.diver.x; ay = boss.y - run.diver.y; var l = Math.hypot(ax, ay) || 1; ax /= l; ay /= l; } // auto-aim
@@ -1906,6 +1912,43 @@
     run.harpoonFx.push({ x: run.diver.x, y: run.diver.y, vx: ax * spd, vy: ay * spd, life: 1.4, ang: Math.atan2(ay, ax) });
   }
 
+  // grabber reptiles (crocs / gators / gharials): they lunge, GRAB you (drains
+  // O2 until you wiggle free) and take two harpoons to bag
+  function updateGrabberFish(dt, diver) {
+    // process an active reptile grab
+    if (run.grab && run.grab.fish) {
+      var gf = run.grab.fish;
+      if (run.fish.indexOf(gf) < 0) { run.grab = null; }
+      else {
+        gf.face = diver.x < gf.x ? -1 : 1;
+        gf.x = diver.x - gf.face * (16 + gf.size); gf.baseY = diver.y; gf.y = diver.y;
+        run.oxygen -= 8 * dt;
+        var input = (joy.active ? joy.mag : 0) + ((keys["a"] || keys["d"] || keys["w"] || keys["s"] || keys["arrowleft"] || keys["arrowright"] || keys["arrowup"] || keys["arrowdown"]) ? 1 : 0);
+        run.grab.wig += input * dt * 0.9 * (D.UPGRADES.knife ? up("knife") : 1);
+        if (run.grab.wig >= 1) {
+          diver.vx = gf.face * 200; diver.vy = -60;
+          gf.fleeing = 1.5; gf.vx = -gf.face * 130; gf.grabCd = 5; run.grab = null;
+          toast("Wriggled free! Now HARPOON it! 🔱", "good", 1400);
+        }
+        return;
+      }
+    }
+    // lunge & grab
+    for (var i = 0; i < run.fish.length; i++) {
+      var f = run.fish[i];
+      if (!f.def.grabber || f.isBoss) continue;
+      if (f.hp == null) f.hp = f.def.hp || 2;
+      if (f.grabCd > 0) { f.grabCd -= dt; continue; }
+      var dd = Math.hypot(f.x - diver.x, f.y - diver.y);
+      if (dd < 240) { var ax = diver.x - f.x, ay = diver.y - f.y, l = Math.hypot(ax, ay) || 1; f.vx = (ax / l) * 90; f.baseY = clamp(f.baseY + (ay / l) * 60 * dt, 30, D.LOCATIONS[run.area].maxDepth * PXPM - 10); }
+      if (dd < 30 + f.size * 2 && !run.grab) {
+        run.grab = { fish: f, wig: 0 };
+        toast(f.def.name + " GRABS you — wiggle free, then HARPOON it (×2)! 🐊", "bad", 2400);
+        if (window.AUDIO) AUDIO.rumble();
+        break;
+      }
+    }
+  }
   // ===== Boss combat AI: charge, grab + O2 drain (wiggle out), kaiju breath =====
   function updateBossAI(boss, dt, diver) {
     if (boss.mode == null) { boss.mode = "roam"; boss.atkT = (boss.def.aggressive ? 1.2 : 3) + Math.random() * (boss.def.aggressive ? 1.2 : 3); boss.modeT = 0; }
@@ -2179,8 +2222,15 @@
   }
 
   function harpoonHit(boss) {
+    if (boss.hp == null) boss.hp = boss.def.hp || 2;
     boss.hp--; boss.hitFlash = 0.4; boss.fleeing = 0.5;
     if (boss.hp <= 0) {
+      // grabber reptiles (croc/gator/gharial) are bagged, not "defeated"
+      if (boss.def.grabber && !boss.isBoss) {
+        if (run.grab && run.grab.fish === boss) run.grab = null;
+        catchFish(boss);
+        return;
+      }
       if (boss.secretBoss) catchSecretBoss(boss);
       else if (boss.areaBoss) catchAreaBoss(boss);
       else if (boss.isBlob) catchBlobfish(boss.shiny);
@@ -3963,8 +4013,11 @@
       if (edge) esb.textContent = "🌀 Enter " + D.LOCATIONS[run.secretEdge].name;
     }
     var hb = document.getElementById("btn-harpoon");
-    hb.style.display = (run.bossPresent && state.harpoons > 0) ? "block" : "none";
-    if (run.bossPresent && state.harpoons > 0) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
+    var grabberNear = false;
+    for (var gh = 0; gh < run.fish.length; gh++) { if (run.fish[gh].def.grabber) { grabberNear = true; break; } }
+    var showHarpoon = (run.bossPresent || grabberNear) && state.harpoons > 0;
+    hb.style.display = showHarpoon ? "block" : "none";
+    if (showHarpoon) hb.textContent = "🔱 Harpoon (" + state.harpoons + ")";
     // Kaiju Breath button (own the breath + submerged)
     var brb = document.getElementById("btn-breath");
     if (brb) {
