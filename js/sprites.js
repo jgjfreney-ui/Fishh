@@ -995,6 +995,23 @@
       ".FF.bbBBBBBBBBBBBbb..A..",
       ".......AA....AA........",
     ],
+    frog: [
+      "..bEPb..bEPb..",
+      ".bBBBBBBBBBBb.",
+      "bBBBBBBBBBBBBb",
+      "bBLLLLLLLLLLBb",
+      "bBMMMMMMMMMMBb",
+      ".bBBBBBBBBBBb.",
+      "..A..A..A..A..",
+    ],
+    tadpole: [
+      "......bBBb...",
+      ".....bBBBBb..",
+      "fffbBBEPBBb..",
+      "ffffBBBBBBb..",
+      "fffbBBBBBb...",
+      ".....bBBb....",
+    ],
     // Magma Kaiju — a volcanic colossus with rocky back-spikes & lava cracks
     magmakaiju: [
       "......A.A.A.A.......",
@@ -1817,7 +1834,7 @@
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
     dunkle: "dunkle", assfish: "assfish", gharial: "gharial", cobra: "cobra", grouper: "grouper", antlereel: "antlereel",
-    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish", magmakaiju: "magmakaiju",
+    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish", magmakaiju: "magmakaiju", frog: "frog", tadpole: "tadpole",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",

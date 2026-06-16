@@ -1300,7 +1300,10 @@
           var lgf = D.FISH[lgi];
           if (lgf.area !== run.area || lgf.areaBoss || lgf.secretBoss || lgf.bird) continue;
           if (lgf.luxury) { if (maxedAqua && Math.random() < 0.3) beaten.push(lgf); continue; } // rarest of all — only with a maxed enclosure
-          if (lgf.legendary) { if (!state.discovered[lgf.id] || Math.random() < 0.5) beaten.push(lgf); }
+          if (lgf.legendary) {
+            if (lgf.id === "gianttadpole" && (state.counts.bullfrogfish || 0) < 2) continue; // tadpole needs 2 bullfrogs first
+            if (!state.discovered[lgf.id] || Math.random() < 0.5) beaten.push(lgf);
+          }
         }
         if (beaten.length && run.fish.length < 30 && Math.random() < 0.5) {
           var src = beaten[(Math.random() * beaten.length) | 0];
