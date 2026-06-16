@@ -4726,11 +4726,23 @@
     html += '<div class="req-banner">🗝️ <b>Kraken requirements:</b> ' + reqDone + '/' + D.REQUIRED_FISH.length
       + ' required fish caught (marked 🗝️). <span class="tiny">...or so the legend says.</span></div>';
 
-    for (var areaId in D.LOCATIONS) {
-      if (D.LOCATIONS[areaId].secret && !state.areas[areaId]) continue; // hide undiscovered secret areas
+    // order areas so each discovered secret site sits right under the area it's
+    // accessed from (#5b)
+    var SECRET_PARENT = { japan: "river", backrooms: "kelp", pirate: "storm", oilrig: "opensea", flooded: "opensea", grotto: "desert", jungle: "forest", olympus: "mountain" };
+    var collOrder = [];
+    for (var aId in D.LOCATIONS) {
+      if (D.LOCATIONS[aId].secret) continue;
+      collOrder.push(aId);
+      for (var sId in D.LOCATIONS) if (SECRET_PARENT[sId] === aId) collOrder.push(sId);
+    }
+    for (var oId in D.LOCATIONS) if (D.LOCATIONS[oId].secret && !SECRET_PARENT[oId]) collOrder.push(oId);
+    collOrder.forEach(function (areaId) {
+      var isSecret = D.LOCATIONS[areaId].secret;
+      if (isSecret && !state.areas[areaId]) return; // hide undiscovered secret areas
       var fishes = byArea[areaId] || [];
-      if (!fishes.length) continue;
-      html += '<h3>' + D.LOCATIONS[areaId].name + '</h3><div class="coll-grid">';
+      if (!fishes.length) return;
+      var label = (isSecret ? '↳ <span class="coll-secret">' + D.LOCATIONS[areaId].name + ' (secret)</span>' : D.LOCATIONS[areaId].name);
+      html += '<h3' + (isSecret ? ' class="coll-secret-h"' : '') + '>' + label + '</h3><div class="coll-grid">';
       fishes.forEach(function (f) {
         var special = f.isKraken || f.isBlob || f.areaBoss || f.secretBoss;
         var found, sh, hidden;
@@ -4765,7 +4777,7 @@
         html += '</div>';
       });
       html += '</div>';
-    }
+    });
 
     html += '</div>';
     html += '<div class="coll-footer">Discovered <b>' + totalFound + '/' + totalAll + '</b> · Shinies <b>' + shinyFound + '</b> ✦ '

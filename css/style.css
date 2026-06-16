@@ -133,6 +133,8 @@ html, body {
 .bg-icon { width: 44px; height: 44px; flex: 0 0 44px; background-size: contain; background-repeat: no-repeat; background-position: center; image-rendering: pixelated; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6)); }
 .bosstoggle.on { background: rgba(40, 150, 80, 0.85) !important; border-color: rgba(150, 255, 180, 0.7) !important; }
 .bosstoggle.off { background: rgba(90, 96, 110, 0.6) !important; }
+.coll-secret-h { margin-left: 14px; opacity: 0.95; }
+.coll-secret { color: #c79aff; }
 .coll-buddy { margin-top: 6px; width: 100%; font-size: 11px; font-weight: 700; padding: 5px 4px; border-radius: 8px; background: rgba(60,90,120,0.5); border: 1px solid rgba(150,200,255,0.4); color: #dff; }
 .coll-buddy.on { background: rgba(40,150,90,0.7); border-color: rgba(150,255,180,0.7); }
 .guide-list { margin: 6px 0 0; padding-left: 18px; font-size: 12px; line-height: 1.5; opacity: 0.92; }
