@@ -173,6 +173,7 @@
       legendTimer: 35 + Math.random() * 35,   // defeated bosses return as legendary catches
       aimX: 1, aimY: 0,                        // last steering direction (torch/breath aim)
       torpedoes: [],                           // homing torpedo-fish fired by the Rig Titan
+      fireballs: [],                           // fireballs spat by the Sea Dragon
       stormCd: 0, peakX: loc.peaks ? loc.worldWidth * 0.5 : null, // storm summoner + mountain peak
     };
     placeWrecks(loc);
@@ -1303,9 +1304,9 @@
         if (sm.life <= 0) { run.smoke.splice(smi, 1); continue; }
         if (Math.hypot(sm.x - diver.x, sm.y - diver.y) < sm.r) inSmoke = true;
       }
-      // Magma Wyrm: lurk in the smoke (with its hint) and it ambushes you (Ashen only)
+      // Magma Wyrm: once you've caught 10 Magma Eels, it ambushes you from the smoke
       var mw = D.FISH_BY_ID.magmawyrm;
-      if (run.area === "ashen" && mw && state.hints.magmawyrm && !state.magmawyrmCaught && !run.bossPresent && inSmoke) {
+      if (run.area === "ashen" && mw && (state.counts.magmaeel || 0) >= 10 && !state.magmawyrmCaught && !run.bossPresent && inSmoke) {
         run.wyrmTimer -= dt;
         if (run.wyrmTimer <= 0) { spawnSecretBoss("magmawyrm"); run.grab = { boss: run.fish[run.fish.length - 1], wig: 0 }; run.fish[run.fish.length - 1].mode = "grab"; run.fish[run.fish.length - 1].modeT = 6; }
       } else { run.wyrmTimer = 2.5; }
@@ -1408,6 +1409,7 @@
       if (theBoss) updateBossAI(theBoss, dt, diver);
     } else { run.grab = null; run.bossBeam = null; }
     if (run.torpedoes.length) updateTorpedoes(dt, diver, loc);
+    if (run.fireballs.length) updateFireballs(dt, diver, loc);
 
     // --- Deploy Net: any fish inside the dropped net is bagged (ignores hold) ---
     if (run.trap && run.trap.active && run.trap.r > 0) {
@@ -1839,6 +1841,7 @@
       boss.atkT -= dt;
       if (boss.atkT <= 0 && !run.grab) {
         if (boss.def.torpedoes && Math.random() < 0.55) startTorpedo(boss);
+        else if (boss.def.fireballs && Math.random() < 0.6) spitFireballs(boss, diver);
         else if (isKaiju && Math.random() < 0.55) startBreath(boss, diver);
         else startCharge(boss, diver);
       }
@@ -1897,6 +1900,40 @@
     run.grab = { boss: boss, wig: 0 }; boss.mode = "grab"; boss.modeT = 4.0;
     toast("GRABBED! Wiggle the joystick to break free! 🌀", "bad", 2000);
     if (window.AUDIO) AUDIO.rumble();
+  }
+  // the Sea Dragon spits a volley of fireballs toward where you are
+  function spitFireballs(boss, diver) {
+    boss.mode = "roam"; boss.atkT = 0.6; // quick recovery so it stays aggressive-ish
+    toast(boss.def.name + " spits FIRE! 🔥", "bad", 1200);
+    if (window.AUDIO) AUDIO.rumble();
+    for (var i = 0; i < 3; i++) {
+      var ang = Math.atan2(diver.y - boss.y, diver.x - boss.x) + (i - 1) * 0.22;
+      var spd = 240 + Math.random() * 60;
+      run.fireballs.push({ x: boss.x + boss.face * 10, y: boss.y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, life: 4 });
+    }
+  }
+  function updateFireballs(dt, diver, loc) {
+    for (var i = run.fireballs.length - 1; i >= 0; i--) {
+      var fb = run.fireballs[i];
+      fb.vy += 60 * dt; // slight arc
+      fb.x += fb.vx * dt; fb.y += fb.vy * dt; fb.life -= dt;
+      if (Math.hypot(fb.x - diver.x, fb.y - diver.y) < 22) {
+        run.oxygen -= 14; for (var b = 0; b < 6; b++) run.bubbles.push({ x: fb.x, y: fb.y, r: 3, vy: 50, life: 0.6 });
+        toast("🔥 A fireball scorches you!", "bad", 1400); run.fireballs.splice(i, 1); continue;
+      }
+      if (fb.y > loc.maxDepth * PXPM - 4 || fb.x < 4 || fb.x > loc.worldWidth - 4 || fb.life <= 0) { run.fireballs.splice(i, 1); }
+    }
+  }
+  function drawFireballs() {
+    for (var i = 0; i < run.fireballs.length; i++) {
+      var fb = run.fireballs[i], x = fb.x - cam.x, y = fb.y - cam.y;
+      if (x < -30 || x > W + 30 || y < -30 || y > H + 30) continue;
+      drawGlow(x, y, 14, "#ff7a1a", 0.6);
+      ctx.fillStyle = "#ffcf3a"; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = "#fff7c0"; ctx.beginPath(); ctx.arc(x - 1, y - 1, 2, 0, 7); ctx.fill();
+      // little trailing flame
+      ctx.fillStyle = "rgba(255,90,20,0.4)"; ctx.beginPath(); ctx.arc(x - fb.vx * 0.02, y - fb.vy * 0.02, 4, 0, 7); ctx.fill();
+    }
   }
   function startTorpedo(boss) {
     boss.mode = "deploy"; boss.modeT = 0.7; boss.hatch = 0;
@@ -2250,6 +2287,7 @@
     drawLanterns();
     drawJewel();
     drawTorpedoes();
+    drawFireballs();
     drawSmoke();
     drawGoblinDarkness();
     drawStormFlash();

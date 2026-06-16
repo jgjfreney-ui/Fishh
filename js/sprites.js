@@ -974,6 +974,17 @@
       "..bbBBBBbbb..bbBBBBbb...",
       "....bbb........bbb......",
     ],
+    // fierce fire dragon (Magma Vents boss) — horns, wing, blazing maw
+    firedragon: [
+      ".......A.A.A.........",
+      "f.....bBBBBBb.......A",
+      "f....bBBBBBBBBBEPb..A",
+      "fFbBBBBBBBBBBBBBBMWMW",
+      "fFbBBBLLLLLLLLBBBBMWMW",
+      "fFbBBBBBBBBBBBBBBBBb.",
+      "..AbBBbAGGAbBBbAAbB..",
+      "...FFF......FFF......",
+    ],
     // liminal "furniture" creatures (Backrooms)
     chairsnail: [
       "...AAAAA....",
@@ -1770,7 +1781,7 @@
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
     dunkle: "dunkle", assfish: "assfish", gharial: "gharial", cobra: "cobra", grouper: "grouper", antlereel: "antlereel",
-    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp",
+    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",

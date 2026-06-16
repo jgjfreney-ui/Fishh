@@ -555,9 +555,9 @@
     { id: "cindercrab", name: "Cinder Crab",  area: "ashen", creature: true, rarity: "uncommon", size: 2, value: 320, color: "#8a3a2a", accent: "#ffcf3a", shape: "crab" },
     { id: "ashsnail",   name: "Ash Snail",    area: "ashen", creature: true, rarity: "common", size: 1, value: 110, color: "#5a4a44", accent: "#ff9a3a", shape: "snail" },
     { id: "emberhawk",  name: "Ember Hawk",   area: "ashen", bird: true, day: true, rarity: "rare", size: 2, value: 720, color: "#c0402a", accent: "#ffcf3a", shape: "raptor", seedCost: 1200 },
-    { id: "cinderboss", name: "Cinder Behemoth", area: "ashen", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 250, color: "#5a2a1a", accent: "#ff7a1a", shape: "cinderboss", hp: 6, reward: "" },
+    { id: "cinderboss", name: "The Sea Dragon", area: "ashen", areaBoss: true, fireballs: true, rarity: "mythic", size: 13, value: 32000, minDepth: 250, color: "#b02a1a", accent: "#ff7a1a", trim: "#ffcf3a", shape: "firedragon", hp: 7, reward: "" },
     { id: "magmawyrm",  name: "Magma Wyrm",   area: "ashen", secretBoss: true, fromSmoke: true, rarity: "mythic", size: 9, value: 9000, minDepth: 0, color: "#e0401a", accent: "#ffe14d", shape: "magmawyrm", hp: 1, reward: "",
-      hint: "Something vast moves inside the ash clouds. Linger in the smoke and it will come for YOU — one harpoon is all it takes, if you're quick." },
+      hint: "Catch TEN Magma Eels and something vast stirs in the ash clouds — linger in the smoke and it will come for YOU. One harpoon is all it takes, if you're quick." },
 
     // ======== Drowned Cove (secret pirate location) ========
     { id: "cutlassfish", name: "Cutlassfish",  area: "pirate", rarity: "common",   size: 2, value: 200, minDepth: 0,   color: "#b0b6bc", accent: "#ffcf3a", shape: "longfish" },
