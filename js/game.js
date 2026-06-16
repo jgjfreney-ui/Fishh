@@ -605,15 +605,18 @@
     var n = loc.maxDepth > 700 ? 3 : 2;
     var planeChance = loc.id === "trench" ? 0.45 : (loc.id === "river" ? 0.1 : 0.28);
     for (var i = 0; i < n; i++) {
-      var type, roll = Math.random();
-      if (roll < 0.06) type = "yacht";                 // a rare luxury yacht (high spoils)
-      else if (roll < 0.34) type = "cargo";            // a big cargo freighter (10 treasures)
+      // #10: the deeper a wreck sits, the better it tends to be (best loot deepest)
+      var depthFrac = 0.42 + 0.55 * (i / Math.max(1, n - 1)) + (Math.random() - 0.5) * 0.12;
+      depthFrac = clamp(depthFrac, 0.3, 0.97);
+      var type, roll = Math.random() * (0.4 + depthFrac); // deeper = higher roll = better type
+      if (roll > 0.85) type = "yacht";                 // best: rare luxury yacht (deepest)
+      else if (roll > 0.62) type = "cargo";            // big cargo freighter
       else if (Math.random() < planeChance) type = "plane";
       else type = "ship";
       run.wrecks.push({
         type: type,
         x: 200 + Math.random() * (loc.worldWidth - 400),
-        y: loc.maxDepth * (0.45 + 0.5 * (i / n)) + Math.random() * 40,
+        y: loc.maxDepth * PXPM * depthFrac,
         w: type === "cargo" ? 300 + Math.random() * 120 : type === "yacht" ? 200 + Math.random() * 80 : 180 + Math.random() * 120,
         looted: 0,
       });
