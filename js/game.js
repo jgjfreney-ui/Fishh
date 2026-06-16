@@ -48,6 +48,7 @@
       diver: { skin: 2, suit: "#1f7d9c", suitAccent: "#ffd24a", suitTrim: "#bfe9ff", hair: 0, look: "short" },
       buddy: null,       // a mini fish companion {id, shiny} that follows you everywhere
       aquaLevels: {},    // areaId -> aquarium enclosure level (0..3); max doubles shiny + unlocks luxury fish
+      ending200: false,  // seen the ultra-rare 200% (everything + a shiny of everything) ending
       diverUnlocks: {}, // premium suit colour id -> true
       items: {},        // one-time items, e.g. shinyPocket
       itemsOff: {},     // itemId -> true means owned but toggled OFF (boss gear)
@@ -1013,6 +1014,31 @@
         toast("🏆 Achievement: " + a.name, "epic", 3200);
       }
     }
+    if (!state.ending200 && is200Percent()) { state.ending200 = true; setTimeout(show200Ending, 600); }
+  }
+  // 200% = every species discovered AND a shiny of every single one
+  function is200Percent() {
+    for (var i = 0; i < D.FISH.length; i++) {
+      var f = D.FISH[i];
+      if (f.isKraken || f.isBlob) continue;
+      if (!state.discovered[f.id] || !state.shinyFound[f.id]) return false;
+    }
+    return state.krakenCaught && state.krakenShiny && state.blobfishCaught && state.blobfishShiny;
+  }
+  function show200Ending() {
+    if (scene === "dive") { try { surface(); } catch (e) {} }
+    scene = "ending"; sellHud(false);
+    var ov = overlay("modal");
+    ov.innerHTML = '<div class="panel ending-panel" style="text-align:center">'
+      + '<h1>✦✦ 200% COMPLETE ✦✦</h1>'
+      + '<div class="blob-reveal" style="background-image:url(' + SPRITES.dataURL("whitesquid", { color: "#eef2f7", accent: "#bfe9ff", shiny: true, scale: 6 }) + ')"></div>'
+      + '<p>You have done the impossible — <b>every creature in the sea discovered, and a SHINY of every single one.</b></p>'
+      + '<p class="prize">The ocean has no secrets left from you. You are the <b>Master of the Deep</b>. ✦</p>'
+      + '<button id="btn-continue" class="big primary">⬆ Back to Boat</button></div>';
+    ov.classList.add("open");
+    bind("btn-continue", function () { closeOverlay("modal"); scene = "boat"; if (window.AUDIO) AUDIO.playMenu(state && state.nextNight); showBoat(); });
+    if (window.AUDIO) AUDIO.rumble();
+    saveGame();
   }
   function areaBossForArea(area) {
     var id = AREA_BOSS_BY_AREA[area];

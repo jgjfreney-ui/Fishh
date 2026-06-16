@@ -68,7 +68,7 @@
     jungle:    { tonic: 55, bpm: 120, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "IV"], pent: PENTA }, // lush, tribal, rhythmic
     swamp:     { tonic: 55, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     boneyard:  { tonic: 50, bpm: 84, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
-    backrooms: { tonic: 58, bpm: 100, density: 0.5, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "IV"], heavyBass: true },
+    backrooms: { tonic: 49, bpm: 66, density: 0.18, lead: "triangle", bells: false, waves: false, prog: ["I", "I", "I", "I"], pent: PENTA_MIN, hook: [0, null, null, null, 1, null, null, null, 0, null, null, null, null, 3, null, null] }, // monotonous liminal hum
     // Ornate Ocean — koto-flavoured, with a graceful pentatonic hook & bells
     japan:     { tonic: 66, bpm: 88, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"], hook: [0, 2, 4, null, 4, 2, 0, null, 4, 4, 7, 4, 2, 0, null, null] },
     secretcave:{ tonic: 55, bpm: 86, density: 0.38, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
