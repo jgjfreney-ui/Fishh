@@ -3548,14 +3548,11 @@
   function suitAccentFor(color) { return mix(color, "#ffffff", 0.42); }
   function suitTrimFor(color, accent) { return mix(accent || mix(color, "#ffffff", 0.42), "#ffffff", 0.4); }
   var LOOKS = [
-    { id: "short",    name: "Short" },
-    { id: "long",     name: "Long" },
-    { id: "bun",      name: "Bun" },
-    { id: "buzz",     name: "Buzz" },
-    { id: "ponytail", name: "Ponytail" },
-    { id: "mohawk",   name: "Mohawk" },
-    { id: "afro",     name: "Afro" },
-    { id: "braids",   name: "Braids" },
+    { id: "round",   name: "Round Dome" },
+    { id: "crest",   name: "Crested" },
+    { id: "antenna", name: "Antenna" },
+    { id: "bolts",   name: "Bolted" },
+    { id: "diadem",  name: "Diadem" },
   ];
   // Themed wetsuits: one per location (unlock as you reach the area) ...
   var LOCATION_SUITS = [
@@ -3656,15 +3653,19 @@
     R(10, -2, 1, 1, mix(skin, "#ff9a9a", 0.55)); // rosy cheek :)
     // hood collar behind the head (trim-lined)
     R(4, 0, 2, 1, suitD); R(4, -1, 1, 2, trim);
-    // hair by look
-    if (look === "short") { R(4, -7, 6, 2, hair); R(4, -6, 1, 4, hair); }
-    else if (look === "long") { R(4, -7, 6, 2, hair); R(3, -6, 2, 8, hair); }
-    else if (look === "bun") { R(4, -7, 6, 2, hair); R(3, -8, 2, 2, hair); R(2, -8, 1, 1, hair); }
-    else if (look === "ponytail") { R(4, -7, 6, 2, hair); R(4, -6, 1, 3, hair); R(2, -7, 2, 1, hair); R(1, -7, 1, 5, hair); R(0, -5, 1, 3, hair); }
-    else if (look === "mohawk") { R(5, -9, 1, 3, hair); R(6, -8, 1, 2, hair); R(7, -8, 1, 1, hair); R(4, -7, 4, 1, hair); }
-    else if (look === "afro") { R(3, -9, 8, 4, hair); R(2, -8, 1, 3, hair); R(11, -8, 1, 3, hair); R(4, -5, 1, 2, hair); }
-    else if (look === "braids") { R(4, -7, 6, 2, hair); R(3, -6, 1, 7, hair); R(3, -1, 1, 1, trim); R(10, -6, 1, 6, hair); R(10, 0, 1, 1, trim); }
-    else { R(5, -7, 5, 1, hair); } // buzz
+    // dive HELMET (replaces hair) — metallic, tinted to your suit colour
+    var hcol = mix(suit, "#b4bcc4", 0.5), hd = mix(hcol, "#000", 0.35), hl = mix(hcol, "#fff", 0.45);
+    R(4, -8, 7, 3, hcol);                       // top dome
+    R(4, -8, 7, 1, hl);                         // top highlight
+    R(4, -5, 1, 7, hd);                         // back of helmet
+    R(10, -5, 1, 4, hd);                        // front brow rim
+    R(5, -7, 1, 1, hl); R(9, -7, 1, 1, hl);     // rivets
+    R(4, 1, 7, 1, hd);                          // chin/collar ring
+    // per-style accents
+    if (look === "crest") { R(5, -10, 1, 2, accent); R(6, -11, 1, 3, accent); R(7, -10, 1, 2, accent); }      // shark-fin crest
+    else if (look === "antenna") { R(7, -11, 1, 3, hd); R(7, -12, 1, 1, "#ff5b5b"); }                          // antenna + light
+    else if (look === "bolts") { R(3, -8, 1, 2, hd); R(11, -8, 1, 2, hd); }                                   // side bolts
+    else if (look === "diadem") { R(4, -9, 7, 1, accent); R(7, -10, 1, 1, trim); }                            // ornate band
     // mask strap
     R(4, -3, 5, 1, "#16323f");
     // big round dive mask + cute eye
@@ -4092,7 +4093,7 @@
     if (window.AUDIO) AUDIO.playMenu(state && state.nextNight); // carries menu ambience once audio is awake
     var saves = listSaves();
     var html = '<div class="panel start-panel">';
-    html += '<h1>🌊 Deep Sea Diver 🐙</h1>';
+    html += '<h1>🌊 Ocean of Discovery 🐙</h1>';
     html += '<p class="sub">Dive deep. Catch everything. Awaken the Kraken.</p>';
     html += '<div class="update-banner">🛠️ NEW: the <b>Tools Update</b>! Grab a <b>Sledgehammer</b> to crack open cages, a <b>Shovel</b> to pry pearl-filled clams, and a <b>Deploy Net</b> that traps fish even when your hold is full — all in the Shop\'s Tools tab.</div>';
     html += '<div class="slot-list">';
@@ -5158,26 +5159,20 @@
     html += '</div>';
     html += '<p class="tiny" style="text-align:center">Tap any item to preview it on your diver. Purely cosmetic!</p>';
 
-    // Look
-    html += '<h3>Look</h3><div class="swatch-row">';
+    // Helmet style
+    html += '<h3>Helmet</h3><div class="swatch-row">';
     LOOKS.forEach(function (l) {
       html += '<button class="look-btn ' + (state.diver.look === l.id ? 'sel' : '') + '" data-look="' + l.id + '">' + l.name + '</button>';
     });
     html += '</div>';
 
-    // Skin tone
+    // Skin tone (face within the helmet)
     html += '<h3>Skin tone</h3><div class="swatch-row">';
     SKIN_TONES.forEach(function (col, i) {
       html += '<button class="swatch ' + (state.diver.skin === i ? 'sel' : '') + '" data-skin="' + i + '" style="background:' + col + '"></button>';
     });
     html += '</div>';
-
-    // Hair colour
-    html += '<h3>Hair colour</h3><div class="swatch-row">';
-    HAIR_COLORS.forEach(function (col, i) {
-      html += '<button class="swatch ' + (state.diver.hair === i ? 'sel' : '') + '" data-hair="' + i + '" style="background:' + col + '"></button>';
-    });
-    html += '</div>';
+    html += '<p class="tiny">Your dive helmet is tinted to match your wetsuit colour.</p>';
 
     // Wetsuits, grouped, each labelled with its name
     ["Wetsuits", "Location suits", "Secret suits", "Boss suits", "Reward"].forEach(function (grp) {
@@ -5206,9 +5201,6 @@
     });
     ov.querySelectorAll("[data-skin]").forEach(function (b) {
       b.onclick = function () { state.diver.skin = +b.getAttribute("data-skin"); saveGame(); showDiverShop(); };
-    });
-    ov.querySelectorAll("[data-hair]").forEach(function (b) {
-      b.onclick = function () { state.diver.hair = +b.getAttribute("data-hair"); saveGame(); showDiverShop(); };
     });
     // tap a suit to PREVIEW it (no commit) — action bar handles equip/buy
     ov.querySelectorAll("[data-suitpick]").forEach(function (b) {
