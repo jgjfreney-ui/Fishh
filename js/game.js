@@ -3988,6 +3988,7 @@
         askText("Name your captain", "Diver", function (name) {
           if (name == null) return;
           activeSlot = slot; state = defaultState(); state.username = name || "Diver";
+          maybeDevSave(name);
           saveGame(); enterBoat();
         });
       };
@@ -4008,6 +4009,35 @@
     });
   }
 
+  // DEV SAVE: name your captain "devdev" to unlock a fully-finished 200% file
+  // (everything discovered, a shiny of everything, every boss beaten, all gear,
+  //  maxed upgrades/enclosures) so all content can be verified.
+  function applyDevSave() {
+    for (var a in D.LOCATIONS) { state.areas[a] = true; state.visited[a] = true; state.aquaLevels[a] = AQUA_MAX; }
+    D.FISH.forEach(function (f) {
+      state.discovered[f.id] = true; state.shinyFound[f.id] = true; state.counts[f.id] = 99;
+      if (f.areaBoss) state.areaBossCaught[f.id] = true;
+      if (f.secretBoss) state[f.id + "Caught"] = true;
+      if (f.hint) state.hints[f.id] = true;
+    });
+    state.krakenCaught = state.krakenShiny = true;
+    state.blobfishCaught = state.blobfishShiny = true;
+    for (var u in D.UPGRADES) state.upgrades[u] = D.UPGRADES[u].levels.length - 1;
+    state.charms = { rarity: D.CHARMS.rarity.maxStack, shiny: D.CHARMS.shiny.maxStack };
+    ["torch", "divingbell", "heatsuit", "coldsuit", "stormsummoner", "goggles", "shinyPocket", "stopwatch",
+     "serpenteye", "necklace", "megtooth", "jellystinger", "sonar", "rocfeather", "crabcrown", "kaijubreath",
+     "nullzone", "cagekey"].forEach(function (k) { state.items[k] = true; });
+    ["pink", "orange", "gold", "neon", "void", "rainbow"].forEach(function (id) { state.diverUnlocks[id] = true; });
+    state.money = 9999999;
+    state.jewels = { red: true, blue: true, green: true, yellow: true };
+    state.keyPieces = 4; state.openseaClams = 15; state.cargoSearched = 5;
+    state.locHints = {}; SECRET_SITE_GUIDE.forEach(function (g) { state.locHints[g.area] = true; });
+    state.nightVision = true;
+  }
+  function maybeDevSave(name) {
+    if (name && name.trim().toLowerCase() === "devdev") { applyDevSave(); toast("🛠️ DEV SAVE — everything unlocked at 200%!", "epic", 3500); return true; }
+    return false;
+  }
   function migrate(s) {
     var base = defaultState();
     for (var k in base) if (!(k in s)) s[k] = base[k];
@@ -4105,7 +4135,7 @@
     bind("btn-rename", function () {
       askText("Name your captain", state.username || "Diver", function (name) {
         if (name == null) return;
-        state.username = name; saveGame(); showBoat();
+        state.username = name; maybeDevSave(name); saveGame(); showBoat();
       });
     });
     bind("btn-music", function () {
@@ -5738,6 +5768,7 @@
       aquaInfo: function () { return aqua ? { tanks: aqua.areaList.length, idx: aqua.idx, area: aqua.area, focus: aqua.focus, entities: aqua.entities.length } : null; },
       scene: function () { return scene; },
       discoverAll: function () { D.FISH.forEach(function (f) { state.discovered[f.id] = true; if (f.areaBoss) state.areaBossCaught[f.id] = true; else if (f.secretBoss) state[f.id + "Caught"] = true; }); state.krakenCaught = true; state.blobfishCaught = true; },
+      devSave: function () { applyDevSave(); },
       forceShinyNext: function () { state.charms.shiny = 999; },
       fishKinds: function () { var o = { fish: 0, bird: 0, creature: 0, boss: 0 }; if (run) run.fish.forEach(function (f) { if (f.isBoss) o.boss++; else if (f.def.bird) o.bird++; else if (f.def.creature) o.creature++; else o.fish++; }); return o; },
     },
