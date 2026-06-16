@@ -504,6 +504,8 @@
     { id: "mudcat",     name: "Mud Catfish",  area: "swamp", rarity: "rare",     size: 3, value: 480, minDepth: 120, color: "#4a3a2a", shape: "catfish" },
     { id: "swampgator", name: "Baby Gator",   area: "swamp", rarity: "epic",     size: 5, value: 1400,minDepth: 200, color: "#3a4a28", shape: "mosasaur" },
     { id: "swampcrab",  name: "Marsh Crab",   area: "swamp", creature: true, rarity: "common", size: 1, value: 80, color: "#7a5a3a", shape: "crab" },
+    { id: "electriccatfish", name: "Electric Catfish", area: "swamp", secret: true, rarity: "mythic", size: 4, value: 9000, minDepth: 250, color: "#2a3328", accent: "#5bf0ff", trim: "#ffe98a", shape: "ecatfish", glow: true,
+      hint: "A monstrous catfish lurking on the very bottom of the swamp, crackling with charge — sink to the deepest mud to find it.", condition: { minDepth: 250 } },
     { id: "swampcroc",  name: "Swamp Croc",   area: "swamp", areaBoss: true, rarity: "mythic", size: 12, value: 16000, minDepth: 200, color: "#2f3a22", accent: "#aebf6a", shape: "crocodile", hp: 4, reward: "" },
 
     // ======== The Boneyard ========
