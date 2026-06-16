@@ -445,6 +445,10 @@
     { id: "rustmite",   name: "Rust Mite",      area: "oilrig",  creature: true, day: true, rarity: "common", size: 1, value: 150, color: "#8a5a3a", accent: "#caa14a", shape: "bug" },
     { id: "novasnail",  name: "Nova Snail",     area: "sanctuary", creature: true, night: true, rarity: "rare", size: 1, value: 700, color: "#9f7bff", accent: "#fff3b0", shape: "snail" },
     { id: "barnowl",    name: "Barn Owl",       area: "forest",  bird: true, night: true, rarity: "rare", size: 2, value: 540, color: "#e8dcc8", accent: "#caa15a", shape: "owl", seedCost: 1000 },
+    { id: "fenfairy",   name: "Fen Wisp",       area: "forest",  night: true, secret: true, rarity: "mythic", size: 2, value: 6000, minDepth: 0, color: "#bfffd0", accent: "#fff3b0", shape: "glowjelly", glow: true,
+      hint: "A glowing wisp that drifts the grove only on the darkest nights — hold perfectly still and it floats out of the trees.", condition: { still: true } },
+    { id: "spectralheron", name: "Spectral Heron", area: "forest", bird: true, night: true, secret: true, rarity: "mythic", size: 2, value: 6500, color: "#cfe0e0", accent: "#9fd0ff", shape: "heron", seedCost: 0,
+      hint: "A ghostly heron that haunts the drowned forest after dark." },
     { id: "tawnyowl",   name: "Tawny Owl",      area: "swamp",   bird: true, night: true, rarity: "rare", size: 2, value: 560, color: "#8a6a4a", accent: "#e0c0a0", shape: "owl", seedCost: 1000 },
 
     // ======== Prism Reef (colourful) ========
@@ -543,6 +547,11 @@
     { id: "empyrshark", name: "Empyrean Shark",area: "olympus",rarity: "epic",     size: 6, value: 3200, minDepth: 250,color: "#e0cf8a", accent: "#fff6d8", shape: "shark" },
     { id: "celestcrab", name: "Celestial Crab",area: "olympus",creature: true, rarity: "uncommon", size: 2, value: 520, color: "#ffd24a", accent: "#fff3b0", shape: "crab" },
     { id: "ichordove",  name: "Ichor Dove",   area: "olympus", bird: true, rarity: "rare", size: 2, value: 900, color: "#fff6d8", accent: "#ffd24a", shape: "songbird", seedCost: 2000 },
+    { id: "aphroditefish", name: "Aphrodite Fish", area: "olympus", secret: true, shy: true, rarity: "mythic", size: 4, value: 9000, minDepth: 0, color: "#ff8ac0", accent: "#ffd6ee", trim: "#fff", shape: "mola",
+      hint: "A bashful heart-shaped sunfish, blushing pink — it shies away the moment you draw near, so corner it gently." },
+    { id: "hadesdragon", name: "Hades Dragonfish", area: "olympus", night: true, secret: true, rarity: "mythic", size: 3, value: 11000, minDepth: 300, color: "#2a1a2a", accent: "#ff3a3a", shape: "dragonfish", glow: true,
+      hint: "Only on the darkest Olympian nights, deep below, does the underworld's dragonfish rise." },
+    { id: "pegasuseagle", name: "Pegasus Eagle", area: "olympus", bird: true, legendary: true, rarity: "mythic", size: 3, value: 14000, color: "#f4f8ff", accent: "#ffe07a", trim: "#bfd0ff", shape: "seabird", seedCost: 3000 },
     { id: "poseidonsteed", name: "Poseidon's Steed", area: "olympus", areaBoss: true, rarity: "mythic", size: 13, value: 40000, minDepth: 200, color: "#2a8ac0", accent: "#ffe07a", shape: "steed", hp: 7, reward: "" },
 
     // ======== Ashen Hollow (volcanic; needs a Heat Suit) ========

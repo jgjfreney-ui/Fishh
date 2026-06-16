@@ -1256,8 +1256,8 @@
         // native legendary fish (e.g. the Golden Gharial) also appear this way
         for (var lgi = 0; lgi < D.FISH.length; lgi++) {
           var lgf = D.FISH[lgi];
-          if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && !state.discovered[lgf.id]) beaten.push(lgf);
-          else if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && Math.random() < 0.5) beaten.push(lgf);
+          if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && !lgf.bird && !state.discovered[lgf.id]) beaten.push(lgf);
+          else if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && !lgf.bird && Math.random() < 0.5) beaten.push(lgf);
         }
         if (beaten.length && run.fish.length < 30 && Math.random() < 0.5) {
           var src = beaten[(Math.random() * beaten.length) | 0];
