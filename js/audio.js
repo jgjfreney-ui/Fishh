@@ -17,6 +17,7 @@
   function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
   var PENTA = [0, 2, 4, 7, 9];       // major pentatonic — always pleasant
   var PENTA_MIN = [0, 3, 5, 7, 10];  // minor pentatonic — dramatic (boss)
+  var PENTA_EGY = [0, 1, 4, 5, 7];   // exotic Hijaz-ish set — Egyptian flavour
   // Repeating, hummable melodic HOOKS (indices into the pentatonic; null = rest)
   // over a 16-eighth (2-bar) phrase. A fixed motif is what makes a tune catchy
   // and memorable, vs. an aimless random walk.
@@ -51,7 +52,8 @@
     prism:     { tonic: 64, bpm: 124, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
     storm:     { tonic: 50, bpm: 120, density: 0.6, lead: "square", bells: false, waves: true, prog: ["I", "IV", "V", "V"], heavyBass: true },
     ashen:     { tonic: 47, bpm: 100, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, heavyBass: true },
-    desert:    { tonic: 58, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "V", "IV"], hook: [0, null, 2, 2, null, 4, 2, 0, null, 4, 4, 2, 0, null, null, null] }, // sparse, sun-baked
+    desert:    { tonic: 57, bpm: 96, density: 0.5, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_EGY, hook: [0, 1, 0, 4, 3, 1, 0, null, 3, 4, 3, 1, 0, 1, 0, null] }, // exotic Egyptian scale
+    grotto:    { tonic: 60, bpm: 88, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_EGY, hook: [0, 3, 4, 3, 1, 0, 1, null, 4, 3, 1, 0, 1, 3, 0, null] }, // mysterious tomb
     mountain:  { tonic: 60, bpm: 96, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"] },
     olympus:   { tonic: 72, bpm: 100, density: 0.55, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
     // Flooded Freighter — creepy but playful: low minor-pentatonic, off-kilter
@@ -255,6 +257,7 @@
     olympus: { fn: ambShimmer, min: 2500, max: 6000 },
     flooded: { fn: ambWhale, min: 3500, max: 8000 }, // groaning, creaking hull
     desert: { fn: ambBubble, min: 3000, max: 7000 },
+    grotto: { fn: ambShimmer, min: 2500, max: 6000 },
   };
   function scheduleAmb() {
     var a = AMB[mode];

@@ -71,7 +71,7 @@
       sky: { top: "#d4ebf7", bottom: "#f0f9ff" },
     },
     desert: {
-      id: "desert", name: "Buried Dunes", tint: "#e0c068",
+      id: "desert", name: "Buried Dunes", tint: "#e0c068", pyramids: true,
       blurb: "A drowned desert of rippling sand dunes and half-buried ruins — rays glide low over the seabed while sand-lurkers wait below.",
       maxDepth: 650, worldWidth: 2700, topColor: "#3aa6c4", deepColor: "#3a2e14",
       shinyBonus: 0, unlocked: false, cost: 34000,
@@ -132,6 +132,13 @@
       maxDepth: 600, worldWidth: 2800, topColor: "#bfe0ff", deepColor: "#7a8ad0",
       shinyBonus: 0, unlocked: false, cost: 0,
       sky: { top: "#fff6d8", bottom: "#cfe0ff" },
+    },
+    grotto: {
+      id: "grotto", name: "Ancient Grotto", tint: "#3ad0e0", secret: true, pyramids: true,
+      blurb: "Deep inside the great pyramid — a crystal-blue grotto where vines trail from the ceiling and the sands glitter with gold and gemstones.",
+      maxDepth: 600, worldWidth: 2600, topColor: "#3ad0e0", deepColor: "#0a5a7a",
+      shinyBonus: 0, unlocked: false, cost: 0,
+      sky: { top: "#d8f4ff", bottom: "#bfeaf2" },
     },
     ashen: {
       id: "ashen", name: "Magma Vents", tint: "#e0552a", smoke: true, hot: true,
@@ -694,6 +701,24 @@
     { id: "seavulture", name: "Sea Vulture",  area: "desert", bird: true, rarity: "uncommon", size: 2, value: 420, color: "#7a6a52", accent: "#caa15a", shape: "raptor", seedCost: 700 },
     { id: "sandlark",  name: "Sand Lark",     area: "desert", bird: true, rarity: "common", size: 1, value: 200, color: "#d8c890", accent: "#fff0b0", shape: "finch", seedCost: 400 },
     { id: "dunetitan", name: "The Dune Titan", area: "desert", areaBoss: true, rarity: "mythic", size: 13, value: 30000, minDepth: 200, color: "#b8985a", accent: "#5a4a2a", shape: "dunkle", hp: 6, reward: "" },
+
+    // ======== Ancient Grotto (secret pyramid; gemstone-themed catchables) ========
+    { id: "rubyfish",   name: "Ruby Fish",     area: "grotto", rarity: "common",   size: 2, value: 400, minDepth: 0,   color: "#e23b5a", accent: "#ff9ab0", shape: "round" },
+    { id: "sapphirefin", name: "Sapphire Fin", area: "grotto", rarity: "common",   size: 2, value: 440, minDepth: 20,  color: "#2a6ad0", accent: "#9fd0ff", shape: "fish" },
+    { id: "emeraldeel", name: "Emerald Eel",   area: "grotto", rarity: "uncommon", size: 3, value: 700, minDepth: 60,  color: "#1faf6a", accent: "#9fffd0", shape: "eel" },
+    { id: "topaztang",  name: "Topaz Tang",    area: "grotto", rarity: "uncommon", size: 2, value: 640, minDepth: 40,  color: "#ffcf3a", accent: "#fff3b0", shape: "tang" },
+    { id: "amethystray", name: "Amethyst Ray", area: "grotto", rarity: "rare",     size: 4, value: 1600, minDepth: 140, color: "#9a5ad0", accent: "#d8b0ff", shape: "ray" },
+    { id: "opalfish",   name: "Opal Killifish", area: "grotto", rarity: "common",  size: 1, value: 380, minDepth: 0,   color: "#cfe0e8", accent: "#ffd6f6", rainbow: true, shape: "guppy" },
+    { id: "garnetperch", name: "Garnet Perch", area: "grotto", rarity: "uncommon", size: 2, value: 560, minDepth: 30,  color: "#a02a3a", accent: "#e25a6a", shape: "perch" },
+    { id: "jadekoi",    name: "Jade Koi",      area: "grotto", rarity: "uncommon", size: 2, value: 620, minDepth: 50,  color: "#2faf7a", accent: "#bfffd0", shape: "koi" },
+    { id: "citrinegoby", name: "Citrine Goby", area: "grotto", rarity: "common",   size: 1, value: 360, minDepth: 0,   color: "#e0b83a", accent: "#fff0a0", shape: "goby" },
+    { id: "diamondshark", name: "Diamond Shark", area: "grotto", rarity: "epic",   size: 6, value: 3200, minDepth: 220, color: "#cfe8f0", accent: "#ffffff", shape: "shark" },
+    { id: "scarabcrab", name: "Scarab Crab",   area: "grotto", creature: true, rarity: "common", size: 1, value: 260, color: "#2faf8a", accent: "#ffd24a", shape: "crab" },
+    { id: "gildedsnail", name: "Gilded Snail", area: "grotto", creature: true, rarity: "common", size: 1, value: 220, color: "#e0c068", accent: "#fff3b0", shape: "snail" },
+    { id: "sacredibis", name: "Sacred Ibis",   area: "grotto", bird: true, rarity: "uncommon", size: 2, value: 520, color: "#eef2f7", accent: "#1a1a1a", shape: "stork", seedCost: 800 },
+    { id: "scarabbeetle", name: "Scarab Beetle", area: "grotto", bird: true, rarity: "common", size: 1, value: 300, color: "#2faf8a", accent: "#ffd24a", shape: "finch", seedCost: 500 },
+    { id: "grottoguard", name: "Pharaoh's Guardian", area: "grotto", areaBoss: true, rarity: "mythic", size: 13, value: 44000, minDepth: 200, color: "#c79a2e", accent: "#3ad0e0", trim: "#fff3b0", shape: "manta", hp: 7, reward: "" },
+    { id: "gharial",    name: "Golden Gharial", area: "grotto", legendary: true, rarity: "mythic", size: 8, value: 26000, minDepth: 60, color: "#c79a4e", accent: "#fff3b0", trim: "#3ad0e0", shape: "gharial" },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },

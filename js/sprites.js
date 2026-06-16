@@ -963,6 +963,16 @@
       "..bbBBBBbbb..bbBBBBbb...",
       "....bbb........bbb......",
     ],
+    // gharial — slender long-snouted crocodilian, scaly ridged back
+    gharial: [
+      "..........................bb",
+      "fF......................bBBMW",
+      "fFbBBBBBBBBBBBBBBBBBBBBBBEPMW",
+      "fFbBBBLLLLLLLLLLLLLLLBBBBbMW",
+      "fFbBBBBBBBBBBBBBBBBBBBBBBb..",
+      ".AAbBBbAAbBBbAAbBBbAAbBBb...",
+      "...A....A....A....A........",
+    ],
     // Dunkleosteus-style armoured desert titan — bony head plates + shear jaws
     dunkle: [
       "..............AAAAAA..",
@@ -1676,7 +1686,7 @@
     davyjones: "davyjones", rigtitan: "rigtitan", oarfish: "oarfish", deeplev: "deeplev",
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
-    dunkle: "dunkle", assfish: "assfish",
+    dunkle: "dunkle", assfish: "assfish", gharial: "gharial",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",

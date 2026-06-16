@@ -25,12 +25,13 @@
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, desert: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
-               oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false },
+               oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false, grotto: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
       davyjonesCaught: false,
       openseaClams: 0,       // clams dug in the Open Sea (15 summons the Leatherback)
       leatherbackCaught: false,
       cargoSearched: 0,      // cargo ships fully stripped (5 opens the Flooded Freighter)
+      jewels: {},            // red/blue/green/yellow gems collected (4 open the Ancient Grotto)
       areaBossCaught: {}, // areaBoss id -> true
       hints: {},          // fishId -> true (purchased hint)
       discovered: {},     // fishId -> true (caught at least once)
@@ -177,6 +178,7 @@
     placeWrecks(loc);
     placeCages(loc);
     placeLanterns(loc);
+    placeJewel(loc);
     generateDecor(loc);
     // initial population
     for (var i = 0; i < 17; i++) spawnFish(true);
@@ -216,6 +218,28 @@
         y: 120 + Math.random() * (floor - 260), lit: true, bob: Math.random() * 6 });
     }
   }
+
+  // Four ancient jewels — one hidden on the seabed of four areas. Collect all
+  // four and a pyramid rises in the Buried Dunes that opens the Ancient Grotto.
+  var JEWELS = {
+    prism:   { color: "red",    col: "#e23b5a" },
+    opensea: { color: "blue",   col: "#2a6ad0" },
+    river:   { color: "green",  col: "#1faf6a" },
+    desert:  { color: "yellow", col: "#ffcf3a" },
+  };
+  function placeJewel(loc) {
+    run.jewel = null; run.pyramid = null;
+    var j = JEWELS[loc.id];
+    if (j && !state.jewels[j.color]) {
+      var floor = loc.maxDepth * PXPM;
+      run.jewel = { x: loc.worldWidth * (0.3 + Math.random() * 0.4), y: floor - 14, col: j.col, color: j.color, phase: Math.random() * 6 };
+    }
+    // once all four are found, a pyramid stands in the Buried Dunes
+    if (loc.id === "desert" && jewelCount() >= 4 && !state.areas.grotto) {
+      run.pyramid = { x: loc.worldWidth * 0.5, y: loc.maxDepth * PXPM - 30 };
+    }
+  }
+  function jewelCount() { var n = 0; for (var k in state.jewels) if (state.jewels[k]) n++; return n; }
 
   function spawnCreature(initial) {
     var loc = D.LOCATIONS[run.area];
@@ -266,6 +290,7 @@
     pirate:    { plants: ["rock", "coral", "rock"], plantColors: ["#caa14a", "#6a5a3a", "#3a4a4a"], rock: "#2a2620", floor: "#15110a" },
     flooded:   { plants: ["rock", "kelp", "rock"], plantColors: ["#3a5a4a", "#4a4a40", "#2a3a32"], rock: "#1f2a26", floor: "#0a120e" },
     desert:    { plants: ["rock", "coral", "rock"], plantColors: ["#d8c078", "#c8a85a", "#a8884a", "#8a6a3a"], rock: "#a8884a", floor: "#c8a860" },
+    grotto:    { plants: ["coral", "crystal", "coral"], plantColors: ["#3ad0e0", "#ffcf3a", "#e23b5a", "#9a5ad0"], rock: "#2a7a8a", floor: "#caa14a" },
   };
 
   function generateDecor(loc) {
@@ -288,7 +313,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune", grotto: "obelisk" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -444,6 +469,14 @@
         for (var a2 = 0; a2 < 18; a2++) { var ang = a2 * 0.5, rr = R0 * (1 - a2 / 22); var pxc = fcx + Math.cos(ang) * rr, pyc = fcy + Math.sin(ang) * rr; if (a2 === 0) ctx.moveTo(pxc, pyc); else ctx.lineTo(pxc, pyc); }
         ctx.stroke();
         ctx.lineWidth = 1.5; for (var rib = 0; rib < 10; rib++) { var ang2 = rib * 0.6, rr2 = R0 * (1 - rib / 14); ctx.beginPath(); ctx.moveTo(fcx + Math.cos(ang2) * rr2 * 0.6, fcy + Math.sin(ang2) * rr2 * 0.6); ctx.lineTo(fcx + Math.cos(ang2) * rr2, fcy + Math.sin(ang2) * rr2); ctx.stroke(); }
+      } else if (fl.type === "obelisk") {
+        // a tall Egyptian obelisk with a gilded pyramidion cap
+        ctx.globalAlpha = 0.6; var ow = 9 * fl.w, oty = floorScreenY - fl.h;
+        ctx.fillStyle = fl.color;
+        ctx.fillRect(Math.round(x - ow / 2), Math.round(oty + 12), Math.round(ow), Math.round(fl.h - 12));
+        ctx.fillStyle = mix("#ffd24a", loc.deepColor, 0.2);
+        ctx.beginPath(); ctx.moveTo(x, oty); ctx.lineTo(x - ow / 2, oty + 14); ctx.lineTo(x + ow / 2, oty + 14); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.fillRect(Math.round(x + ow / 6), Math.round(oty + 14), Math.round(ow / 3), Math.round(fl.h - 14));
       } else if (fl.type === "dune") {
         // a rolling sand dune ridge with a wind-blown crest
         ctx.globalAlpha = 0.6; ctx.fillStyle = fl.color;
@@ -821,6 +854,8 @@
       how: "Fully strip the loot from <b>5 cargo-ship wrecks</b>, then swim into another cargo wreck's hold." },
     { area: "olympus",    requires: "mountain", price: 35000, teaser: "They say something divine waits above the highest peak of all.",
       how: "Own the <b>Storm Summoner</b>, climb to the tallest peak of the <b>Sunlit Peaks</b>, line up with its tip and summon a storm." },
+    { area: "grotto",     requires: "desert", price: 30000, teaser: "Legends tell of four ancient jewels and a tomb sealed beneath the dunes.",
+      how: "Collect the four jewels — RED in Prism Reef, BLUE in the Open Sea, GREEN in River Run, YELLOW in the Buried Dunes — then enter the pyramid that rises in the <b>Buried Dunes</b>." },
   ];
   var pendingSecretEnter = null; // area id to dive into after this frame
   // hidden-area discovery checks, run every dive frame
@@ -1191,8 +1226,15 @@
       if (run.legendTimer <= 0) {
         run.legendTimer = 30 + Math.random() * 45;
         var beaten = defeatedBossDefsForArea(run.area);
+        // native legendary fish (e.g. the Golden Gharial) also appear this way
+        for (var lgi = 0; lgi < D.FISH.length; lgi++) {
+          var lgf = D.FISH[lgi];
+          if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && !state.discovered[lgf.id]) beaten.push(lgf);
+          else if (lgf.area === run.area && lgf.legendary && !lgf.areaBoss && !lgf.secretBoss && Math.random() < 0.5) beaten.push(lgf);
+        }
         if (beaten.length && run.fish.length < 30 && Math.random() < 0.5) {
-          var ldef = legendDefFor(beaten[(Math.random() * beaten.length) | 0]);
+          var src = beaten[(Math.random() * beaten.length) | 0];
+          var ldef = (src.legendary && !src.areaBoss && !src.secretBoss) ? src : legendDefFor(src);
           var lx = clamp(diver.x + (Math.random() < 0.5 ? -1 : 1) * (260 + Math.random() * 200), 30, loc.worldWidth - 30);
           var ly = clamp(diver.y + (Math.random() - 0.5) * 280, 40, loc.maxDepth * PXPM - 20);
           run.fish.push({ uid: ldef.id + "_L", def: ldef, x: lx, y: ly, baseY: ly,
@@ -1534,6 +1576,25 @@
       }
     }
 
+    // --- Ancient jewels: swim into one to collect it ---
+    if (run.jewel) {
+      if (Math.hypot(run.jewel.x - diver.x, run.jewel.y - diver.y) < 34) {
+        state.jewels[run.jewel.color] = true; saveGame();
+        var jc = jewelCount();
+        run.floaters.push({ x: run.jewel.x, y: run.jewel.y - 16, text: "💎 " + run.jewel.color + " jewel!", color: run.jewel.col, life: 2.4 });
+        toast(jc >= 4 ? "💎 The FOURTH jewel! A pyramid is rising in the Buried Dunes..." : "💎 An ancient " + run.jewel.color + " jewel! (" + jc + "/4)", "epic", 3000);
+        if (window.AUDIO) AUDIO.rumble();
+        run.jewel = null;
+      }
+    }
+    // --- The pyramid in the Buried Dunes opens the Ancient Grotto ---
+    if (run.pyramid && !state.areas.grotto) {
+      if (Math.hypot(run.pyramid.x - diver.x, run.pyramid.y - diver.y) < 60) {
+        unlockSecretArea("grotto", "🔺 The pyramid's seal answers your four jewels — it grinds open onto the ANCIENT GROTTO!");
+        pendingSecretEnter = "grotto";
+      }
+    }
+
     // --- The Oil Rig (Open Sea): approach with the Cage Key to open the way ---
     if (run.oilrig && !state.areas.oilrig) {
       if (Math.hypot(run.oilrig.x - diver.x, run.oilrig.y - diver.y) < 90) {
@@ -1850,6 +1911,26 @@
       toast("💥 The torpedo detonates on you — oxygen blown out!", "bad", 1800);
     }
   }
+  function drawJewel() {
+    if (run.jewel) {
+      var jx = run.jewel.x - cam.x, jy = run.jewel.y - cam.y + Math.sin(run.time * 2 + run.jewel.phase) * 3;
+      var pulse = 0.6 + 0.4 * Math.sin(run.time * 3 + run.jewel.phase);
+      drawGlow(jx, jy, 22 * pulse, run.jewel.col, 0.6);
+      drawTreasureSprite("ruby", jx, jy, run.jewel.col); // faceted gem shape, jewel-coloured
+      if (Math.sin(run.time * 4) > 0.5) { ctx.fillStyle = "#fff"; ctx.fillRect(jx - 3 | 0, jy - 4 | 0, 2, 2); }
+    }
+    if (run.pyramid) {
+      var px = run.pyramid.x - cam.x, py = run.pyramid.y - cam.y;
+      var pw = 130;
+      ctx.fillStyle = "#caa14a";
+      ctx.beginPath(); ctx.moveTo(px, py - 150); ctx.lineTo(px - pw, py); ctx.lineTo(px + pw, py); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.18)"; ctx.beginPath(); ctx.moveTo(px, py - 150); ctx.lineTo(px + pw, py); ctx.lineTo(px, py); ctx.closePath(); ctx.fill();
+      // glowing sealed doorway
+      drawGlow(px, py - 30, 26 + Math.sin(run.time * 3) * 6, "#3ad0e0", 0.5);
+      ctx.fillStyle = "#0a3a4a"; ctx.fillRect(px - 14, py - 50, 28, 50);
+      ctx.fillStyle = "#caa14a"; for (var b = 0; b < 6; b += 2) ctx.fillRect(px - 14, py - 50 + b * 8, 28, 2);
+    }
+  }
   function drawLanterns() {
     if (!run.lanterns || !run.lanterns.length) return;
     for (var i = 0; i < run.lanterns.length; i++) {
@@ -2139,6 +2220,7 @@
     drawNetFx();
     drawTrap();
     drawLanterns();
+    drawJewel();
     drawTorpedoes();
     drawSmoke();
     drawGoblinDarkness();
@@ -2202,6 +2284,11 @@
 
     // Flooded Freighter: drifting silt + pairs of shy eyes peering from the dark
     if (loc.id === "flooded") drawFloodedAtmos(loc);
+
+    // Buried Dunes / Ancient Grotto: great pyramids on the horizon
+    if (loc.pyramids) drawPyramidsBg(loc);
+    // Ancient Grotto: vines trailing from the ceiling + a glittering floor
+    if (loc.id === "grotto") drawGrottoAtmos(loc);
 
     // Ornate Ocean: red torii gates in the haze + drifting cherry-blossom petals
     if (loc.id === "japan") drawJapanAtmos(loc);
@@ -2541,6 +2628,44 @@
         ctx.fillStyle = "rgba(255,255,255," + (a * 0.8).toFixed(2) + ")";
         ctx.fillRect((sx + 1) | 0, sy | 0, 1, 1); ctx.fillRect((sx + 10) | 0, sy | 0, 1, 1);
       }
+    }
+    ctx.restore();
+  }
+  // great pyramids silhouetted on the horizon (Buried Dunes & the Grotto)
+  function drawPyramidsBg(loc) {
+    var floorScreenY = loc.maxDepth * PXPM - cam.y;
+    ctx.save();
+    for (var p = 0; p < 4; p++) {
+      var px = ((p * 760 - cam.x * 0.25) % (W + 500) + (W + 500)) % (W + 500) - 250;
+      var ph = 180 + (p % 3) * 70, pw = ph * 1.1;
+      var base = floorScreenY - 6;
+      if (base < -40) continue;
+      ctx.fillStyle = "rgba(150,120,60,0.22)";
+      ctx.beginPath(); ctx.moveTo(px, base - ph); ctx.lineTo(px - pw, base); ctx.lineTo(px + pw, base); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(80,60,30,0.12)";
+      ctx.beginPath(); ctx.moveTo(px, base - ph); ctx.lineTo(px + pw, base); ctx.lineTo(px, base); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+  // hanging vines from the ceiling + sparkling gemstone sand (Ancient Grotto)
+  function drawGrottoAtmos(loc) {
+    ctx.save();
+    // vines trailing down from the top of the cavern
+    for (var v = 0; v < 9; v++) {
+      var vx = ((v * 311 - cam.x * 0.5) % (W + 60) + (W + 60)) % (W + 60) - 30;
+      var vlen = 60 + (v % 4) * 40, sway = Math.sin(run.time * 0.6 + v) * 10;
+      ctx.strokeStyle = "rgba(40,140,90,0.4)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(vx, -cam.y < 0 ? 0 : -cam.y);
+      var top = Math.max(0, -cam.y);
+      ctx.moveTo(vx, top); ctx.quadraticCurveTo(vx + sway * 0.5, top + vlen * 0.6, vx + sway, top + vlen); ctx.stroke();
+      ctx.fillStyle = "rgba(60,180,110,0.4)";
+      for (var lf = 1; lf < 4; lf++) ctx.fillRect((vx + sway * lf / 3) | 0, (top + vlen * lf / 4) | 0, 4, 3);
+    }
+    // glittering gemstone flecks drifting in the crystal-blue water
+    for (var s = 0; s < 30; s++) {
+      var sx = ((s * 173 - cam.x * 0.6) % (W + 40) + (W + 40)) % (W + 40) - 20;
+      var sy = ((s * 211 + run.time * 8 - cam.y * 0.6) % (H + 40) + (H + 40)) % (H + 40) - 20;
+      if (Math.sin(run.time * 3 + s) > 0.3) { ctx.fillStyle = ["rgba(255,210,80,0.6)", "rgba(90,230,255,0.6)", "rgba(230,90,120,0.5)"][s % 3]; ctx.fillRect(sx | 0, sy | 0, 2, 2); }
     }
     ctx.restore();
   }
