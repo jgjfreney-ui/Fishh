@@ -692,8 +692,21 @@
       var ny = run.diver.y < 90 || run.diver.y > cl.maxDepth * PXPM - 90;
       if (!(nx && ny)) return false;
     }
+    if (c.corners4 && cornersVisited() < 4) return false; // must visit ALL four corners this run
     return true;
   }
+  // track which of the four map corners you've reached this dive (for the CCTV Fish)
+  function trackCorners() {
+    var cl = D.LOCATIONS[run.area], d = run.diver;
+    var left = d.x < 160, right = d.x > cl.worldWidth - 160;
+    var top = d.y < 120, bot = d.y > cl.maxDepth * PXPM - 120;
+    if (!run.corners) run.corners = {};
+    if (left && top) run.corners.tl = true;
+    if (right && top) run.corners.tr = true;
+    if (left && bot) run.corners.bl = true;
+    if (right && bot) run.corners.br = true;
+  }
+  function cornersVisited() { var c = run.corners || {}; return (c.tl ? 1 : 0) + (c.tr ? 1 : 0) + (c.bl ? 1 : 0) + (c.br ? 1 : 0); }
 
   function spawnFish(initial) {
     var loc = D.LOCATIONS[run.area];
@@ -1575,6 +1588,8 @@
         spawnSecretBoss("assfish");
       }
     }
+
+    if (run.area === "backrooms") trackCorners(); // CCTV Fish wants all four corners
 
     // --- Ancient jewels: swim into one to collect it ---
     if (run.jewel) {

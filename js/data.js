@@ -127,11 +127,11 @@
       sky: { top: "#bcd6ee", bottom: "#e8f2fa" },
     },
     olympus: {
-      id: "olympus", name: "Olympus Aerie", tint: "#ffe07a", secret: true,
+      id: "olympus", name: "Olympus Aerie", tint: "#e0c068", secret: true,
       blurb: "Above the clouds atop the highest peak — a golden realm of the gods, where Poseidon's own steed swims the sky-sea.",
-      maxDepth: 600, worldWidth: 2800, topColor: "#bfe0ff", deepColor: "#7a8ad0",
+      maxDepth: 600, worldWidth: 2800, topColor: "#7a9ad0", deepColor: "#3a4a8a",
       shinyBonus: 0, unlocked: false, cost: 0,
-      sky: { top: "#fff6d8", bottom: "#cfe0ff" },
+      sky: { top: "#d8c890", bottom: "#9fb0e0" },
     },
     grotto: {
       id: "grotto", name: "Ancient Grotto", tint: "#3ad0e0", secret: true, pyramids: true,
@@ -581,7 +581,7 @@
     { id: "hazmatshark", name: "Hazmat Shark", area: "backrooms", rarity: "epic", size: 6, value: 2400, minDepth: 120, color: "#e0c83a", accent: "#1a1a1a", shape: "shark" },
     { id: "poolnoodle", name: "Pool Noodle Eel", area: "backrooms", rarity: "rare", size: 3, value: 520, minDepth: 80, color: "#4ad0e0", accent: "#ffffff", shape: "eel" },
     { id: "cctvfish",   name: "CCTV Fish",    area: "backrooms", rarity: "mythic", size: 2, value: 4000, minDepth: 0, color: "#7a8a90", accent: "#ff4040", shape: "cctv", secret: true,
-      hint: "They watch from the corners. Linger at the very edges of the rooms and one will find you.", condition: { corner: true } },
+      hint: "They watch from every corner. Visit ALL FOUR corners of the rooms in a single dive and one will find you.", condition: { corners4: true } },
     { id: "parsonscuttle", name: "Parson's Cuttlefish", area: "backrooms", rarity: "mythic", size: 3, value: 7000, minDepth: 0, color: "#d8c468", accent: "#b8a038", trim: "#fff6a0", shape: "cuttlefish", secret: true, camo: true,
       hint: "A cuttlefish that perfectly mimics the damp yellow wallpaper — all but invisible until it moves. Hold still and watch the walls.", condition: { still: true } },
     { id: "bacteriawhale", name: "Bacteria Whale", area: "backrooms", areaBoss: true, rarity: "mythic", size: 13, value: 24000, minDepth: 200, color: "#b8c83a", accent: "#eaff8a", shape: "bacteriawhale", hp: 5, reward: "" },

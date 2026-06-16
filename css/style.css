@@ -49,13 +49,13 @@ html, body {
   flex-wrap: wrap;
 }
 .hud-block {
-  background: rgba(6, 22, 36, 0.4);
-  border: 1px solid rgba(120, 200, 255, 0.22);
+  background: rgba(6, 22, 36, 0.2);
+  border: 1px solid rgba(120, 200, 255, 0.14);
   border-radius: 12px;
   padding: 8px 14px;
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
   min-width: 96px;
 }
 
