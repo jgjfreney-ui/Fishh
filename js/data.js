@@ -579,6 +579,8 @@
     { id: "cinderboss", name: "The Sea Dragon", area: "ashen", areaBoss: true, fireballs: true, rarity: "mythic", size: 13, value: 32000, minDepth: 250, color: "#b02a1a", accent: "#ff7a1a", trim: "#ffcf3a", shape: "firedragon", hp: 7, reward: "" },
     { id: "magmawyrm",  name: "Magma Wyrm",   area: "ashen", secretBoss: true, fromSmoke: true, rarity: "mythic", size: 9, value: 9000, minDepth: 0, color: "#e0401a", accent: "#ffe14d", shape: "magmawyrm", hp: 1, reward: "",
       hint: "Catch TEN Magma Eels and something vast stirs in the ash clouds — linger in the smoke and it will come for YOU. One harpoon is all it takes, if you're quick." },
+    { id: "magmakaiju", name: "Magma Kaiju",  area: "ashen", secretBoss: true, aggressive: true, backrocks: true, rarity: "mythic", size: 15, value: 70000, minDepth: 250, color: "#7a2418", accent: "#ff5b1a", trim: "#ffcf3a", shape: "magmakaiju", hp: 10, reward: "",
+      hint: "Defeat the Sea Dragon, then hunt down FIVE of the legendary Sea Dragons that return to the vents — only then does the Magma Kaiju erupt, hurling fire-rocks from its back." },
 
     // ======== Drowned Cove (secret pirate location) ========
     { id: "cutlassfish", name: "Cutlassfish",  area: "pirate", rarity: "common",   size: 2, value: 200, minDepth: 0,   color: "#b0b6bc", accent: "#ffcf3a", shape: "longfish" },

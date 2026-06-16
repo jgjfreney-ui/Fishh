@@ -995,6 +995,18 @@
       ".FF.bbBBBBBBBBBBBbb..A..",
       ".......AA....AA........",
     ],
+    // Magma Kaiju — a volcanic colossus with rocky back-spikes & lava cracks
+    magmakaiju: [
+      "......A.A.A.A.......",
+      ".....bGbGbGbG......",
+      "f...bBBBBBBBBBb....",
+      "f..bBBBBBBBBBBBBEPb",
+      "fFbBBGBBGBBGBBBBMMMM",
+      "fFbBBBBBBBBBBBBBMWMW",
+      "fFbBBGBBGBBGBBBBBb.",
+      "..bBbAAbBbAAbBbAA..",
+      "...FF........FF....",
+    ],
     // fierce fire dragon (Magma Vents boss) — horns, wing, blazing maw
     firedragon: [
       ".......A.A.A.........",
@@ -1805,7 +1817,7 @@
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
     dunkle: "dunkle", assfish: "assfish", gharial: "gharial", cobra: "cobra", grouper: "grouper", antlereel: "antlereel",
-    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish",
+    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish", magmakaiju: "magmakaiju",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",

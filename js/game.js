@@ -959,7 +959,7 @@
     for (var k in state.areaBossCaught) if (state.areaBossCaught[k]) n++;
     if (state.blobfishCaught) n++;
     if (state.krakenCaught) n++;
-    var secret = ["magmawyrm", "cavernwyrm", "assfish", "leatherback", "davyjones", "mechakaiju"];
+    var secret = ["magmawyrm", "cavernwyrm", "assfish", "leatherback", "davyjones", "mechakaiju", "captaincarp", "magmakaiju", "goblinshark"];
     for (var i = 0; i < secret.length; i++) if (state[secret[i] + "Caught"]) n++;
     return n;
   }
@@ -1374,6 +1374,8 @@
         spawnSecretBoss("mechakaiju");          // wakes only after the Kaiju AND Rig Titan fall
       } else if (run.area === "backrooms" && !state.captaincarpCaught && furnitureComplete()) {
         spawnSecretBoss("captaincarp");         // the furious carp surfaces for revenge
+      } else if (run.area === "ashen" && state.areaBossCaught.cinderboss && (state.counts.cinderboss || 0) >= 5 && !state.magmakaijuCaught) {
+        spawnSecretBoss("magmakaiju");          // erupts after 5 legendary Sea Dragons are caught
       } else {
         var ab = areaBossForArea(run.area);
         if (ab) spawnAreaBoss(ab);
@@ -1912,6 +1914,7 @@
       boss.atkT -= dt;
       if (boss.atkT <= 0 && !run.grab) {
         if (boss.def.torpedoes && Math.random() < 0.55) startTorpedo(boss);
+        else if (boss.def.backrocks && Math.random() < 0.6) spitBackRocks(boss, diver);
         else if (boss.def.fireballs && Math.random() < 0.6) spitFireballs(boss, diver);
         else if (isKaiju && Math.random() < 0.55) startBreath(boss, diver);
         else startCharge(boss, diver);
@@ -1971,6 +1974,17 @@
     run.grab = { boss: boss, wig: 0 }; boss.mode = "grab"; boss.modeT = 4.0;
     toast("GRABBED! Wiggle the joystick to break free! 🌀", "bad", 2000);
     if (window.AUDIO) AUDIO.rumble();
+  }
+  // the Magma Kaiju hurls fire-rocks up out of its back; they arc down onto you
+  function spitBackRocks(boss, diver) {
+    boss.mode = "roam"; boss.atkT = 0.9;
+    toast(boss.def.name + " hurls FIRE-ROCKS from its back! 🌋", "bad", 1300);
+    if (window.AUDIO) AUDIO.rumble();
+    for (var i = 0; i < 4; i++) {
+      var dx = diver.x - boss.x, dir = dx < 0 ? -1 : 1;
+      run.fireballs.push({ x: boss.x + (Math.random() - 0.5) * 30, y: boss.y - 30 - boss.size * 2,
+        vx: dir * (70 + Math.random() * 130), vy: -160 - Math.random() * 90, life: 5 });
+    }
   }
   // the Sea Dragon spits a volley of fireballs toward where you are
   function spitFireballs(boss, diver) {
