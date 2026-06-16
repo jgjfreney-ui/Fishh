@@ -607,7 +607,7 @@
     for (var i = 0; i < n; i++) {
       var type, roll = Math.random();
       if (roll < 0.06) type = "yacht";                 // a rare luxury yacht (high spoils)
-      else if (roll < 0.22) type = "cargo";            // a big cargo freighter (10 treasures)
+      else if (roll < 0.34) type = "cargo";            // a big cargo freighter (10 treasures)
       else if (Math.random() < planeChance) type = "plane";
       else type = "ship";
       run.wrecks.push({
@@ -666,8 +666,10 @@
         out.push(f); continue;                     // no depth/secret gating for the sky
       }
       if (creaturePool) {
-        if (!f.creature || f.rarity !== rarity) continue;
-        out.push(f); continue;                     // every creature drifts in the cave
+        if (f.creature && f.rarity === rarity) { out.push(f); continue; } // every creature drifts in the cave
+        // ...plus the cavern's own resident fish
+        if (f.area === areaId && !f.bird && !f.areaBoss && !f.secretBoss && f.rarity === rarity && depthM >= f.minDepth) out.push(f);
+        continue;
       }
       if (!allContent && f.area !== areaId) continue;
       if (f.rarity !== rarity) continue;
@@ -870,7 +872,7 @@
     { area: "oilrig",     requires: "opensea", price: 16000, teaser: "A derelict structure rusts somewhere out in the <b>Open Sea</b>.",
       how: "Smash sea-floor cages with the <b>Sledgehammer</b> to pry out a Cage Key, then carry it to the sunken rig in the Open Sea." },
     { area: "flooded",    requires: "opensea", price: 24000, teaser: "Sailors whisper of a freighter lost in the deep, full of loot.",
-      how: "Fully strip the loot from <b>5 cargo-ship wrecks</b>, then swim into another cargo wreck's hold." },
+      how: "Fully strip the loot from <b>3 cargo-ship wrecks</b>, then swim into another cargo wreck's hold." },
     { area: "olympus",    requires: "mountain", price: 35000, teaser: "They say something divine waits above the highest peak of all.",
       how: "Own the <b>Storm Summoner</b>, climb to the tallest peak of the <b>Sunlit Peaks</b>, line up with its tip and summon a storm." },
     { area: "grotto",     requires: "desert", price: 30000, teaser: "Legends tell of four ancient jewels and a tomb sealed beneath the dunes.",
@@ -1637,9 +1639,9 @@
       }
     }
 
-    // --- Flooded Freighter: once 5 cargo ships are stripped, swim into a cargo
+    // --- Flooded Freighter: once 3 cargo ships are stripped, swim into a cargo
     //     wreck's hold and you drop straight into the hidden freighter ---
-    if ((state.cargoSearched || 0) >= 5 && !state.areas.flooded && run.area !== "flooded") {
+    if ((state.cargoSearched || 0) >= 3 && !state.areas.flooded && run.area !== "flooded") {
       for (var cwi = 0; cwi < run.wrecks.length; cwi++) {
         var cw = run.wrecks[cwi];
         if (cw.type !== "cargo") continue;
@@ -1734,8 +1736,8 @@
   function markCargoSearched() {
     state.cargoSearched = (state.cargoSearched || 0) + 1;
     saveGame();
-    if (state.cargoSearched === 5 && !state.areas.flooded) {
-      toast("📦 You've stripped 5 cargo ships bare... a flooded freighter is said to lie deep below. Sink to a cargo wreck's hold to find it.", "epic", 4800);
+    if (state.cargoSearched === 3 && !state.areas.flooded) {
+      toast("📦 You've stripped 3 cargo ships bare... a flooded freighter is said to lie deep below. Sink to a cargo wreck's hold to find it.", "epic", 4800);
     }
   }
 
