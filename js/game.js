@@ -2104,7 +2104,8 @@
     var nvOn = nightVisionOn();
     // the open sky never goes dark; the cavern is extra gloomy
     var darkness = loc.airArea ? 0 : depthFactor(run.diver.y, loc);
-    if (loc.caveArea) darkness = Math.min(0.92, darkness + 0.35);
+    // caves are moody-dark but never blinding (capped so you can always see to play)
+    if (loc.caveArea) darkness = Math.min(0.7, darkness + 0.2);
     if (run.night && !nvOn) darkness = Math.min(0.95, darkness + (loc.airArea ? 0.3 : 0.4)); // nocturnal gloom
 
     // --- background, lighting & scenery ---
@@ -2795,8 +2796,8 @@
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, W, H);
     }
-    // Torch: a bright beam projected in the direction you're steering (cuts the gloom)
-    if (state.items.torch) {
+    // Torch: a bright beam in the direction you steer — only lit at night
+    if (state.items.torch && run.night) {
       var reach = 320, halfW = 130;
       var aim = Math.atan2(run.aimY || 0, run.aimX != null ? run.aimX : (run.diver.face < 0 ? -1 : 1));
       ctx.save();
