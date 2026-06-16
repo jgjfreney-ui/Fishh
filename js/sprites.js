@@ -975,6 +975,17 @@
       "..bbBBBBbbb..bbBBBBbb...",
       "....bbb........bbb......",
     ],
+    // giant arapaima — armoured plated river monster (Jungle boss)
+    arapaima: [
+      "f.........bbBBBBBBBBb...",
+      "fFF...bbBBBBBBBBBBBBBBb.",
+      "fFbBBBBBBBBBBBBBBBBBBBEPb",
+      "fFbBBBLLLLLLLLLLLBBBBBPMW",
+      "fFbBBABBABBABBABBBBBBBb..",
+      "fFbBBBBBBBBBBBBBBBBBBb...",
+      ".FF.bbBBBBBBBBBBBbb..A..",
+      ".......AA....AA........",
+    ],
     // fierce fire dragon (Magma Vents boss) — horns, wing, blazing maw
     firedragon: [
       ".......A.A.A.........",
@@ -1785,7 +1796,7 @@
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
     dunkle: "dunkle", assfish: "assfish", gharial: "gharial", cobra: "cobra", grouper: "grouper", antlereel: "antlereel",
-    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon",
+    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",

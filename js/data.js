@@ -133,6 +133,13 @@
       shinyBonus: 0, unlocked: false, cost: 0,
       sky: { top: "#d8c890", bottom: "#9fb0e0" },
     },
+    jungle: {
+      id: "jungle", name: "Sunken Jungle", tint: "#3aa83a", secret: true, jungle: true,
+      blurb: "A flooded emerald jungle — shafts of green light pierce a tangle of vines and giant leaves where river monsters lurk.",
+      maxDepth: 650, worldWidth: 2800, topColor: "#3a9a4a", deepColor: "#0a2a14",
+      shinyBonus: 0, unlocked: false, cost: 0,
+      sky: { top: "#bfe8a0", bottom: "#e0f4c0" },
+    },
     grotto: {
       id: "grotto", name: "Ancient Grotto", tint: "#3ad0e0", secret: true, pyramids: true,
       blurb: "Deep inside the great pyramid — a crystal-blue grotto where vines trail from the ceiling and the sands glitter with gold and gemstones.",
@@ -481,6 +488,7 @@
     { id: "willoweel",  name: "Willow Eel",   area: "forest", rarity: "rare",     size: 3, value: 480, minDepth: 180, color: "#3a6a3a", shape: "eel" },
     { id: "ancientcarp",name: "Ancient Carp", area: "forest", rarity: "epic",     size: 5, value: 1500,minDepth: 300, color: "#8a9a4a", shape: "fish" },
     { id: "elkeel",     name: "Elk Eel",       area: "forest", rarity: "rare",     size: 3, value: 880, minDepth: 120, color: "#5a7a3a", accent: "#caa15a", shape: "antlereel" },
+    { id: "coconutpuffer", name: "Coconut Puffer", area: "forest", legendary: true, rarity: "epic", size: 2, value: 4000, minDepth: 0, color: "#8a5a2a", accent: "#cfe0a0", trim: "#fff3b0", shape: "puffer" },
     { id: "dappletrout",name: "Dapple Trout", area: "forest", rarity: "common",   size: 2, value: 120, minDepth: 20,  color: "#7aa84a", accent: "#d8e0a0", shape: "trout" },
     { id: "rootperch",  name: "Root Perch",   area: "forest", rarity: "uncommon", size: 2, value: 200, minDepth: 60,  color: "#5a7a3a", accent: "#caa15a", shape: "perch" },
     { id: "bramblemack",name: "Bramble Mackerel", area: "forest", rarity: "uncommon", size: 2, value: 260, minDepth: 100, color: "#4a8a5a", accent: "#bfe0a0", shape: "mackerel" },
@@ -737,6 +745,23 @@
     { id: "scarabbeetle", name: "Scarab Beetle", area: "grotto", bird: true, rarity: "common", size: 1, value: 300, color: "#2faf8a", accent: "#ffd24a", shape: "finch", seedCost: 500 },
     { id: "grottoguard", name: "Pharaoh's Guardian", area: "grotto", areaBoss: true, rarity: "mythic", size: 13, value: 44000, minDepth: 200, color: "#c79a2e", accent: "#3ad0e0", trim: "#fff3b0", shape: "manta", hp: 7, reward: "" },
     { id: "gharial",    name: "Golden Gharial", area: "grotto", legendary: true, rarity: "mythic", size: 8, value: 26000, minDepth: 60, color: "#c79a4e", accent: "#fff3b0", trim: "#3ad0e0", shape: "gharial" },
+
+    // ======== Sunken Jungle (secret; flooded river-monster jungle) ========
+    { id: "junglepiranha", name: "Piranha",   area: "jungle", rarity: "common",   size: 1, value: 280, minDepth: 0,   color: "#7a8a3a", accent: "#e25a3a", shape: "triggerfish" },
+    { id: "arowana",   name: "Arowana",       area: "jungle", rarity: "uncommon", size: 3, value: 520, minDepth: 40,  color: "#caa15a", accent: "#ffd24a", shape: "longfish" },
+    { id: "electriceel", name: "Electric Eel", area: "jungle", rarity: "rare",    size: 3, value: 900, minDepth: 100, color: "#3a5a3a", accent: "#ffe98a", shape: "eel", glow: true },
+    { id: "jungleray", name: "Motoro Ray",    area: "jungle", rarity: "rare",     size: 4, value: 1100, minDepth: 140, color: "#5a6a3a", accent: "#cfe0a0", shape: "ray" },
+    { id: "redpacu",   name: "Red Pacu",      area: "jungle", rarity: "common",   size: 2, value: 320, minDepth: 0,   color: "#7a4a3a", accent: "#e0805a", shape: "round" },
+    { id: "junglekardinal", name: "Cardinal Tetra",    area: "jungle", rarity: "common",   size: 1, value: 240, minDepth: 0,   color: "#2a8ac0", accent: "#ff3a5a", shape: "guppy", glow: true },
+    { id: "jungleangel", name: "Freshwater Angelfish",     area: "jungle", rarity: "uncommon", size: 2, value: 420, minDepth: 30,  color: "#cfd6de", accent: "#3a3a3a", shape: "tang" },
+    { id: "junglecat", name: "Jungle Catfish", area: "jungle", rarity: "uncommon", size: 3, value: 480, minDepth: 80, color: "#5a4a3a", accent: "#9fd05a", shape: "catfish" },
+    { id: "alligatorgar", name: "Alligator Gar", area: "jungle", rarity: "rare",  size: 4, value: 1300, minDepth: 180, color: "#4a5a3a", accent: "#caa15a", shape: "pike" },
+    { id: "peacockbass", name: "Peacock Bass", area: "jungle", rarity: "epic",    size: 4, value: 2400, minDepth: 250, color: "#2faf6a", accent: "#ffcf3a", shape: "perch" },
+    { id: "junglecrab", name: "Jungle Crab",  area: "jungle", creature: true, rarity: "common", size: 1, value: 200, color: "#7a4a2a", accent: "#9fd05a", shape: "crab" },
+    { id: "junglesnail", name: "Apple Snail", area: "jungle", creature: true, rarity: "common", size: 1, value: 160, color: "#caa15a", accent: "#3aa83a", shape: "snail" },
+    { id: "toucanbird", name: "Toucan",       area: "jungle", bird: true, rarity: "uncommon", size: 2, value: 480, color: "#1a1a1a", accent: "#ff7a1a", shape: "macaw", seedCost: 700 },
+    { id: "junglestork", name: "Jabiru Stork", area: "jungle", bird: true, rarity: "common", size: 2, value: 320, color: "#eef2f7", accent: "#e23b5a", shape: "heron", seedCost: 500 },
+    { id: "junglearapaima", name: "The Arapaima", area: "jungle", areaBoss: true, rarity: "mythic", size: 14, value: 36000, minDepth: 200, color: "#5a6a3a", accent: "#e25a4a", trim: "#caa15a", shape: "arapaima", hp: 7, reward: "" },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },

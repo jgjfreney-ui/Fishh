@@ -65,6 +65,7 @@
     // Gloom Cavern — sparse, low, mysterious but still cosy (cave-pentatonic, not scary)
     cave:      { tonic: 53, bpm: 88, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     forest:    { tonic: 57, bpm: 80, density: 0.36, lead: "triangle", bells: true, waves: false, prog: ["I", "vi", "IV", "V"], pent: PENTA }, // mellow sun-dappled under-forest
+    jungle:    { tonic: 55, bpm: 120, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "IV"], pent: PENTA }, // lush, tribal, rhythmic
     swamp:     { tonic: 55, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     boneyard:  { tonic: 50, bpm: 84, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
     backrooms: { tonic: 58, bpm: 100, density: 0.5, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "IV"], heavyBass: true },
@@ -257,6 +258,7 @@
     olympus: { fn: ambShimmer, min: 2500, max: 6000 },
     flooded: { fn: ambWhale, min: 3500, max: 8000 }, // groaning, creaking hull
     desert: { fn: ambBubble, min: 3000, max: 7000 },
+    jungle: { fn: ambBubble, min: 1500, max: 4000 },
     grotto: { fn: ambShimmer, min: 2500, max: 6000 },
   };
   function scheduleAmb() {

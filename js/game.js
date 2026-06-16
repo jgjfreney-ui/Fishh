@@ -25,7 +25,7 @@
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, desert: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
-               oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false, grotto: false },
+               oilrig: false, cave: false, cloud: false, sanctuary: false, flooded: false, grotto: false, jungle: false },
       keyPieces: 0,          // pirate key-of-the-captain's-chest pieces (0..4)
       davyjonesCaught: false,
       openseaClams: 0,       // clams dug in the Open Sea (15 summons the Leatherback)
@@ -297,6 +297,7 @@
     flooded:   { plants: ["rock", "kelp", "rock"], plantColors: ["#3a5a4a", "#4a4a40", "#2a3a32"], rock: "#1f2a26", floor: "#0a120e" },
     desert:    { plants: ["rock", "coral", "rock"], plantColors: ["#d8c078", "#c8a85a", "#a8884a", "#8a6a3a"], rock: "#a8884a", floor: "#c8a860" },
     grotto:    { plants: ["coral", "crystal", "coral"], plantColors: ["#3ad0e0", "#ffcf3a", "#e23b5a", "#9a5ad0"], rock: "#2a7a8a", floor: "#caa14a" },
+    jungle:    { plants: ["kelp", "coral", "kelp"], plantColors: ["#2faf3a", "#3a8a2a", "#6cae4a", "#caa15a"], rock: "#2a4a1a", floor: "#1a3a12" },
   };
 
   function generateDecor(loc) {
@@ -319,7 +320,7 @@
     // BIG background flora — towering kelp / coral mounds / spires, hazed,
     // parallaxed, rising from the floor. Makes areas feel lush & deep.
     run.bgFlora = [];
-    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune", grotto: "obelisk" }[loc.id] || "bigkelp";
+    var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune", grotto: "obelisk", jungle: "tree" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
       run.bgFlora.push({
@@ -1770,6 +1771,12 @@
     if (f.shiny) state.shinyFound[def.id] = true;
     state.counts[def.id] = (state.counts[def.id] || 0) + 1;
     state.stats.totalCaught++;
+    // catch 20 Coconut Puffers and the Sunken Jungle opens
+    if (def.id === "coconutpuffer" && !state.areas.jungle) {
+      var cp = state.counts.coconutpuffer;
+      if (cp >= 20) unlockSecretArea("jungle", "🥥 Twenty Coconut Puffers! A wall of vines parts — the SUNKEN JUNGLE opens. (Now in Change Area.)");
+      else toast("🥥 Coconut Puffer " + cp + "/20 — collect 20 to find the Sunken Jungle.", "good", 1800);
+    }
 
     run.floaters.push({ x: f.x, y: f.y, text: (f.shiny ? "✦ " : "") + def.name, color: f.shiny ? "#ffe66d" : "#dff", life: 1.4 });
 
