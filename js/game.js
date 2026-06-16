@@ -98,13 +98,13 @@
   function up(track) { return D.UPGRADES[track].levels[state.upgrades[track]].value; }
   function maxOxygen() { return up("oxygen"); }
   function speed() { return up("fins"); }
-  function catchRadius() { return up("net"); }
+  function catchRadius() { return up("net") + (itemOn("krakenlimbs") ? 70 : 0); } // Kraken's Limbs reach further out
   // a boss-reward item only applies if owned AND not toggled off
   function itemOn(id) { return state.items[id] && !(state.itemsOff && state.itemsOff[id]); }
   // Night-Vision Goggles active: night reads as day
   function nightVisionOn() { return !!(run && run.night && state.items.goggles && state.nightVision); }
   // the boss-reward gear that can be toggled on/off
-  var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown", "nullzone"];
+  var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown", "nullzone", "krakenlimbs"];
   function anyBossItemOn() { for (var i = 0; i < BOSS_ITEMS.length; i++) if (itemOn(BOSS_ITEMS[i])) return true; return false; }
   function creatureValueMult() { return itemOn("crabcrown") ? 2 : 1; } // Spider Crab Crown = creatures worth ×2
   function reelMul() { return up("reel"); }
@@ -2293,6 +2293,7 @@
   function catchKraken(shiny) {
     state.krakenCaught = true;
     if (shiny) state.krakenShiny = true;
+    state.items.krakenlimbs = true; // #15: the Kraken's reaching limbs
     saveGame();
     setTimeout(function () { showEnding(shiny); }, 900);
   }
@@ -4070,7 +4071,7 @@
     state.charms = { rarity: D.CHARMS.rarity.maxStack, shiny: D.CHARMS.shiny.maxStack };
     ["torch", "divingbell", "heatsuit", "coldsuit", "stormsummoner", "goggles", "shinyPocket", "stopwatch",
      "serpenteye", "necklace", "megtooth", "jellystinger", "sonar", "rocfeather", "crabcrown", "kaijubreath",
-     "nullzone", "cagekey"].forEach(function (k) { state.items[k] = true; });
+     "nullzone", "krakenlimbs", "cagekey"].forEach(function (k) { state.items[k] = true; });
     ["pink", "orange", "gold", "neon", "void", "rainbow"].forEach(function (id) { state.diverUnlocks[id] = true; });
     state.money = 9999999;
     state.jewels = { red: true, blue: true, green: true, yellow: true };
@@ -5513,6 +5514,7 @@
     { id: "kaijubreath",  name: "Kaiju Breath",        effect: "Tap 🔵 in a dive to fire a beam that vacuums up fish.", reward: "kaijubreath", toggle: false },
     { id: "serpenteye",   name: "Eye of the Serpent",  effect: "Golden coin chests wash up in every dive site.", reward: "serpenteye", toggle: false },
     { id: "nullzone",     name: "Null Zone",           effect: "Swim off the RIGHT edge of the world and reappear on the LEFT (and vice versa).", reward: "nullzone", toggle: true },
+    { id: "krakenlimbs",  name: "Kraken's Limbs",      effect: "Reaching tentacles grab fish from well outside your normal catch radius.", reward: "krakenlimbs", toggle: true },
   ];
   function bossForReward(rk) {
     for (var i = 0; i < D.FISH.length; i++) if (D.FISH[i].reward === rk && (D.FISH[i].areaBoss || D.FISH[i].secretBoss)) return D.FISH[i];
