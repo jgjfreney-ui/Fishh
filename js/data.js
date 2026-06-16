@@ -141,11 +141,11 @@
       sky: { top: "#d8f4ff", bottom: "#bfeaf2" },
     },
     ashen: {
-      id: "ashen", name: "Magma Vents", tint: "#e0552a", smoke: true, hot: true,
-      blurb: "A drowned volcanic vent — black water lit by lava, choked with drifting ash and smoke. Without a Heat Suit the heat burns through your oxygen.",
-      maxDepth: 700, worldWidth: 2600, topColor: "#3a2218", deepColor: "#0a0402",
+      id: "ashen", name: "Magma Vents", tint: "#e0552a", smoke: true, hot: true, volcano: true,
+      blurb: "A drowned volcanic vent — red-black water lit by lava, choked with drifting ash and smoke under a sky of boiling dark cloud. Without a Heat Suit the heat burns through your oxygen.",
+      maxDepth: 700, worldWidth: 2600, topColor: "#5a1e10", deepColor: "#1a0402",
       shinyBonus: 0, unlocked: false, cost: 200000,
-      sky: { top: "#3a2a20", bottom: "#1a0e08" },
+      sky: { top: "#2a1410", bottom: "#1a0a08", volcano: true },
     },
     pirate: {
       id: "pirate", name: "Drowned Cove", tint: "#caa14a", secret: true, hot: true,

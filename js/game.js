@@ -957,7 +957,7 @@
     var beaten = totalBossesBeaten();
     var tier = (def && def.area) ? areaTier(def.area) : 0;
     var depthTier = def ? Math.floor((def.minDepth || 0) / 350) : 0;
-    var scaled = base + Math.floor(beaten * 0.8) + Math.floor(tier * 0.6) + depthTier;
+    var scaled = base + 1 + Math.floor(beaten * 1.0) + Math.floor(tier * 0.7) + depthTier;
     return Math.max(1, scaled - (itemOn("megtooth") ? 1 : 0));
   }
 
@@ -2009,7 +2009,7 @@
     if (window.AUDIO) AUDIO.rumble();
   }
   function endBossAttack(boss) {
-    boss.mode = "roam"; boss.atkT = 3.5 + Math.random() * 3.5; run.bossBeam = null;
+    boss.mode = "roam"; boss.atkT = 2.3 + Math.random() * 2.4; run.bossBeam = null;
   }
 
   // Kaiju Breath: fire a blue beam in your facing/aim direction that bags fish
@@ -2684,6 +2684,30 @@
     }
     ctx.restore();
   }
+  // boiling dark volcanic cloud cover with a smouldering red horizon glow
+  // (used for the Magma Vents; reusable for other volcanic skies)
+  function drawVolcanoSky(surfaceY) {
+    var g = ctx.createLinearGradient(0, 0, 0, surfaceY);
+    g.addColorStop(0, "#1a0a08"); g.addColorStop(0.7, "#3a120a"); g.addColorStop(1, "#6a1e0e");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, surfaceY);
+    // roiling dark clouds
+    for (var c = 0; c < 10; c++) {
+      var cx = ((c * 213 - cam.x * 0.1 + run.time * (4 + (c % 3) * 3)) % (W + 240) + (W + 240)) % (W + 240) - 120;
+      var cy = surfaceY * (0.15 + (c % 4) * 0.18);
+      var rr = 40 + (c % 3) * 26;
+      var cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
+      cg.addColorStop(0, "rgba(20,10,8,0.7)"); cg.addColorStop(1, "rgba(20,10,8,0)");
+      ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 7); ctx.fill();
+    }
+    // smouldering glow at the waterline
+    drawGlow(W * 0.5, surfaceY, W * 0.6, "#ff4a1a", 0.16 + 0.05 * Math.sin(run.time * 2));
+    // the odd ember rising
+    for (var e = 0; e < 6; e++) {
+      var ex = ((e * 331 + run.time * 20) % W);
+      var ey = surfaceY - ((run.time * 30 + e * 40) % surfaceY);
+      ctx.fillStyle = "rgba(255,140,40,0.6)"; ctx.fillRect(ex | 0, ey | 0, 2, 2);
+    }
+  }
   function drawSky(loc) {
     var surfaceY = -cam.y;            // screen y of the waterline (world y = 0)
     if (surfaceY <= 0) return;        // fully underwater — no sky in view
@@ -2696,6 +2720,11 @@
       var wbk = ctx.createLinearGradient(0, surfaceY, 0, surfaceY + 24);
       wbk.addColorStop(0, "rgba(220,220,160,0.3)"); wbk.addColorStop(1, "rgba(220,220,160,0)");
       ctx.fillStyle = wbk; ctx.fillRect(0, surfaceY, W, 24);
+      return;
+    }
+    // Volcano sky: boiling dark clouds with a smouldering red glow on the horizon
+    if (sky.volcano) {
+      drawVolcanoSky(surfaceY);
       return;
     }
     var g = ctx.createLinearGradient(0, 0, 0, surfaceY);
