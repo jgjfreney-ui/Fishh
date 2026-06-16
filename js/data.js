@@ -93,10 +93,10 @@
     },
     prism: {
       id: "prism", name: "Prism Reef", tint: "#ff7ad0",
-      blurb: "A kaleidoscopic coral garden ablaze with colour — and a master of disguise hiding in plain sight.",
-      maxDepth: 420, worldWidth: 2600, topColor: "#2fc0d0", deepColor: "#1a3a7a",
+      blurb: "A kaleidoscopic rose-tinted coral garden ablaze with colour — and a master of disguise hiding in plain sight.",
+      maxDepth: 420, worldWidth: 2600, topColor: "#ff8ad0", deepColor: "#7a2a8a",
       shinyBonus: 0, unlocked: false, cost: 12000,
-      sky: { top: "#bff0ff", bottom: "#ffe6fb" },
+      sky: { top: "#ffd6f6", bottom: "#fff0fb" },
     },
     swamp: {
       id: "swamp", name: "Mangrove Swamp", tint: "#7a8a3a",
@@ -449,6 +449,8 @@
 
     // ======== Prism Reef (colourful) ========
     { id: "mandarinfish", name: "Mandarinfish", area: "prism", rarity: "common",   size: 1, value: 200, minDepth: 0,   color: "#2a8ac0", accent: "#ff9a3a", shape: "fish" },
+    { id: "fuchsialion", name: "Fuchsia Lionfish", area: "prism", rarity: "rare", size: 2, value: 620, minDepth: 40, color: "#ff3ac0", accent: "#7afcff", shape: "lionfish" },
+    { id: "neonclown",  name: "Neon Clownfish", area: "prism", rarity: "uncommon", size: 1, value: 280, minDepth: 0,  color: "#ff5b9f", accent: "#5bffd0", shape: "clownfish" },
     { id: "neontetra",  name: "Neon Tetra",   area: "prism", rarity: "common",   size: 1, value: 160, minDepth: 0,   color: "#2fd0e0", accent: "#ff3a6a", shape: "guppy" },
     { id: "royalgramma",name: "Royal Gramma", area: "prism", rarity: "uncommon", size: 1, value: 280, minDepth: 20,  color: "#9a3ad0", accent: "#ffe14d", shape: "tang" },
     { id: "flamewrasse",name: "Flame Wrasse", area: "prism", rarity: "uncommon", size: 2, value: 320, minDepth: 40,  color: "#ff5b3a", accent: "#ffe14d", shape: "butterflyfish" },
