@@ -3746,6 +3746,7 @@
   // ---------------------------------------------------------------------
   //  HUD
   // ---------------------------------------------------------------------
+  var dispMoney = null; // animated money counter (rolls toward state.money)
   function updateHud() {
     var hud = document.getElementById("hud");
     if (!hud) return;
@@ -3755,7 +3756,12 @@
     document.getElementById("ox-fill").style.background = oxPct < 0.25 ? "#e74c3c" : (oxPct < 0.5 ? "#f39c12" : "#3fd0ff");
     document.getElementById("ox-text").textContent = Math.ceil(run.oxygen) + "s";
     document.getElementById("depth-text").textContent = depthM + "m";
-    document.getElementById("money-text").textContent = "$" + fmt(state.money);
+    // money rolls smoothly toward the real total instead of snapping
+    if (dispMoney == null) dispMoney = state.money;
+    var diff = state.money - dispMoney;
+    if (Math.abs(diff) < 1) dispMoney = state.money;
+    else dispMoney += diff * 0.18;
+    document.getElementById("money-text").textContent = "$" + fmt(Math.round(dispMoney));
     document.getElementById("cargo-text").textContent = run.bagUsed + " / " + inventoryCap();
     document.getElementById("area-name").textContent = D.LOCATIONS[run.area].name;
     var atTop = run.diver.y <= 30;
