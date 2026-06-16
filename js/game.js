@@ -1083,8 +1083,12 @@
     canvas.addEventListener("touchmove", onTouchMove, { passive: false });
     canvas.addEventListener("touchend", onTouchEnd, { passive: false });
     canvas.addEventListener("touchcancel", onTouchEnd, { passive: false });
+    // desktop: click to flip through close-up specimens
+    canvas.addEventListener("click", function () { if (scene === "aquarium" && aqua && aqua.focus) aquaNav(1); });
   }
   function onTouchStart(e) {
+    // in the aquarium close-up, tap anywhere to flip to the next specimen
+    if (scene === "aquarium" && aqua && aqua.focus) { e.preventDefault(); aquaNav(1); return; }
     if (scene !== "dive" && !(scene === "aquarium" && aqua && aqua.diverActive)) return;
     if (joy.active) return;
     var t = e.changedTouches[0];
@@ -4699,15 +4703,25 @@
       SPRITES.draw(ctx, arch, 0, 0, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, scale: scale });
       ctx.restore();
     }
-    // info card
-    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, H - 72, W, 72);
+    // position counter + tap hint at the top
     ctx.textAlign = "center";
-    ctx.fillStyle = e.shiny ? "#ffe66d" : "#fff"; ctx.font = "bold 22px 'Segoe UI',sans-serif";
-    ctx.fillText((e.shiny ? "✦ " : "") + e.def.name, W / 2, H - 42);
+    ctx.fillStyle = "rgba(0,0,0,0.4)"; ctx.fillRect(0, 0, W, 30);
+    ctx.fillStyle = "#cfe6ff"; ctx.font = "13px 'Segoe UI',sans-serif";
+    ctx.fillText("◀ " + (aqua.focusIdx + 1) + " / " + aqua.entities.length + " ▶   (tap to flip through)", W / 2, 20);
+    // rich specimen card
+    ctx.fillStyle = "rgba(0,0,0,0.62)"; ctx.fillRect(0, H - 108, W, 108);
+    ctx.fillStyle = e.shiny ? "#ffe66d" : "#fff"; ctx.font = "bold 23px 'Segoe UI',sans-serif";
+    ctx.fillText((e.shiny ? "✦ " : "") + e.def.name, W / 2, H - 78);
     ctx.fillStyle = D.RARITY[e.def.rarity].color; ctx.font = "14px 'Segoe UI',sans-serif";
-    var tags = D.RARITY[e.def.rarity].name + (e.def.bird ? " · Bird" : e.def.creature ? " · Creature" : "")
-      + (e.def.night ? " · 🌙" : e.def.day ? " · ☀️" : "") + (e.def.value ? " · $" + fmt(e.def.value) : "");
-    ctx.fillText(tags, W / 2, H - 20);
+    var kind = e.def.luxury ? "Luxury" : e.def.legendary ? "Legendary" : e.def.areaBoss ? "Area Boss" : e.def.secretBoss ? "Secret Boss" : e.def.bird ? "Bird" : e.def.creature ? "Creature" : (e.def.secret ? "Secret" : "Fish");
+    ctx.fillText(D.RARITY[e.def.rarity].name + " · " + kind
+      + (e.def.night ? " · 🌙 Night" : e.def.day ? " · ☀️ Day" : ""), W / 2, H - 56);
+    ctx.fillStyle = "#bfe9ff"; ctx.font = "13px 'Segoe UI',sans-serif";
+    ctx.fillText("From " + D.LOCATIONS[e.def.area].name + " · Size " + e.def.size + (e.def.value ? " · worth $" + fmt(e.def.value) : ""), W / 2, H - 36);
+    var caught = state.counts[e.def.id] || 0;
+    var shinyTxt = state.shinyFound[e.def.id] ? " · ✦ shiny found" : "";
+    ctx.fillStyle = "#9fd0a0"; ctx.fillText((caught ? "Caught " + caught + " time" + (caught === 1 ? "" : "s") : "Not yet caught") + shinyTxt, W / 2, H - 16);
+    ctx.textAlign = "left";
     // glass frame
     ctx.strokeStyle = "rgba(200,230,255,0.5)"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, W - 8, H - 8);
   }
