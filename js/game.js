@@ -1083,7 +1083,9 @@
     if (trig === "allbirds") return allBirdsFound() ? id : null;
     for (var i = 0; i < D.FISH.length; i++) {
       var f = D.FISH[i];
-      if (f.area !== area || f.areaBoss || f.isKraken || f.isBlob || f.secret) continue;
+      // luxury fish (maxed-aquarium catches) are NOT required for the area boss —
+      // they're only needed toward the final 100% that wakes the Kraken
+      if (f.area !== area || f.areaBoss || f.isKraken || f.isBlob || f.secret || f.luxury) continue;
       var match = trig === "creatures" ? !!f.creature : (!f.creature && !f.bird);
       if (match && !state.discovered[f.id]) return null;
     }
@@ -4325,9 +4327,9 @@
 
     if (!state.krakenCaught) {
       if (trueComplete()) {
-        html += '<div class="kraken-alert">🦑 100% complete!! The <b>TRUE Kraken</b> now stirs in the deepest <b>Sunken Trench</b>. Go and face it with harpoons.</div>';
+        html += '<div class="kraken-alert">🦑 100% complete!! The <b>TRUE Kraken</b> now stirs in the deepest <b>Final Trench</b>. Go and face it with harpoons.</div>';
       } else if (requiredMet() && !state.blobfishCaught) {
-        html += '<div class="kraken-alert">🦑 You\'ve caught every <b>required</b> fish... surely the Kraken awaits in the deep <b>Sunken Trench</b>? Dive and find out.</div>';
+        html += '<div class="kraken-alert">🦑 You\'ve caught every <b>required</b> fish... surely the Kraken awaits in the deep <b>Final Trench</b>? Dive and find out.</div>';
       } else if (state.blobfishCaught) {
         html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything</b> caught. You\'re at ' + Object.keys(state.discovered).length + '... keep going!</div>';
       }
@@ -5086,7 +5088,8 @@
         html += '<div class="coll-meta">' + D.RARITY[f.rarity].name
           + (found && !special ? ' · ' + (state.counts[f.id] || 0) + ' caught' : '')
           + (f.creature ? ' · Creature' : (f.bird ? ' · Bird' : '')) + (f.secret ? ' · Secret' : '') + tod + '</div>';
-        if (!special) html += '<div class="coll-meta">Size ' + f.size + ' · $' + fmt(f.value) + '</div>';
+        if (!special) html += '<div class="coll-meta">Size ' + f.size + ' · $' + fmt(f.value)
+          + (found && f.venom ? ' · ☠️ Venomous' : '') + '</div>';
         else {
           var bossKind = (f.isKraken || f.isBlob) ? '🦑 Legendary Boss' : f.secretBoss ? '⭐ Secret Boss' : '⚔️ Area Boss';
           html += '<div class="coll-meta">' + (found ? '✓ Defeated! · ' + bossKind : '🔒 ' + bossKind) + '</div>';

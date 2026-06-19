@@ -214,7 +214,7 @@
       sky: { top: "#cdeeff", bottom: "#eaf8ff" },
     },
     trench: {
-      id: "trench", name: "Sunken Trench", tint: "#5a6cff",
+      id: "trench", name: "Final Trench", tint: "#5a6cff",
       blurb: "The deepest, final frontier — a crushing abyss where the Kraken itself waits.",
       maxDepth: 1400, worldWidth: 2600, topColor: "#13496e", deepColor: "#01040c",
       shinyBonus: 0, unlocked: false, cost: 1500000,
@@ -262,7 +262,7 @@
     { id: "manta",      name: "Manta Ray",    area: "trench", rarity: "epic",     size: 5, value: 1100, minDepth: 220, color: "#2c3e57", shape: "manta" },
     { id: "hammerhead", name: "Hammerhead",   area: "trench", rarity: "epic",     size: 5, value: 1250, minDepth: 300, color: "#6e8290", shape: "hammer" },
 
-    // ---- Sunken Trench (deep) ----
+    // ---- Final Trench (deep) ----
     { id: "lanternfish", name: "Lanternfish",  area: "trench", rarity: "common",   size: 1, value: 40,   minDepth: 100, color: "#7fa0c0", shape: "lantern" },
     { id: "hatchetfish", name: "Hatchetfish",  area: "trench", rarity: "uncommon", size: 1, value: 120,  minDepth: 200, color: "#cfd6e0", shape: "hatchetfish" },
     { id: "anglerfish",  name: "Anglerfish",   area: "trench", rarity: "uncommon", size: 2, value: 160,  minDepth: 300, color: "#283b2f", shape: "angler" },
@@ -296,7 +296,7 @@
     { id: "wolfeel",    name: "Wolf Eel",      area: "kelp", rarity: "rare",     size: 3, value: 340, minDepth: 180, color: "#6a6a5a", shape: "glowworm" },
     { id: "sunfish",    name: "Ocean Sunfish", area: "kelp", rarity: "epic",     size: 6, value: 1500, minDepth: 220, color: "#9fb4c4", shape: "mola" },
 
-    // ---- Sunken Trench ----
+    // ---- Final Trench ----
     { id: "barreleye",  name: "Barreleye",     area: "trench", rarity: "uncommon", size: 1, value: 150, minDepth: 250, color: "#2a3a44", shape: "barreleye", glow: true },
     { id: "dumbo",      name: "Dumbo Octopus", area: "trench", rarity: "rare",     size: 3, value: 480, minDepth: 520, color: "#c06a8a", shape: "octopus" },
     { id: "fangtooth",  name: "Fangtooth",     area: "trench", rarity: "rare",     size: 1, value: 360, minDepth: 600, color: "#3a3a44", shape: "fangtooth" },
@@ -918,7 +918,7 @@
     "giantsquid", "sunfish",             // Kelp Forest
     "greenlandshark", "narwhal",         // Arctic Shelf
     "megalodon", "mosasaur",             // Fossil Abyss
-    "anglerfish", "frilledshark", "greatwhite", // Sunken Trench (final)
+    "anglerfish", "frilledshark", "greatwhite", // Final Trench (final)
   ];
 
   // Build a quick lookup
