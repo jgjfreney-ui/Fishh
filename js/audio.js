@@ -1,0 +1,406 @@
+/* ===========================================================================
+ * Deep Sea Diver — Generative Audio (v3, cheerful)
+ * Bright, bouncy chiptune in the spirit of cozy handheld games (Kirby-ish):
+ * MAJOR keys only, a clear major-pentatonic melody (which basically can't
+ * sound scary), bouncy bass + chord stabs, light reverb. The menu adds gentle
+ * waves + occasional gulls. All synthesised live — no audio files.
+ * ======================================================================== */
+(function () {
+  "use strict";
+
+  var ctx = null, master = null, dryBus = null, reverbSend = null, musicBus = null, sfxBus = null;
+  var muted = false, musicMuted = false, sfxMuted = false;
+  var voices = [];
+  var schedTimer = null, gullTimer = null, ambTimer = null;
+  var mode = null, nextTime = 0, step = 0, melIdx = 4, cfgCur = null;
+
+  function mtof(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+  var PENTA = [0, 2, 4, 7, 9];       // major pentatonic — always pleasant
+  var PENTA_MIN = [0, 3, 5, 7, 10];  // minor pentatonic — dramatic (boss)
+  var PENTA_EGY = [0, 1, 4, 5, 7];   // exotic Hijaz-ish set — Egyptian flavour
+  // Repeating, hummable melodic HOOKS (indices into the pentatonic; null = rest)
+  // over a 16-eighth (2-bar) phrase. A fixed motif is what makes a tune catchy
+  // and memorable, vs. an aimless random walk.
+  var HOOK      = [0, null, 2, 4, 4, null, 2, 0, 2, null, 4, 7, 7, 4, 2, null];
+  var HOOK_BOSS = [0, 0, 3, 0, 5, 3, 0, null, 0, 0, 3, 5, 7, 5, 3, 0];
+  function penta(base, idx, sc) { sc = sc || PENTA; return base + sc[((idx % 5) + 5) % 5] + 12 * Math.floor(idx / 5); }
+
+  // bright major triads relative to a tonic
+  function triad(tonic, deg) {
+    if (deg === "IV") return [tonic + 5, tonic + 9, tonic + 12];
+    if (deg === "V") return [tonic + 7, tonic + 11, tonic + 14];
+    if (deg === "vi") return [tonic + 9, tonic + 12, tonic + 16]; // relative minor
+    return [tonic, tonic + 4, tonic + 7]; // I
+  }
+  function bassRoot(tonic, deg) {
+    if (deg === "IV") return tonic - 7;
+    if (deg === "V") return tonic - 5;
+    if (deg === "vi") return tonic - 3;
+    return tonic - 12;
+  }
+
+  var TRACKS = {
+    menu:      { tonic: 60, bpm: 116, density: 0.5, lead: "triangle", bells: false, waves: true,  prog: ["I", "IV", "V", "V"] },
+    coral:     { tonic: 60, bpm: 130, density: 0.6, lead: "square",   bells: false, waves: false, prog: ["I", "IV", "V", "I"] },
+    kelp:      { tonic: 57, bpm: 110, density: 0.5, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"] },
+    trench:    { tonic: 48, bpm: 96,  density: 0.42, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "V", "I"] },
+    sanctuary: { tonic: 67, bpm: 96,  density: 0.5, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "I", "V"] },
+    // Arctic — remade: slow, glassy and crystalline, with its own flowing hook
+    arctic:    { tonic: 69, bpm: 76,  density: 0.5, lead: "triangle", bells: true,  waves: false, prog: ["I", "IV", "V", "IV"], hook: [0, 4, 7, 4, 2, null, 0, null, 4, 7, 9, 7, 4, 2, 0, null] },
+    ancient:   { tonic: 50, bpm: 104, density: 0.55, lead: "square",   bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
+    opensea:   { tonic: 60, bpm: 108, density: 0.55, lead: "triangle", bells: false, waves: false, prog: ["I", "V", "IV", "I"] },
+    prism:     { tonic: 64, bpm: 124, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
+    storm:     { tonic: 50, bpm: 120, density: 0.6, lead: "square", bells: false, waves: true, prog: ["I", "IV", "V", "V"], heavyBass: true },
+    ashen:     { tonic: 47, bpm: 100, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, heavyBass: true },
+    desert:    { tonic: 57, bpm: 96, density: 0.5, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_EGY, hook: [0, 1, 0, 4, 3, 1, 0, null, 3, 4, 3, 1, 0, 1, 0, null] }, // exotic Egyptian scale
+    grotto:    { tonic: 60, bpm: 88, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_EGY, hook: [0, 3, 4, 3, 1, 0, 1, null, 4, 3, 1, 0, 1, 3, 0, null] }, // mysterious tomb
+    mountain:  { tonic: 60, bpm: 96, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"] },
+    olympus:   { tonic: 72, bpm: 100, density: 0.55, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "V", "I"] },
+    // Flooded Freighter — creepy but playful: low minor-pentatonic, off-kilter
+    // hook with lots of space, a hint of celesta sparkle for the "fun" edge.
+    flooded:   { tonic: 45, bpm: 90, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "vi", "IV", "V"], pent: PENTA_MIN, hook: [0, null, 3, null, 5, 3, 0, null, null, 7, 5, 3, 0, null, 3, null] },
+    pirate:    { tonic: 52, bpm: 116, density: 0.6, lead: "square", bells: false, waves: false, prog: ["I", "IV", "V", "I"], heavyBass: true },
+    // Cloud Reaches — high, airy, twinkly and uplifting (you're in the sky!)
+    cloud:     { tonic: 72, bpm: 120, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"] },
+    // Gloom Cavern — sparse, low, mysterious but still cosy (cave-pentatonic, not scary)
+    cave:      { tonic: 53, bpm: 88, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    forest:    { tonic: 57, bpm: 80, density: 0.36, lead: "triangle", bells: true, waves: false, prog: ["I", "vi", "IV", "V"], pent: PENTA }, // mellow sun-dappled under-forest
+    jungle:    { tonic: 55, bpm: 120, density: 0.6, lead: "square", bells: true, waves: false, prog: ["I", "IV", "V", "IV"], pent: PENTA }, // lush, tribal, rhythmic
+    alien:     { tonic: 63, bpm: 84, density: 0.45, lead: "sine", bells: true, waves: true, prog: ["I", "vi", "IV", "V"], pent: PENTA_MIN }, // eerie cosmic
+    swamp:     { tonic: 55, bpm: 92, density: 0.45, lead: "triangle", bells: false, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    boneyard:  { tonic: 50, bpm: 84, density: 0.4, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    backrooms: { tonic: 49, bpm: 66, density: 0.18, lead: "triangle", bells: false, waves: false, prog: ["I", "I", "I", "I"], pent: PENTA_MIN, hook: [0, null, null, null, 1, null, null, null, 0, null, null, null, null, 3, null, null] }, // monotonous liminal hum
+    // Ornate Ocean — koto-flavoured, with a graceful pentatonic hook & bells
+    japan:     { tonic: 66, bpm: 88, density: 0.5, lead: "triangle", bells: true, waves: false, prog: ["I", "V", "IV", "I"], hook: [0, 2, 4, null, 4, 2, 0, null, 4, 4, 7, 4, 2, 0, null, null] },
+    secretcave:{ tonic: 55, bpm: 86, density: 0.38, lead: "triangle", bells: true, waves: false, prog: ["I", "IV", "I", "V"], pent: PENTA_MIN },
+    oilrig:    { tonic: 48, bpm: 110, density: 0.55, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], heavyBass: true },
+    // Kraken boss theme — fast, driving, dramatic (minor pentatonic, power
+    // chords, pounding bass). Epic, not eerie.
+    boss:      { tonic: 45, bpm: 156, density: 0.78, lead: "square", bells: false, waves: false, prog: ["I", "I", "IV", "V"], pent: PENTA_MIN, power: true, heavyBass: true },
+    // Blobfish theme — goofy, bouncy, NOT epic (you got pranked)
+    blob:      { tonic: 50, bpm: 124, density: 0.7, lead: "square", bells: false, waves: false, prog: ["I", "IV", "V", "V"], heavyBass: true },
+  };
+
+  // ---- audio graph ------------------------------------------------------
+  function ensure() {
+    if (ctx) return true;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = muted ? 0 : 0.22;
+      // a hard-ish limiter so stacked notes never clip into static
+      var comp = ctx.createDynamicsCompressor();
+      try {
+        comp.threshold.value = -14; comp.knee.value = 6; comp.ratio.value = 14;
+        comp.attack.value = 0.003; comp.release.value = 0.25;
+      } catch (e) {}
+      master.connect(comp); comp.connect(ctx.destination);
+      // separate sub-mixes so Music and SFX can be muted independently
+      musicBus = ctx.createGain(); musicBus.gain.value = musicMuted ? 0 : 1; musicBus.connect(master);
+      sfxBus = ctx.createGain(); sfxBus.gain.value = sfxMuted ? 0 : 1; sfxBus.connect(master);
+      dryBus = ctx.createGain(); dryBus.gain.value = 0.85; dryBus.connect(musicBus);
+      var conv = ctx.createConvolver(); conv.buffer = impulse(0.55, 3.4);
+      var wet = ctx.createGain(); wet.gain.value = 0.16; conv.connect(wet); wet.connect(musicBus);
+      reverbSend = ctx.createGain(); reverbSend.gain.value = 0.13; reverbSend.connect(conv);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function impulse(sec, decay) {
+    var rate = ctx.sampleRate, len = (rate * sec) | 0, buf = ctx.createBuffer(2, len, rate);
+    for (var ch = 0; ch < 2; ch++) {
+      var d = buf.getChannelData(ch);
+      for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    return buf;
+  }
+  var _noise = null;
+  function noiseBuffer() {
+    if (_noise) return _noise;
+    var len = ctx.sampleRate * 2; _noise = ctx.createBuffer(1, len, ctx.sampleRate);
+    var d = _noise.getChannelData(0), last = 0;
+    for (var i = 0; i < len; i++) { var w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
+    return _noise;
+  }
+  function vgain() { var g = ctx.createGain(); g.connect(dryBus); g.connect(reverbSend); return g; }
+
+  // short, bright note (lead / stab / bell)
+  function blip(midi, t, dur, type, vol, cutoff) {
+    var o = ctx.createOscillator(), g = vgain(), lp = ctx.createBiquadFilter();
+    o.type = type || "square"; o.frequency.value = mtof(midi);
+    lp.type = "lowpass"; lp.frequency.value = cutoff || 2200;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(vol * 0.6, t + dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(lp); lp.connect(g); o.start(t); o.stop(t + dur + 0.04);
+  }
+  // rounded bass
+  function bass(midi, t, dur, vol) {
+    var o = ctx.createOscillator(), g = vgain(), lp = ctx.createBiquadFilter();
+    o.type = "triangle"; o.frequency.value = mtof(midi);
+    lp.type = "lowpass"; lp.frequency.value = 700;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(lp); lp.connect(g); o.start(t); o.stop(t + dur + 0.05);
+  }
+
+  // ---- menu ambience ----------------------------------------------------
+  function startWaves() {
+    var src = ctx.createBufferSource(); src.buffer = noiseBuffer(); src.loop = true;
+    var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 470;
+    var g = ctx.createGain(); g.gain.value = 0.14;
+    var lfo = ctx.createOscillator(), lg = ctx.createGain();
+    lfo.frequency.value = 0.12; lg.gain.value = 0.1; lfo.connect(lg); lg.connect(g.gain);
+    src.connect(lp); lp.connect(g); g.connect(sfxBus); src.start(); lfo.start();
+    voices.push({ nodes: [src, lfo], gain: g });
+  }
+  function gull() {
+    if (!ctx || muted) return;
+    var t = ctx.currentTime, calls = 1 + ((Math.random() * 2) | 0);
+    for (var c = 0; c < calls; c++) {
+      var base = 900 + Math.random() * 400;
+      var o = ctx.createOscillator(), g = ctx.createGain(), bp = ctx.createBiquadFilter();
+      o.type = "sawtooth"; o.frequency.setValueAtTime(base, t);
+      o.frequency.linearRampToValueAtTime(base * 1.5, t + 0.08);
+      o.frequency.linearRampToValueAtTime(base * 0.95, t + 0.18);
+      bp.type = "bandpass"; bp.frequency.value = base * 1.2; bp.Q.value = 6;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.04, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+      o.connect(bp); bp.connect(g); g.connect(sfxBus);
+      o.start(t); o.stop(t + 0.3); t += 0.22 + Math.random() * 0.12;
+    }
+  }
+  function scheduleGulls() { gullTimer = setTimeout(function () { gull(); scheduleGulls(); }, 6000 + Math.random() * 9000); }
+
+  // ---- per-location ambient SFX ----------------------------------------
+  function ambBubble() {
+    if (!ctx) return; var t = ctx.currentTime, n = 2 + ((Math.random() * 3) | 0);
+    for (var i = 0; i < n; i++) {
+      var o = ctx.createOscillator(), g = ctx.createGain(), f0 = 380 + Math.random() * 520;
+      o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f0 * 1.8, t + 0.12);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.04, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.2); t += 0.08 + Math.random() * 0.1;
+    }
+  }
+  function ambWhale() {
+    if (!ctx) return; var t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    var f0 = 64 + Math.random() * 40;
+    o.type = "sine"; o.frequency.setValueAtTime(f0, t); o.frequency.linearRampToValueAtTime(f0 * 1.7, t + 0.9); o.frequency.linearRampToValueAtTime(f0 * 1.2, t + 2.0);
+    lp.type = "lowpass"; lp.frequency.value = 380;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 0.6); g.gain.linearRampToValueAtTime(0.0001, t + 2.4);
+    o.connect(lp); lp.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 2.5);
+  }
+  function ambIce() {
+    if (!ctx) return; var t = ctx.currentTime, src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = noiseBuffer(); bp.type = "bandpass"; bp.frequency.setValueAtTime(320, t); bp.frequency.linearRampToValueAtTime(160, t + 0.7); bp.Q.value = 9;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.06, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+    src.connect(bp); bp.connect(g); g.connect(sfxBus); src.start(t); src.stop(t + 1.0);
+  }
+  function ambShimmer() {
+    if (!ctx) return; var t = ctx.currentTime;
+    for (var i = 0; i < 3; i++) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "triangle"; o.frequency.value = 900 + Math.random() * 1300;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.022, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.6); t += 0.12;
+    }
+  }
+  // night-on-the-water ambience for the menu: chirping crickets + the odd owl
+  function ambCricket() {
+    if (!ctx) return; var t = ctx.currentTime, reps = 3 + ((Math.random() * 4) | 0);
+    for (var i = 0; i < reps; i++) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square"; o.frequency.value = 4200 + Math.random() * 600;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.012, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.04); t += 0.06;
+    }
+  }
+  function ambOwl() {
+    if (!ctx) return; var t = ctx.currentTime;
+    function hoot(tt, f0) {
+      var o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+      o.type = "sine"; o.frequency.setValueAtTime(f0, tt); o.frequency.linearRampToValueAtTime(f0 * 0.92, tt + 0.3);
+      lp.type = "lowpass"; lp.frequency.value = 700;
+      g.gain.setValueAtTime(0.0001, tt); g.gain.linearRampToValueAtTime(0.06, tt + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, tt + 0.42);
+      o.connect(lp); lp.connect(g); g.connect(sfxBus); o.start(tt); o.stop(tt + 0.5);
+    }
+    var base = 300 + Math.random() * 60;
+    hoot(t, base); hoot(t + 0.55, base * 0.96); // classic two-note "hoo... hoo"
+  }
+  function ambNightMenu() { ambCricket(); if (Math.random() < 0.35) ambOwl(); }
+
+  var AMB = {
+    coral:  { fn: ambBubble, min: 1500, max: 4000 },
+    river:  { fn: ambBubble, min: 2000, max: 5000 },
+    kelp:   { fn: ambBubble, min: 2500, max: 6000 },
+    arctic: { fn: ambIce,    min: 4500, max: 11000 },
+    ancient:{ fn: ambWhale,  min: 7000, max: 15000 },
+    trench: { fn: ambWhale,  min: 5500, max: 13000 },
+    opensea: { fn: ambWhale, min: 6000, max: 13000 },
+    sanctuary: { fn: ambShimmer, min: 3000, max: 8000 },
+    cloud:  { fn: ambShimmer, min: 3500, max: 8000 },
+    cave:   { fn: ambBubble,  min: 2500, max: 6500 },
+    forest: { fn: ambBubble,  min: 2500, max: 6000 },
+    swamp:  { fn: ambBubble,  min: 2000, max: 5500 },
+    boneyard: { fn: ambWhale, min: 6000, max: 13000 },
+    backrooms: { fn: ambShimmer, min: 4000, max: 9000 },
+    japan:  { fn: ambWhale,   min: 6000, max: 13000 },
+    secretcave: { fn: ambBubble, min: 2500, max: 6500 },
+    oilrig: { fn: ambBubble, min: 2500, max: 6000 },
+    prism:  { fn: ambShimmer, min: 2500, max: 6000 },
+    storm:  { fn: ambWhale, min: 4000, max: 9000 },
+    ashen:  { fn: ambBubble, min: 2000, max: 5000 },
+    pirate: { fn: ambWhale, min: 5000, max: 11000 },
+    mountain: { fn: ambBubble, min: 3000, max: 7000 },
+    olympus: { fn: ambShimmer, min: 2500, max: 6000 },
+    flooded: { fn: ambWhale, min: 3500, max: 8000 }, // groaning, creaking hull
+    desert: { fn: ambBubble, min: 3000, max: 7000 },
+    jungle: { fn: ambBubble, min: 1500, max: 4000 },
+    alien: { fn: ambShimmer, min: 2000, max: 5000 },
+    grotto: { fn: ambShimmer, min: 2500, max: 6000 },
+  };
+  function scheduleAmb() {
+    var a = AMB[mode];
+    if (mode === "menu" && curNight) a = { fn: ambNightMenu, min: 1400, max: 3600 }; // crickets + owls at night
+    if (!a) return;
+    ambTimer = setTimeout(function () { if (!muted) a.fn(); scheduleAmb(); }, a.min + Math.random() * (a.max - a.min));
+  }
+
+  // ---- sequencer (steady, bouncy) --------------------------------------
+  function scheduler() {
+    if (!ctx || !cfgCur) return;
+    var spb = 60 / cfgCur.bpm, eighth = spb / 2;
+    while (nextTime < ctx.currentTime + 0.15) { stepFn(step, nextTime, spb, eighth); nextTime += eighth; step++; }
+  }
+  function stepFn(s, t, spb, eighth) {
+    if (muted) return;
+    var cfg = cfgCur, per = 8, pos = s % per;
+    var bar = Math.floor(s / per);
+    var deg = cfg.prog[bar % cfg.prog.length];
+    var tonic = cfg.tonic;
+    var ch = cfg.power ? [tonic, tonic + 7, tonic + 12] : triad(tonic, deg); // power chords for boss
+    var pent = cfg.pent || PENTA;
+    var isBoss = cfg.power || cfg.heavyBass;
+    // 8-bar form: phrases of 4 bars, alternating A/B "sections", with the LEAD
+    // resting on the last bar of each phrase so the tune breathes (call &
+    // response) instead of looping the same hook relentlessly = far less tiring.
+    var phraseBar = bar % 4;
+    var sectionB = (Math.floor(bar / 4) % 2) === 1;
+    var restBar = !isBoss && phraseBar === 3;
+    // bass: pounding every eighth for the boss, else bouncy root/fifth
+    if (cfg.heavyBass) bass(bassRoot(tonic, deg), t, eighth * 0.95, 0.18);
+    else if (pos % 2 === 0) bass(bassRoot(tonic, deg), t, spb * 0.42, 0.14);
+    else if (!restBar || pos === 1) bass(bassRoot(tonic, deg) + 7, t, spb * 0.3, 0.09);
+    // chord stabs on the offbeats (oom-PAH) — thin them on rest bars for air
+    if ((pos === 2 || pos === 6) && !(restBar && pos === 6)) ch.forEach(function (m) { blip(m + 12, t, eighth * 0.8, "triangle", isBoss ? 0.05 : 0.038, isBoss ? 2400 : 1800); });
+    // sparkle bells — sparser (every other bar) so they don't tinkle constantly
+    if (cfg.bells && (bar % 2 === 0) && (pos === 0 || pos === 4)) blip(penta(tonic + 12, s, pent) + 12, t, eighth * 1.3, "triangle", 0.034, 3000);
+    // lead melody — a hummable HOOK, but with breathing space + an octave lift
+    // in the B section and gently humanised velocity so it never feels robotic.
+    var hook = cfg.hook || (isBoss ? HOOK_BOSS : HOOK);
+    var hi = ((s % hook.length) + hook.length) % hook.length;
+    var note = hook[hi];
+    var leadVol = (cfg.bells ? 0.028 : 0.05);  // a touch softer overall
+    var oct = (sectionB && !isBoss) ? 24 : 12;  // B section sings an octave higher
+    if (restBar) {
+      if (pos === 0 && note != null) blip(penta(tonic, note, pent) + 12, t, eighth * 1.5, cfg.lead, leadVol * 0.65, 2400); // lone tail note
+    } else if (note != null) {
+      var longNote = (hi % 8 === 0);
+      var vel = leadVol * (0.82 + Math.random() * 0.32); // humanised dynamics
+      blip(penta(tonic, note, pent) + oct, t, eighth * (longNote ? 1.7 : 0.92), cfg.lead, vel, 2600);
+    } else if (Math.random() < cfg.density * 0.22) {
+      var nxt = hook[(hi + 1) % hook.length]; if (nxt == null) nxt = 2;
+      blip(penta(tonic, nxt, pent) + oct, t, eighth * 0.55, cfg.lead, leadVol * 0.5, 2400);
+    }
+  }
+
+  function clearSchedule() {
+    if (schedTimer) { clearInterval(schedTimer); schedTimer = null; }
+    if (gullTimer) { clearTimeout(gullTimer); gullTimer = null; }
+    if (ambTimer) { clearTimeout(ambTimer); ambTimer = null; }
+    var now = ctx ? ctx.currentTime : 0;
+    voices.forEach(function (v) {
+      try {
+        v.gain.gain.cancelScheduledValues(now);
+        v.gain.gain.setValueAtTime(v.gain.gain.value, now);
+        v.gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        v.nodes.forEach(function (n) { try { n.stop(now + 0.6); } catch (e) {} });
+      } catch (e) {}
+    });
+    voices = [];
+  }
+
+  var curNight = false;
+  function startTrack(id, night) {
+    if (!ensure()) return;
+    night = !!night;
+    if (mode === id && curNight === night) return;
+    mode = id; curNight = night;
+    var base = TRACKS[id] || TRACKS.menu;
+    // at night, play a slower, mellower version of the area's track
+    cfgCur = night ? { tonic: base.tonic - 0, bpm: Math.round(base.bpm * 0.78), density: base.density * 0.8,
+                       lead: base.lead, bells: base.bells, waves: base.waves, prog: base.prog,
+                       pent: base.pent, hook: base.hook, power: base.power, heavyBass: base.heavyBass }
+                    : base;
+    clearSchedule();
+    step = 0; melIdx = 4; nextTime = ctx.currentTime + 0.12;
+    if (cfgCur.waves) { startWaves(); scheduleGulls(); }
+    scheduleAmb();
+    schedTimer = setInterval(scheduler, 25);
+  }
+
+  window.AUDIO = {
+    init: function (m) { muted = !!m; ensure(); },
+    resume: function () { if (ensure() && ctx.state === "suspended") ctx.resume(); },
+    setMuted: function (m) { muted = !!m; if (master) master.gain.linearRampToValueAtTime(muted ? 0 : 0.22, (ctx ? ctx.currentTime : 0) + 0.2); },
+    setMusicMuted: function (m) { musicMuted = !!m; if (musicBus) musicBus.gain.linearRampToValueAtTime(musicMuted ? 0 : 1, (ctx ? ctx.currentTime : 0) + 0.2); },
+    setSfxMuted: function (m) { sfxMuted = !!m; if (sfxBus) sfxBus.gain.linearRampToValueAtTime(sfxMuted ? 0 : 1, (ctx ? ctx.currentTime : 0) + 0.2); },
+    isMusicMuted: function () { return musicMuted; },
+    isSfxMuted: function () { return sfxMuted; },
+    toggleMute: function () { this.setMuted(!muted); return muted; },
+    isMuted: function () { return muted; },
+    playArea: function (a, night) { this.resume(); startTrack(a, night); },
+    playMenu: function (night) { this.resume(); startTrack("menu", night); },
+    playBoss: function () { this.resume(); startTrack("boss"); },
+    playBlob: function () { this.resume(); startTrack("blob"); },
+    stopAll: function () { clearSchedule(); cfgCur = null; mode = null; },
+    // deep rumbling tremor for the Kraken's arrival
+    rumble: function () {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(85, t); o.frequency.exponentialRampToValueAtTime(26, t + 2);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55, t + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+      o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 2.5);
+      var src = ctx.createBufferSource(); src.buffer = noiseBuffer();
+      var lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 110;
+      var ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.4, t + 0.2); ng.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+      src.connect(lp); lp.connect(ng); ng.connect(sfxBus); src.start(t); src.stop(t + 2.5);
+    },
+    ui: function (kind) {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime;
+      var base = kind === "buy" ? 74 : kind === "back" ? 62 : 69;
+      blip(base, t, 0.1, "triangle", 0.06, 2600);
+      if (kind === "buy") blip(base + 7, t + 0.05, 0.12, "triangle", 0.05, 2800);
+    },
+    // Sonar Radar ping — pitch rises as you get "hotter" (closer to a wreck)
+    sonar: function (closeness) {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime;
+      var midi = 64 + Math.round(Math.max(0, Math.min(1, closeness)) * 22); // cold→warm pitch
+      blip(midi, t, 0.09, "sine", 0.05, 2600);
+    },
+    // homing-torpedo proximity beep — higher & sharper the closer it is
+    torpedoBeep: function (closeness) {
+      if (!ensure() || muted) return;
+      var t = ctx.currentTime, c = Math.max(0, Math.min(1, closeness));
+      blip(72 + Math.round(c * 18), t, 0.05, "square", 0.05 + c * 0.05, 3200);
+    },
+  };
+})();

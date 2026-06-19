@@ -1,0 +1,123 @@
+name: Build Android APK
+
+# Builds an installable debug APK for Deep Sea Diver.
+# Run it from the GitHub "Actions" tab (Run workflow), or it runs automatically
+# when the game changes. Download the APK from the run's "Artifacts" section.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/deep-sea-fishing-game-ihlwg7
+      - main
+    paths:
+      - "index.html"
+      - "css/**"
+      - "js/**"
+      - "scripts/**"
+      - "package.json"
+      - "capacitor.config.json"
+      - ".github/workflows/android.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install required Android SDK packages
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Copy web assets into www/
+        run: npm run build:web
+
+      - name: Add Android platform
+        run: npx --no-install cap add android
+
+      - name: Sync Capacitor
+        run: npx --no-install cap sync android
+
+      # Give every build a unique, increasing versionCode so Android installs
+      # it as an UPDATE over the previous version (no uninstall needed). The
+      # run number always increases; versionName stays human-readable.
+      - name: Set incrementing version
+        run: |
+          cd android/app
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" build.gradle
+          grep -E "versionCode|versionName" build.gradle
+
+      - name: Generate app icon & splash (Kraken)
+        run: npx --no-install @capacitor/assets generate --android --iconBackgroundColor '#0a1f38' --iconBackgroundColorDark '#0a1f38' --splashBackgroundColor '#0a1f38' --splashBackgroundColorDark '#04101d'
+
+      # Use a single, committed debug keystore for EVERY build so the APK's
+      # signature is stable. Without this, each build gets a random debug key
+      # and Android refuses to update over a previous install ("App not
+      # installed"). androiddebugkey / password "android" are the standard
+      # Android debug-signing defaults the generated project expects.
+      - name: Use stable debug signing key
+        run: |
+          mkdir -p ~/.android
+          cp android-signing/debug.keystore ~/.android/debug.keystore
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk deep-sea-diver.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deep-sea-diver-apk
+          path: deep-sea-diver.apk
+          if-no-files-found: error
+
+      # Publish the raw .apk as a Release asset so it can be downloaded and
+      # installed with a single tap on a phone (no unzipping needed). The
+      # "latest" link below always points at the newest build.
+      - name: Publish APK to a Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Deep Sea Diver v1.0.${{ github.run_number }}
+          make_latest: "true"
+          files: deep-sea-diver.apk
+          body: |
+            ## 📲 Install / update Deep Sea Diver on your phone
+
+            **Tap this link on your phone** to download and install:
+            👉 https://github.com/jgjfreney-ui/Fishh/releases/latest/download/deep-sea-diver.apk
+
+            It downloads the `deep-sea-diver.apk` file directly (no unzipping).
+            Tap the downloaded file, allow "install unknown apps" if asked, and
+            tap **Install** (or **Update** if you already have it). Your saved
+            progress is kept across updates.
+
+            Or just tap **deep-sea-diver.apk** in the Assets list below.

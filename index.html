@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#02060c" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Ocean of Discovery 🐙</title>
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="stage">
+    <canvas id="game"></canvas>
+
+    <!-- In-dive HUD -->
+    <div id="hud">
+      <div class="hud-block area">
+        <div class="hud-label">Dive Site</div>
+        <div id="area-name">—</div>
+      </div>
+      <div class="hud-block ox">
+        <div class="hud-label">Oxygen <span id="ox-text">—</span></div>
+        <div class="ox-bar"><div id="ox-fill"></div></div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Depth</div>
+        <div id="depth-text">0m</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Inventory</div>
+        <div id="cargo-text">0 / 0</div>
+      </div>
+      <div class="hud-block">
+        <div class="hud-label">Money</div>
+        <div id="money-text">$0</div>
+      </div>
+    </div>
+
+    <button id="btn-return">⬆ Surface</button>
+    <button id="btn-harpoon">🔱 Throw Harpoon</button>
+    <button id="btn-breath">🔵 Kaiju Breath</button>
+    <button id="btn-cloak">🦑 Cuttle Cloak</button>
+    <button id="btn-seed">🌾 Scatter Seed</button>
+    <button id="btn-vent">💨 Vent Air</button>
+    <button id="btn-trap">🪤 Deploy Net</button>
+    <button id="btn-sling">🪃 Slingshot</button>
+    <button id="btn-storm">⚡ Summon Storm</button>
+    <button id="btn-enter-secret">🌀 Enter Secret Location</button>
+    <button id="surface-hint">⬆ Tap to climb aboard the boat</button>
+
+    <!-- Aquarium controls -->
+    <div id="aqua-ui">
+      <div class="aqua-row aqua-top">
+        <button id="aqua-prev">◀</button>
+        <div id="aqua-title">Tank</div>
+        <button id="aqua-next">▶</button>
+        <button id="aqua-close">✕ Exit</button>
+      </div>
+      <div class="aqua-row aqua-actions">
+        <button id="aqua-focus">🔍 Close-up</button>
+        <button id="aqua-swim">🤿 Swim</button>
+        <button id="aqua-daynight">🌙 Night</button>
+        <button id="aqua-list">📖 List</button>
+      </div>
+      <div class="aqua-row">
+        <button id="aqua-upgrade" style="flex:1">⬆ Upgrade Enclosure</button>
+      </div>
+    </div>
+
+
+    <!-- Overlays -->
+    <div id="modal" class="overlay"></div>
+    <div id="shop" class="overlay"></div>
+
+    <div id="toasts"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
