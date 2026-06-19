@@ -242,8 +242,8 @@
     { id: "seabass",    name: "Sea Bass",    area: "coral", rarity: "common",   size: 1, value: 26,  minDepth: 20,  color: "#8fa6b0", shape: "perch" },
     { id: "angelfish",  name: "Angelfish",   area: "coral", rarity: "uncommon", size: 1, value: 70,  minDepth: 40,  color: "#ffd84a", shape: "tang" },
     { id: "parrotfish", name: "Parrotfish",  area: "coral", rarity: "uncommon", size: 2, value: 95,  minDepth: 60,  color: "#36d6a0", shape: "parrotfish" },
-    { id: "pufferfish", name: "Pufferfish",  area: "coral", rarity: "uncommon", size: 2, value: 110, minDepth: 80,  color: "#c8d24a", shape: "puffer" },
-    { id: "lionfish",   name: "Lionfish",    area: "coral", rarity: "rare",     size: 2, value: 240, minDepth: 120, color: "#e0533a", shape: "lionfish" },
+    { id: "pufferfish", name: "Pufferfish",  area: "coral", rarity: "uncommon", size: 2, value: 110, minDepth: 80,  color: "#c8d24a", shape: "puffer", venom: true },
+    { id: "lionfish",   name: "Lionfish",    area: "coral", rarity: "rare",     size: 2, value: 240, minDepth: 120, color: "#e0533a", shape: "lionfish", venom: true },
     { id: "seaturtle",  name: "Sea Turtle",  area: "coral", rarity: "rare",     size: 3, value: 320, minDepth: 100, color: "#4f9e5e", shape: "turtle" },
     { id: "reefshark",  name: "Reef Shark",  area: "coral", rarity: "epic",     size: 4, value: 900, minDepth: 180, color: "#7d93a3", shape: "shark" },
 
@@ -266,7 +266,7 @@
     { id: "lanternfish", name: "Lanternfish",  area: "trench", rarity: "common",   size: 1, value: 40,   minDepth: 100, color: "#7fa0c0", shape: "lantern" },
     { id: "hatchetfish", name: "Hatchetfish",  area: "trench", rarity: "uncommon", size: 1, value: 120,  minDepth: 200, color: "#cfd6e0", shape: "hatchetfish" },
     { id: "anglerfish",  name: "Anglerfish",   area: "trench", rarity: "uncommon", size: 2, value: 160,  minDepth: 300, color: "#283b2f", shape: "angler" },
-    { id: "viperfish",   name: "Viperfish",    area: "trench", rarity: "rare",     size: 2, value: 380,  minDepth: 400, color: "#3a4a55", shape: "eel" },
+    { id: "viperfish",   name: "Viperfish",    area: "trench", rarity: "rare",     size: 2, value: 380,  minDepth: 400, color: "#3a4a55", shape: "eel", venom: true },
     { id: "gulpereel",   name: "Gulper Eel",   area: "trench", rarity: "rare",     size: 3, value: 460,  minDepth: 500, color: "#241f33", shape: "glowworm" },
     { id: "frilledshark",name: "Frilled Shark",area: "trench", rarity: "epic",     size: 5, value: 1500, minDepth: 600, color: "#4a3f4f", shape: "helicoprion" },
     { id: "colossalsquid",name:"Colossal Squid",area:"trench", rarity: "legendary",size: 7, value: 4200, minDepth: 800, color: "#b03c5a", shape: "squid" },
@@ -333,7 +333,7 @@
     { id: "sailfish",   name: "Sailfish",      area: "river", rarity: "mythic", size: 4, value: 5800, minDepth: 30, color: "#3a6fb0", accent: "#7affd0", shape: "sword", secret: true,
       hint: "The fastest fish in the sea — it only races into view when YOU are moving at full speed (max fins help!).",
       condition: { fast: true } },
-    { id: "stonefish",  name: "Stonefish",     area: "kelp", rarity: "mythic", size: 2, value: 4800, minDepth: 80, color: "#7a6a4a", accent: "#e0533a", shape: "round", secret: true,
+    { id: "stonefish",  name: "Stonefish",     area: "kelp", rarity: "mythic", size: 2, value: 4800, minDepth: 80, color: "#7a6a4a", accent: "#e0533a", shape: "round", secret: true, venom: true,
       hint: "A master of disguise — hold perfectly STILL on the seabed and it may reveal itself.",
       condition: { still: true } },
     { id: "goldenkoi",  name: "Golden Koi",    area: "coral",     rarity: "mythic", size: 2, value: 2600, minDepth: 0,   color: "#ffd54a", accent: "#fff3b0", shape: "koi",  secret: true,
@@ -467,7 +467,7 @@
 
     // ======== Prism Reef (colourful) ========
     { id: "mandarinfish", name: "Mandarinfish", area: "prism", rarity: "common",   size: 1, value: 200, minDepth: 0,   color: "#2a8ac0", accent: "#ff9a3a", shape: "fish" },
-    { id: "fuchsialion", name: "Fuchsia Lionfish", area: "prism", rarity: "rare", size: 2, value: 620, minDepth: 40, color: "#ff3ac0", accent: "#7afcff", shape: "lionfish" },
+    { id: "fuchsialion", name: "Fuchsia Lionfish", area: "prism", rarity: "rare", size: 2, value: 620, minDepth: 40, color: "#ff3ac0", accent: "#7afcff", shape: "lionfish", venom: true },
     { id: "neonclown",  name: "Neon Clownfish", area: "prism", rarity: "uncommon", size: 1, value: 280, minDepth: 0,  color: "#ff5b9f", accent: "#5bffd0", shape: "clownfish" },
     { id: "neontetra",  name: "Neon Tetra",   area: "prism", rarity: "common",   size: 1, value: 160, minDepth: 0,   color: "#2fd0e0", accent: "#ff3a6a", shape: "guppy" },
     { id: "royalgramma",name: "Royal Gramma", area: "prism", rarity: "uncommon", size: 1, value: 280, minDepth: 20,  color: "#9a3ad0", accent: "#ffe14d", shape: "tang" },
@@ -485,7 +485,7 @@
     // the secret camouflaged cuttlefish
     { id: "cuttlefish", name: "Mimic Cuttlefish", area: "prism", rarity: "mythic", size: 2, value: 6500, minDepth: 0, color: "#8a6aa0", accent: "#5bf0ff", trim: "#ff5bd0", shape: "cuttlefish", secret: true, camo: true,
       hint: "A master of disguise that melts into the reef — watch for the faint shimmer that doesn't match the coral.", condition: {} },
-    { id: "kingcuttle", name: "The Vanishing King", area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 26000, minDepth: 150, color: "#8a5ad0", accent: "#ff7ad0", camo: true, shape: "kingcuttle", hp: 5, reward: "" },
+    { id: "kingcuttle", name: "The Vanishing King", area: "prism", areaBoss: true, rarity: "mythic", size: 12, value: 26000, minDepth: 150, color: "#8a5ad0", accent: "#ff7ad0", camo: true, shape: "kingcuttle", hp: 5, reward: "cuttlecloak" },
 
     // ======== Sunken Grove (forest) ========
     { id: "grovefish",  name: "Grovefish",    area: "forest", rarity: "common",   size: 1, value: 60,  minDepth: 0,   color: "#6cae4a", shape: "goby" },
@@ -495,7 +495,7 @@
     { id: "willoweel",  name: "Willow Eel",   area: "forest", rarity: "rare",     size: 3, value: 480, minDepth: 180, color: "#3a6a3a", shape: "eel" },
     { id: "ancientcarp",name: "Ancient Carp", area: "forest", rarity: "epic",     size: 5, value: 1500,minDepth: 300, color: "#8a9a4a", shape: "fish" },
     { id: "elkeel",     name: "Elk Eel",       area: "forest", rarity: "rare",     size: 3, value: 880, minDepth: 120, color: "#5a7a3a", accent: "#caa15a", shape: "antlereel" },
-    { id: "coconutpuffer", name: "Coconut Puffer", area: "forest", legendary: true, rarity: "epic", size: 2, value: 4000, minDepth: 0, color: "#8a5a2a", accent: "#cfe0a0", trim: "#fff3b0", shape: "puffer" },
+    { id: "coconutpuffer", name: "Coconut Puffer", area: "forest", legendary: true, rarity: "epic", size: 2, value: 4000, minDepth: 0, color: "#8a5a2a", accent: "#cfe0a0", trim: "#fff3b0", shape: "puffer", venom: true },
     { id: "dappletrout",name: "Dapple Trout", area: "forest", rarity: "common",   size: 2, value: 120, minDepth: 20,  color: "#7aa84a", accent: "#d8e0a0", shape: "trout" },
     { id: "rootperch",  name: "Root Perch",   area: "forest", rarity: "uncommon", size: 2, value: 200, minDepth: 60,  color: "#5a7a3a", accent: "#caa15a", shape: "perch" },
     { id: "bramblemack",name: "Bramble Mackerel", area: "forest", rarity: "uncommon", size: 2, value: 260, minDepth: 100, color: "#4a8a5a", accent: "#bfe0a0", shape: "mackerel" },
@@ -773,6 +773,8 @@
     { id: "junglesnail", name: "Apple Snail", area: "jungle", creature: true, rarity: "common", size: 1, value: 160, color: "#caa15a", accent: "#3aa83a", shape: "snail" },
     { id: "toucanbird", name: "Toucan",       area: "jungle", bird: true, rarity: "uncommon", size: 2, value: 480, color: "#1a1a1a", accent: "#ff7a1a", shape: "macaw", seedCost: 700 },
     { id: "junglestork", name: "Jabiru Stork", area: "jungle", bird: true, rarity: "common", size: 2, value: 320, color: "#eef2f7", accent: "#e23b5a", shape: "heron", seedCost: 500 },
+    { id: "treefrog",  name: "Red-Eyed Tree Frog", area: "jungle", rarity: "rare", size: 1, value: 1400, minDepth: 0, surface: true, color: "#3ac24a", accent: "#ff3a3a", trim: "#ffa83a", shape: "treefrog" },
+    { id: "dartfrog",  name: "Golden Poison Dart Frog", area: "jungle", legendary: true, venom: true, rarity: "mythic", size: 1, value: 8800, minDepth: 0, surface: true, color: "#ffe11a", accent: "#1a1a1a", trim: "#ffcf3a", shape: "dartfrog" },
     { id: "junglearapaima", name: "The Arapaima", area: "jungle", areaBoss: true, rarity: "mythic", size: 14, value: 36000, minDepth: 200, color: "#5a6a3a", accent: "#e25a4a", trim: "#caa15a", shape: "arapaima", hp: 7, reward: "" },
 
     // ======== Luxury catchables (one per site; rarest of all, need a MAXED aquarium) ========
@@ -816,7 +818,7 @@
     { id: "voidsnail",  name: "Void Snail",    area: "alien", creature: true, rarity: "common", size: 1, value: 480, color: "#3a2a6a", accent: "#bf9aff", shape: "snail", glow: true },
     { id: "starflyer",  name: "Star Flyer",    area: "alien", bird: true, rarity: "uncommon", size: 2, value: 1100, color: "#bfeaff", accent: "#ffcf3a", shape: "seabird", seedCost: 1500 },
     { id: "moonmoth",   name: "Moon Moth",     area: "alien", bird: true, rarity: "common", size: 1, value: 700, color: "#9f7bff", accent: "#fff3b0", shape: "finch", seedCost: 1000 },
-    { id: "alienoverlord", name: "The Overlord", area: "alien", areaBoss: true, rarity: "mythic", size: 14, value: 90000, minDepth: 200, color: "#7a3ad0", accent: "#3affd0", trim: "#ffcf3a", shape: "xenoboss", hp: 9, reward: "" },
+    { id: "alienoverlord", name: "The Xenofish", area: "alien", areaBoss: true, rarity: "mythic", size: 14, value: 90000, minDepth: 200, color: "#3a4a3a", accent: "#9fffba", trim: "#1a1a1a", shape: "xenofish", hp: 9, reward: "", jawLunge: true, venom: true },
 
     // ======== Birds (fly above the surface; lured with seeds) — 2 per area ========
     { id: "seagull",   name: "Seagull",      area: "coral", bird: true, rarity: "common",   size: 1, value: 45,  color: "#eef3f7", shape: "bird", seedCost: 200 },
@@ -1125,6 +1127,17 @@
         { cost: 6000,  value: 1.6 },
         { cost: 16800, value: 2.3 },
         { cost: 40800, value: 3.2 },
+      ],
+    },
+    gloves: {
+      name: "Venom-Proof Gloves",
+      desc: "Reinforced gloves that blunt the sting of venomous sea life (lionfish, puffers, snakes...). Each upgrade takes less poison damage — fully maxed, venom can't touch you at all.",
+      unit: "venom",
+      levels: [
+        { cost: 0,     value: 1.0 },  // bare hands — full poison
+        { cost: 5200,  value: 0.66 },
+        { cost: 14800, value: 0.33 },
+        { cost: 38000, value: 0.0 },  // immune
       ],
     },
   };

@@ -21,7 +21,7 @@
       created: Date.now(),
       username: "Diver",
       money: 0,
-      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0, knife: 0 },
+      upgrades: { oxygen: 0, fins: 0, net: 0, reel: 0, inventory: 0, suit: 0, light: 0, scoop: 0, trap: 0, hammer: 0, shovel: 0, sling: 0, knife: 0, gloves: 0 },
       charms: { rarity: 0, shiny: 0 },
       areas: { coral: true, river: false, kelp: false, arctic: false, desert: false, ancient: false, opensea: false, trench: false,
                prism: false, forest: false, swamp: false, boneyard: false, storm: false, ashen: false, mountain: false, olympus: false, pirate: false, backrooms: false, japan: false, secretcave: false,
@@ -98,6 +98,19 @@
   // ---------------------------------------------------------------------
   function up(track) { return D.UPGRADES[track].levels[state.upgrades[track]].value; }
   function maxOxygen() { return up("oxygen"); }
+  // --- venom & Cuttle Cloak tuning ---
+  var POISON_DPS = 7;          // O2 drained per second while venom courses through you
+  var POISON_TIME = 5;         // a venom sting lasts 5 seconds
+  var CLOAK_DUR = 9;           // seconds of invisibility per use
+  var CLOAK_CD = 95;           // large cooldown before you can cloak again
+  function glovesMul() { return (state.upgrades.gloves != null) ? up("gloves") : 1; } // Venom-Proof Gloves blunt poison (0 = immune)
+  function isCloaked() { return !!(run && run.cloakActive > 0); }
+  function poisonDiver() { // apply a venom sting (no-op if your gloves make you immune)
+    if (glovesMul() <= 0) return;
+    var fresh = !(run.poison > 0);
+    run.poison = POISON_TIME;
+    if (fresh) toast("☠️ Venom! Your oxygen is draining — surface or tough it out.", "bad", 1800);
+  }
   function speed() { return up("fins"); }
   function catchRadius() { return up("net") + (itemOn("krakenlimbs") ? 70 : 0); } // Kraken's Limbs reach further out
   // a boss-reward item only applies if owned AND not toggled off
@@ -105,7 +118,7 @@
   // Night-Vision Goggles active: night reads as day
   function nightVisionOn() { return !!(run && run.night && state.items.goggles && state.nightVision); }
   // the boss-reward gear that can be toggled on/off
-  var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown", "nullzone", "krakenlimbs"];
+  var BOSS_ITEMS = ["necklace", "jellystinger", "megtooth", "sonar", "rocfeather", "crabcrown", "nullzone", "krakenlimbs", "cuttlecloak"];
   function anyBossItemOn() { for (var i = 0; i < BOSS_ITEMS.length; i++) if (itemOn(BOSS_ITEMS[i])) return true; return false; }
   function creatureValueMult() { return itemOn("crabcrown") ? 2 : 1; } // Spider Crab Crown = creatures worth ×2
   function reelMul() { return up("reel"); }
@@ -177,6 +190,8 @@
       bellUsed: false,
       grab: null, bossBeam: null,  // boss combat state
       playerBeam: null, breathCd: 0, // Kaiju Breath
+      poison: 0,                     // venom timer (seconds of O2 drain)
+      cloakActive: 0, cloakCd: 0,    // Cuttle Cloak invisibility + cooldown
       smoke: [], smokeTimer: 0, wyrmTimer: 6, // ashen smoke + magma wyrm
       legendTimer: 35 + Math.random() * 35,   // defeated bosses return as legendary catches
       aimX: 1, aimY: 0,                        // last steering direction (torch/breath aim)
@@ -333,13 +348,22 @@
     var bigType = { coral: "bigcoral", river: "reed", kelp: "bigkelp", trench: "spire", sanctuary: "starcoral", arctic: "bigcrystal", ancient: "fossil", opensea: "boulder", cave: "stalagmite", cloud: "skyisle", forest: "tree", swamp: "mangrove", boneyard: "bones", backrooms: "pillar", japan: "blossom", secretcave: "mushroom", oilrig: "pipe", prism: "fan", storm: "piling", pirate: "mast", ashen: "lavavent", mountain: "crag", olympus: "column", flooded: "container", desert: "dune", grotto: "obelisk", jungle: "tree", alien: "bigcrystal" }[loc.id] || "bigkelp";
     var bcount = loc.airArea ? Math.round(loc.worldWidth / 420) : Math.round(loc.worldWidth / 190);
     for (var bi = 0; bi < bcount; bi++) {
+      var fh = 160 + Math.random() * 320;
+      var emergent = false;
+      // flooded jungle: ~45% of trees are old-growth GIANTS, tall enough to
+      // burst up through the surface and tower into the sky above the water
+      if (loc.id === "jungle" && Math.random() < 0.45) {
+        fh = floorY + 140 + Math.random() * 320;
+        emergent = true;
+      }
       run.bgFlora.push({
         type: bigType,
         x: Math.random() * loc.worldWidth,
-        h: 160 + Math.random() * 320,
-        w: 0.8 + Math.random() * 1.1,
+        h: fh,
+        emergent: emergent,
+        w: (emergent ? 1.4 : 0.8) + Math.random() * 1.1,
         sway: Math.random() * 6.28,
-        parallax: 0.62 + Math.random() * 0.12,
+        parallax: emergent ? 0.78 + Math.random() * 0.08 : 0.62 + Math.random() * 0.12,
         color: mix(d.plantColors[(Math.random() * d.plantColors.length) | 0], loc.deepColor, 0.45),
       });
     }
@@ -403,21 +427,25 @@
         ctx.fillStyle = mix(fl.color, "#ffffff", 0.4);
         ctx.fillRect(Math.round(x - 3), Math.round(floorScreenY - fl.h + 10), 4, Math.round(fl.h - 14));
       } else if (fl.type === "tree") {
-        // submerged old-growth tree: brown trunk + leafy green canopy that sways
-        ctx.globalAlpha = 0.6;
+        // submerged old-growth tree: brown trunk + leafy green canopy that sways.
+        // "emergent giants" punch up through the surface — brighter, fuller canopy.
+        var emer = fl.emergent;
+        ctx.globalAlpha = emer ? 0.92 : 0.6;
         var topY = floorScreenY - fl.h, sway = Math.sin(run.time * 0.5 + fl.sway) * 8;
-        ctx.fillStyle = mix(fl.color, "#2a1c10", 0.7); // trunk
-        var tw = 10 * fl.w;
-        ctx.fillRect(Math.round(x - tw / 2), Math.round(topY + fl.h * 0.32), Math.round(tw), Math.round(fl.h * 0.68));
-        // a couple of boughs
-        ctx.fillRect(Math.round(x - 22 * fl.w), Math.round(topY + fl.h * 0.4), Math.round(22 * fl.w), 5);
-        ctx.fillRect(Math.round(x + sway), Math.round(topY + fl.h * 0.5), Math.round(20 * fl.w), 5);
-        // leafy canopy — overlapping green blobs
-        ctx.fillStyle = fl.color;
-        for (var cb = 0; cb < 6; cb++) {
-          var bx = x + sway + Math.sin(cb * 1.7 + fl.sway) * 30 * fl.w;
-          var by = topY + (cb % 3) * 16 + Math.cos(cb * 1.3) * 8;
-          ctx.beginPath(); ctx.arc(bx, by, 24 * fl.w, 0, 7); ctx.fill();
+        ctx.fillStyle = mix(fl.color, "#2a1c10", emer ? 0.78 : 0.7); // trunk
+        var tw = (emer ? 16 : 10) * fl.w;
+        ctx.fillRect(Math.round(x - tw / 2), Math.round(topY + fl.h * 0.18), Math.round(tw), Math.round(fl.h * 0.82));
+        // boughs along the trunk
+        ctx.fillRect(Math.round(x - 22 * fl.w), Math.round(topY + fl.h * 0.32), Math.round(22 * fl.w), emer ? 7 : 5);
+        ctx.fillRect(Math.round(x + sway), Math.round(topY + fl.h * 0.42), Math.round(20 * fl.w), emer ? 7 : 5);
+        // leafy canopy — overlapping green blobs (lusher & brighter on giants)
+        var canopy = emer ? mix(fl.color, "#6cd24a", 0.5) : fl.color;
+        var blobs = emer ? 9 : 6, br = (emer ? 30 : 24) * fl.w;
+        for (var cb = 0; cb < blobs; cb++) {
+          var bx = x + sway + Math.sin(cb * 1.7 + fl.sway) * (emer ? 40 : 30) * fl.w;
+          var by = topY + (cb % 3) * (emer ? 22 : 16) + Math.cos(cb * 1.3) * 8;
+          ctx.fillStyle = cb % 3 === 0 ? mix(canopy, "#ffffff", 0.18) : canopy;
+          ctx.beginPath(); ctx.arc(bx, by, br, 0, 7); ctx.fill();
         }
       } else if (fl.type === "bones") {
         // a giant ribcage rising from the seabed
@@ -761,6 +789,9 @@
     if (pool.length === 0) return;
 
     var def = pool[(Math.random() * pool.length) | 0];
+
+    // surface dwellers (tree frogs, dart frogs) bob around the very top of the water
+    if (def.surface) { spawnYpx = 18 + Math.random() * 64; }
 
     var shiny = Math.random() < shinyChance(run.area);
 
@@ -1276,6 +1307,22 @@
       }
     } else {
       run.oxygen = run.maxO; // refill at surface
+      run.poison = 0;        // surfacing flushes the venom out
+    }
+
+    // --- venom: while poisoned your O2 bleeds away (Venom-Proof Gloves blunt it) ---
+    if (run.poison > 0) {
+      if (diver.y > 26) {
+        run.oxygen -= POISON_DPS * glovesMul() * dt;
+        if (Math.random() < 0.55) run.bubbles.push({ x: diver.x + (Math.random() - 0.5) * 12, y: diver.y - 4, r: 2 + Math.random() * 3, vy: 45, life: 1, venom: true });
+      }
+      run.poison -= dt;
+    }
+    // --- Cuttle Cloak: invisibility ticks down; large cooldown recharges ---
+    if (run.cloakCd > 0) run.cloakCd -= dt;
+    if (run.cloakActive > 0) {
+      run.cloakActive -= dt;
+      if (run.cloakActive <= 0) toast("Your Cuttle Cloak shimmers off — you're visible again.", "good", 1600);
     }
 
     // --- bubbles from diver (no bubbles up in the open sky) ---
@@ -1412,9 +1459,13 @@
       if (full && !canGrab && !f.isBoss && dist < mRange) {
         if (run.time - (run.fullHint || -99) > 5) { run.fullHint = run.time; toast("Inventory full! Surface to sell.", "bad", 1500); }
       }
+      // venomous fish (lionfish, puffers, dart frogs...) sting on close contact,
+      // poisoning you for a few seconds of draining oxygen (Venom-Proof Gloves help)
+      if (f.def.venom && !f.isBoss && dist < 24 + f.size * 4) poisonDiver();
       // skittish secrets (e.g. the White Squid) bolt away when you near them —
-      // you have to CHASE and corner them for the magnet to grab
-      if (f.def.skittish && dist < 360) {
+      // you have to CHASE and corner them for the magnet to grab. The Cuttle
+      // Cloak makes you unspottable, so they stop fleeing while you're invisible.
+      if (f.def.skittish && dist < 360 && !isCloaked()) {
         f.fleeing = 0.6;
         f.vx = (-dx / dist) * 110;          // dart away horizontally
         f.baseY += (-dy / dist) * 90 * dt;  // and vertically
@@ -1944,6 +1995,7 @@
       if (!f.def.grabber || f.isBoss) continue;
       if (f.hp == null) f.hp = f.def.hp || 2;
       if (f.grabCd > 0) { f.grabCd -= dt; continue; }
+      if (isCloaked()) continue; // Cuttle Cloak: reptiles can't spot you
       var dd = Math.hypot(f.x - diver.x, f.y - diver.y);
       if (dd < 240) { var ax = diver.x - f.x, ay = diver.y - f.y, l = Math.hypot(ax, ay) || 1; f.vx = (ax / l) * 90; f.baseY = clamp(f.baseY + (ay / l) * 60 * dt, 30, D.LOCATIONS[run.area].maxDepth * PXPM - 10); }
       if (dd < 30 + f.size * 2 && !run.grab) {
@@ -1963,7 +2015,7 @@
 
     if (boss.mode === "roam") {
       boss.atkT -= dt;
-      if (boss.atkT <= 0 && !run.grab) {
+      if (boss.atkT <= 0 && !run.grab && !isCloaked()) {  // Cuttle Cloak: bosses lose track of you
         if (boss.def.torpedoes && Math.random() < 0.55) startTorpedo(boss);
         else if (boss.def.backrocks && Math.random() < 0.6) spitBackRocks(boss, diver);
         else if (boss.def.fireballs && Math.random() < 0.6) spitFireballs(boss, diver);
@@ -2024,6 +2076,7 @@
   function startGrab(boss) {
     run.grab = { boss: boss, wig: 0 }; boss.mode = "grab"; boss.modeT = 4.0;
     toast("GRABBED! Wiggle the joystick to break free! 🌀", "bad", 2000);
+    if (boss.def.venom) poisonDiver(); // the Xenofish's inner jaw injects venom
     if (window.AUDIO) AUDIO.rumble();
   }
   // the Magma Kaiju hurls fire-rocks up out of its back; they arc down onto you
@@ -2197,6 +2250,17 @@
     boss.mode = "roam"; boss.atkT = (boss.def.aggressive ? 1.0 : 2.3) + Math.random() * (boss.def.aggressive ? 1.2 : 2.4); run.bossBeam = null;
   }
 
+  // Cuttle Cloak: vanish for a short while — fish, reptiles and bosses lose track
+  // of you. Long cooldown so it's a clutch escape, not a crutch.
+  function activateCloak() {
+    if (!itemOn("cuttlecloak")) return;
+    if (run.cloakActive > 0) return;
+    if (run.cloakCd > 0) { toast("Cuttle Cloak still recharging — " + Math.ceil(run.cloakCd) + "s", "bad", 1200); return; }
+    run.cloakActive = CLOAK_DUR; run.cloakCd = CLOAK_CD;
+    toast("🦑 You melt into the water — invisible!", "good", 1800);
+    if (window.AUDIO) AUDIO.rumble();
+  }
+
   // Kaiju Breath: fire a blue beam in your facing/aim direction that bags fish
   function fireBreath() {
     if (!state.items.kaijubreath || run.breathCd > 0) return;
@@ -2303,6 +2367,7 @@
     else if (def.reward === "rocfeather") state.items.rocfeather = true;
     else if (def.reward === "crabcrown") state.items.crabcrown = true;
     else if (def.reward === "kaijubreath") state.items.kaijubreath = true;
+    else if (def.reward === "cuttlecloak") state.items.cuttlecloak = true;
     run.bossPresent = false;
     saveGame();
     setTimeout(function () { showAreaBossEnding(def, pay); }, 700);
@@ -3526,6 +3591,14 @@
       ctx.restore();
       return;
     }
+    // Cuttle Cloak: shimmer almost-invisible while the cloak is active
+    if (isCloaked()) {
+      ctx.save();
+      ctx.globalAlpha = 0.2 + 0.06 * Math.sin(run.time * 6);
+      drawDiverPixel(ctx, x, y, 3, run.diver.face < 0 ? -1 : 1, state.diver, kick);
+      ctx.restore();
+      return;
+    }
     drawDiverPixel(ctx, x, y, 3, run.diver.face < 0 ? -1 : 1, state.diver, kick);
   }
 
@@ -4046,6 +4119,13 @@
       brb.style.display = (!atTop && state.items.kaijubreath) ? "block" : "none";
       brb.textContent = run.breathCd > 0 ? "🔵 (" + Math.ceil(run.breathCd) + ")" : "🔵 Breath";
     }
+    // Cuttle Cloak button (own the cloak + submerged)
+    var clb = document.getElementById("btn-cloak");
+    if (clb) {
+      clb.style.display = (!atTop && itemOn("cuttlecloak")) ? "block" : "none";
+      clb.textContent = run.cloakActive > 0 ? "🦑 (" + Math.ceil(run.cloakActive) + ")"
+        : run.cloakCd > 0 ? "🦑 ⏳" + Math.ceil(run.cloakCd) : "🦑 Cloak";
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -4164,7 +4244,7 @@
     state.charms = { rarity: D.CHARMS.rarity.maxStack, shiny: D.CHARMS.shiny.maxStack };
     ["torch", "divingbell", "heatsuit", "coldsuit", "stormsummoner", "goggles", "shinyPocket", "stopwatch",
      "serpenteye", "necklace", "megtooth", "jellystinger", "sonar", "rocfeather", "crabcrown", "kaijubreath",
-     "nullzone", "krakenlimbs", "cagekey"].forEach(function (k) { state.items[k] = true; });
+     "nullzone", "krakenlimbs", "cuttlecloak", "cagekey"].forEach(function (k) { state.items[k] = true; });
     ["pink", "orange", "gold", "neon", "void", "rainbow"].forEach(function (id) { state.diverUnlocks[id] = true; });
     state.money = 9999999;
     state.jewels = { red: true, blue: true, green: true, yellow: true };
@@ -4365,6 +4445,8 @@
     if (esb) esb.style.display = "none";
     var brb = document.getElementById("btn-breath");
     if (brb) brb.style.display = "none";
+    var clb = document.getElementById("btn-cloak");
+    if (clb) clb.style.display = "none";
     if (run) run.venting = false;
     document.getElementById("btn-return").style.display = show ? "block" : "none";
   }
@@ -5624,6 +5706,7 @@
     { id: "serpenteye",   name: "Eye of the Serpent",  effect: "Golden coin chests wash up in every dive site.", reward: "serpenteye", toggle: false },
     { id: "nullzone",     name: "Null Zone",           effect: "Swim off the RIGHT edge of the world and reappear on the LEFT (and vice versa).", reward: "nullzone", toggle: true },
     { id: "krakenlimbs",  name: "Kraken's Limbs",      effect: "Reaching tentacles grab fish from well outside your normal catch radius.", reward: "krakenlimbs", toggle: true },
+    { id: "cuttlecloak",  name: "Cuttle Cloak",        effect: "Tap 🦑 in a dive to vanish for a few seconds — skittish fish, aggressive hunters and even bosses lose track of you. Long cooldown.", reward: "cuttlecloak", toggle: true },
   ];
   function bossForReward(rk) {
     for (var i = 0; i < D.FISH.length; i++) if (D.FISH[i].reward === rk && (D.FISH[i].areaBoss || D.FISH[i].secretBoss)) return D.FISH[i];
@@ -5854,6 +5937,9 @@
     // kaiju-breath button (beam that vacuums up fish)
     var brb = document.getElementById("btn-breath");
     if (brb) brb.addEventListener("click", function () { if (scene === "dive" && run) fireBreath(); });
+    // cuttle-cloak button (go invisible)
+    var clb = document.getElementById("btn-cloak");
+    if (clb) clb.addEventListener("click", function () { if (scene === "dive" && run) activateCloak(); });
     // storm-summoner button (lightning strike / open Olympus at the peak)
     var stb = document.getElementById("btn-storm");
     if (stb) stb.addEventListener("click", function () { if (scene === "dive" && run) summonStorm(); });

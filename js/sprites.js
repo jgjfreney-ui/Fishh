@@ -1033,6 +1033,38 @@
       "fffbBBBBBb...",
       ".....bBBb....",
     ],
+    // Red-eyed tree frog — bright green, huge red eyes, orange toes
+    treefrog: [
+      ".AEPA....AEPA.",
+      ".bBBBb..bBBBb.",
+      "bBBBBBBBBBBBBb",
+      "bBLLLLLLLLLLBb",
+      ".bBBBBBBBBBBb.",
+      ".A.A....A.A...",
+    ],
+    // Golden poison dart frog — vivid yellow with bold black blotches
+    dartfrog: [
+      "..bEPb..bEPb..",
+      ".bBBBBBBBBBBb.",
+      "bBAABBBBBBAABb",
+      "bBBLLLLLLLLBBb",
+      "bBBBAABBAABBBb",
+      ".bBBBBBBBBBBb.",
+      ".A..A..A..A...",
+    ],
+    // The Xenofish — a xenomorph of the deep: long smooth biomech skull,
+    // a second inner jaw that extends, dripping venom-green slime
+    xenofish: [
+      "................bBBBBb",
+      "..............bBBBBBBb",
+      "Fb...........bBBBBBBBb",
+      "FFb.......bBBBBBBBBLLB",
+      "FFFbBBBBBBBBBBBBBBMWMW",
+      "FFFbBBLLLLLLLLLBBBGWMW",
+      ".FFbBBBBBBBBBBBBBBLLB.",
+      "..AbBGBBGBBGBBGBb.....",
+      "...AA..AA..AA..A......",
+    ],
     // Magma Kaiju — a volcanic colossus with rocky back-spikes & lava cracks
     magmakaiju: [
       "......A.A.A.A.......",
@@ -1855,7 +1887,7 @@
     celestserp: "celestserp", rivergiant: "rivergiant", frostwyrm: "wyrm", ancientlev: "ancientlev",
     wyrm: "wyrm", cavewyrm: "wyrm", goblin: "goblin", kingcuttle: "kingcuttle", torpedo: "torpedo", mechakaiju: "mechakaiju",
     dunkle: "dunkle", assfish: "assfish", gharial: "gharial", cobra: "cobra", grouper: "grouper", antlereel: "antlereel",
-    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish", magmakaiju: "magmakaiju", frog: "frog", bigfrog: "bigfrog", tadpole: "tadpole", xenoboss: "xenoboss",
+    chairsnail: "chairsnail", tableturtle: "tableturtle", lampsquid: "lampsquid", captaincarp: "captaincarp", firedragon: "firedragon", arapaima: "arapaima", ecatfish: "ecatfish", magmakaiju: "magmakaiju", frog: "frog", bigfrog: "bigfrog", tadpole: "tadpole", xenoboss: "xenoboss", treefrog: "treefrog", dartfrog: "dartfrog", xenofish: "xenofish",
     manta: "manta", mola: "mola", whaleshark: "whaleshark", giantsquid: "giantsquid", sturgeon: "sturgeon",
     helicoprion: "helicoprion", ichthyosaur: "ichthyosaur", seaspider: "seaspider", flyingfish: "flyingfish",
     mahimahi: "mahimahi", butterflyfish: "butterflyfish", moorishidol: "moorishidol",
