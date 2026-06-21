@@ -946,7 +946,15 @@
     "pike", "sturgeon",                  // River Run
     "giantsquid", "sunfish",             // Kelp Forest
     "greenlandshark", "narwhal",         // Arctic Shelf
+    "dustray", "duneshark",              // Buried Dunes
+    "whaleshark", "bluewhale",           // Open Sea
     "megalodon", "mosasaur",             // Fossil Abyss
+    "rainbowparrot", "harlequin",        // Prism Reef
+    "ancientcarp", "willoweel",          // Tidal Grove
+    "swampgator", "mudcat",              // Mangrove Swamp
+    "wraithwhale", "marrowshark",        // The Boneyard
+    "stormwhale", "maelshark",           // Stormy Seas
+    "summitwhale", "cragshark",          // Sunlit Peaks
     "anglerfish", "frilledshark", "greatwhite", // Final Trench (final)
   ];
 

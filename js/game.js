@@ -5786,6 +5786,7 @@
     if (bossHtml) html += bossHtml;
     if (state.items.stopwatch) html += row("⏱️ Tide Stopwatch", "pick day or night");
     if (state.items.shinyPocket) html += row("✨ Shiny Pocket", "grab shinies when full");
+    if (state.items.wideGoggles) html += row("🔭 Wide-View Goggles", "panoramic field of view");
     if (state.items.goggles) {
       html += row("🥽 Night-Vision Goggles", "see further");
       html += '<div class="stat-row"><span>🌙 Night vision · night = day</span>'
