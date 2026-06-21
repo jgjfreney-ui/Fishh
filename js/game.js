@@ -66,7 +66,7 @@
 
   function listSaves() {
     var out = [];
-    for (var i = 1; i <= 6; i++) {
+    for (var i = 1; i <= 10; i++) {
       var raw = null;
       try { raw = localStorage.getItem(SAVE_PREFIX + i); } catch (e) {}
       if (raw) {
@@ -1381,7 +1381,7 @@
       // roll) instead of appearing every single time you meet its condition
       if (state.discovered[sf.id]) {
         if (!run.secretRoll) run.secretRoll = {};
-        if (run.secretRoll[sf.id] === undefined) run.secretRoll[sf.id] = Math.random() < 0.2;
+        if (run.secretRoll[sf.id] === undefined) run.secretRoll[sf.id] = Math.random() < 0.55;
         if (!run.secretRoll[sf.id]) { run.secretShown[sf.id] = true; continue; }
       }
       if (secretConditionMet(sf, depthM)) {
@@ -3257,7 +3257,7 @@
 
   function drawLighting(loc, darkness) {
     var dx = run.diver.x - cam.x, dy = run.diver.y - cam.y;
-    var gog = state.items.goggles ? 260 : 0;      // goggles substantially widen your view
+    var gog = (state.items.goggles ? 260 : 0) + (state.items.wideGoggles ? 180 : 0);
     // FOV grows with each Dive Light upgrade level (and again with goggles)
     var fov = lightRadius() * 1.5 + gog;
     // caves are dim but you can always see a wide area (never pitch black)
@@ -4042,7 +4042,7 @@
   function drawFishLabels() {
     ctx.textAlign = "center";
     ctx.font = "11px 'Segoe UI', sans-serif";
-    var range = state.items.goggles ? 460 : 220; // Wide-View Goggles see further
+    var range = (state.items.goggles ? 460 : 220) + (state.items.wideGoggles ? 200 : 0);
     for (var i = 0; i < run.fish.length; i++) {
       var f = run.fish[i];
       var dist = Math.hypot(f.x - run.diver.x, f.y - run.diver.y);
@@ -4244,7 +4244,7 @@
     state.blobfishCaught = state.blobfishShiny = true;
     for (var u in D.UPGRADES) state.upgrades[u] = D.UPGRADES[u].levels.length - 1;
     state.charms = { rarity: D.CHARMS.rarity.maxStack, shiny: D.CHARMS.shiny.maxStack };
-    ["torch", "divingbell", "heatsuit", "coldsuit", "stormsummoner", "goggles", "shinyPocket", "stopwatch",
+    ["torch", "divingbell", "heatsuit", "coldsuit", "stormsummoner", "goggles", "wideGoggles", "shinyPocket", "stopwatch",
      "serpenteye", "necklace", "megtooth", "jellystinger", "sonar", "rocfeather", "crabcrown", "kaijubreath",
      "nullzone", "krakenlimbs", "cuttlecloak", "cagekey"].forEach(function (k) { state.items[k] = true; });
     ["pink", "orange", "gold", "neon", "void", "rainbow"].forEach(function (id) { state.diverUnlocks[id] = true; });
@@ -4334,7 +4334,7 @@
         html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything</b> caught. You\'re at ' + Object.keys(state.discovered).length + '... keep going!</div>';
       }
     } else if (state.blobfishCaught && !state.areas.sanctuary) {
-      html += '<div class="kraken-alert">✦ Every boss is beaten! The <b>Starlight Sanctuary</b> can now be unlocked ($90k) — <b>every</b> creature gathers there, with sky-high shiny odds. 🗺️</div>';
+      html += '<div class="kraken-alert">✦ Every boss is beaten! The <b>Starlight Sanctuary</b> can now be unlocked ($50k) — <b>every</b> creature gathers there, with sky-high shiny odds. 🗺️</div>';
     }
     html += '</div>';
     ov.innerHTML = html;
@@ -5368,7 +5368,14 @@
         + '<div class="area-info"><b style="color:' + tint + ';">' + loc.name + '</b>'
         + '<p>' + loc.blurb + '</p>'
         + '<small>Max depth ' + loc.maxDepth + 'm' + (loc.shinyBonus ? ' · ✦ Shiny haven' : '')
-        + (loc.cold ? ' · 🧊 Cold Suit recommended' : '') + (loc.hot ? ' · 🔥 Heat Suit recommended' : '') + '</small></div>'
+        + (loc.cold ? ' · 🧊 Cold Suit recommended' : '') + (loc.hot ? ' · 🔥 Heat Suit recommended' : '') + '</small>'
+        + (function() {
+            var reqHere = D.REQUIRED_FISH.filter(function(rid){ var rf = D.FISH_BY_ID[rid]; return rf && rf.area === id; });
+            if (!reqHere.length) return '';
+            var bits = reqHere.map(function(rid){ var rf = D.FISH_BY_ID[rid]; var got = state.discovered[rid]; return '<span class="req-fish ' + (got?'got':'need') + '">' + (got?'✓ ':'○ ') + rf.name + '</span>'; });
+            return '<div class="req-list"><b>Kraken-required:</b> ' + bits.join(' ') + '</div>';
+          })()
+        + '</div>'
         + '<div class="area-act">'
         + (unlocked
             ? '<button data-go="' + id + '"' + goStyle + '>Dive Here</button>'
@@ -5520,7 +5527,10 @@
   // ---------------------------------------------------------------------
   //  Helpers
   // ---------------------------------------------------------------------
-  function bind(id, fn) { var el = document.getElementById(id); if (el) el.onclick = fn; }
+  function bind(id, fn) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("click", function(e) { if (window.AUDIO) AUDIO.ui("back"); fn(e); });
+  }
 
   // simple text-input modal (used for usernames)
   function askText(title, def, cb) {

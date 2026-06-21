@@ -49,8 +49,8 @@ html, body {
   flex-wrap: wrap;
 }
 .hud-block {
-  background: rgba(6, 22, 36, 0.2);
-  border: 1px solid rgba(120, 200, 255, 0.14);
+  background: rgba(6, 22, 36, 0.12);
+  border: 1px solid rgba(120, 200, 255, 0.10);
   border-radius: 12px;
   padding: 8px 14px;
   backdrop-filter: blur(4px);
@@ -64,8 +64,8 @@ html, body {
   bottom: calc(24px + env(safe-area-inset-bottom)); left: 14px;
   display: none;
   z-index: 8;
-  background: rgba(60, 50, 20, 0.55);
-  border: 1px solid rgba(255, 220, 130, 0.45);
+  background: rgba(60, 50, 20, 0.41);
+  border: 1px solid rgba(255, 220, 130, 0.34);
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
   border-radius: 22px;
@@ -96,8 +96,8 @@ html, body {
   bottom: calc(132px + env(safe-area-inset-bottom)); right: 14px;
   display: none;
   z-index: 8;
-  background: rgba(20, 40, 70, 0.62);
-  border: 1px solid rgba(120, 200, 255, 0.6);
+  background: rgba(20, 40, 70, 0.47);
+  border: 1px solid rgba(120, 200, 255, 0.45);
   backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
   border-radius: 22px;
   padding: 10px 16px;
@@ -109,8 +109,8 @@ html, body {
   bottom: calc(78px + env(safe-area-inset-bottom)); left: 14px;
   display: none;
   z-index: 8;
-  background: rgba(30, 50, 30, 0.6);
-  border: 1px solid rgba(150, 230, 150, 0.5);
+  background: rgba(30, 50, 30, 0.45);
+  border: 1px solid rgba(150, 230, 150, 0.38);
   backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
   border-radius: 22px;
   padding: 10px 16px;
@@ -160,8 +160,8 @@ html, body {
   bottom: calc(132px + env(safe-area-inset-bottom)); left: 14px;
   display: none;
   z-index: 8;
-  background: rgba(50, 40, 24, 0.6);
-  border: 1px solid rgba(220, 190, 120, 0.5);
+  background: rgba(50, 40, 24, 0.45);
+  border: 1px solid rgba(220, 190, 120, 0.38);
   backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
   border-radius: 22px;
   padding: 10px 16px;
@@ -194,8 +194,8 @@ html, body {
   bottom: calc(78px + env(safe-area-inset-bottom)); right: 14px;
   display: none;
   z-index: 8;
-  background: rgba(70, 20, 20, 0.6);
-  border: 1px solid rgba(255, 130, 120, 0.5);
+  background: rgba(70, 20, 20, 0.45);
+  border: 1px solid rgba(255, 130, 120, 0.38);
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
   border-radius: 22px;
@@ -209,8 +209,8 @@ html, body {
   bottom: calc(24px + env(safe-area-inset-bottom)); right: 14px;
   display: none;
   z-index: 8;
-  background: rgba(10, 40, 60, 0.5);
-  border: 1px solid rgba(160, 230, 255, 0.4);
+  background: rgba(10, 40, 60, 0.35);
+  border: 1px solid rgba(160, 230, 255, 0.28);
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
   border-radius: 22px;
@@ -650,3 +650,9 @@ button.big { padding: 16px; font-size: 16px; font-weight: 600; }
   .hud-block { padding: 4px 8px; }
   #surface-hint { bottom: calc(12px + env(safe-area-inset-bottom)); padding: 12px 22px; }
 }
+
+/* Required fish tracker on area cards */
+.req-list { margin-top: 4px; font-size: 11px; line-height: 1.7; }
+.req-fish { display: inline-block; margin: 1px 4px 1px 0; padding: 1px 6px; border-radius: 10px; background: rgba(255, 178, 46, 0.12); border: 1px solid rgba(255, 178, 46, 0.3); }
+.req-fish.got { background: rgba(74, 216, 138, 0.15); border-color: rgba(74, 216, 138, 0.4); color: #4ad88a; }
+.req-fish.need { color: #ffb22e; }

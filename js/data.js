@@ -223,9 +223,9 @@
     },
     sanctuary: {
       id: "sanctuary", name: "Starlight Sanctuary", tint: "#b07bff",
-      blurb: "A post-game paradise where EVERY creature in the sea gathers — and shinies bloom like stars.",
+      blurb: "A post-game paradise where EVERY creature in the sea gathers — and shinies bloom like stars. Unlock after catching the Kraken for $50k.",
       maxDepth: 900, worldWidth: 2600, topColor: "#5a3ea8", deepColor: "#0a0226",
-      shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 900000,
+      shinyBonus: 0.25, starfield: true, allContent: true, unlocked: false, cost: 50000,
       requireBosses: true, // only buyable once the Kraken & blobfish are both caught
       sky: { top: "#160b32", bottom: "#3a2a6a", night: true },
     },
@@ -354,6 +354,23 @@
     { id: "rivergiant", name: "River Leviathan", area: "river", rarity: "mythic", size: 8, value: 11000, minDepth: 90, color: "#2f6a4a", accent: "#9fe0a0", trim: "#ffd24a", shape: "rivergiant", secret: true,
       hint: "An enormous serpent said to lurk in the deepest river pools (below 90m).",
       condition: { minDepth: 90 } },
+
+    // ---- Secret fish for areas that lacked them ----
+    // Secret fish for Buried Dunes
+    { id: "sandghost", name: "Sand Ghost Ray", area: "desert", rarity: "mythic", size: 5, value: 7500, minDepth: 200, color: "#f0e8c8", accent: "#cfe0ff", trim: "#8a7a5a", shape: "ray", secret: true,
+      hint: "A pale, translucent ray that buries itself in the deep sand — it only emerges for a diver who holds PERFECTLY STILL near the seafloor (below 200m).", condition: { still: true, minDepth: 200 } },
+    // Secret fish for Boneyard
+    { id: "boneleviathan", name: "Bone Leviathan", area: "boneyard", rarity: "mythic", size: 10, value: 11000, minDepth: 500, color: "#f0ece0", accent: "#c8c0b0", trim: "#9f8aff", shape: "deeplev", secret: true,
+      hint: "An ancient skeleton-serpent haunts the very deepest bones (below 500m) — only appears in the gravest depths.", condition: { minDepth: 500 } },
+    // Secret fish for Stormy Seas
+    { id: "stormcaller", name: "Storm Caller", area: "storm", rarity: "mythic", size: 7, value: 9000, minDepth: 100, color: "#1a2a4a", accent: "#7afcff", trim: "#ff8be0", shape: "dragonfish", secret: true, glow: true,
+      hint: "A crackling electric dragonfish that only emerges when something swims in wild CIRCLES — mimic the chaos of the storm to summon it.", condition: { circle: true } },
+    // Secret fish for Sunlit Peaks
+    { id: "glacierserpent", name: "Glacier Serpent", area: "mountain", rarity: "mythic", size: 8, value: 10000, minDepth: 350, color: "#cdeeff", accent: "#ffffff", trim: "#6fdfff", shape: "frostwyrm", secret: true,
+      hint: "A crystal-white serpent said to sleep in the glacial deep (below 350m) — approach with absolute stillness.", condition: { still: true, minDepth: 350 } },
+    // Secret fish for Oil Rig
+    { id: "phantombot", name: "Phantom Bot", area: "oilrig", rarity: "mythic", size: 4, value: 8500, minDepth: 0, color: "#6a8a9a", accent: "#3ad0ff", trim: "#ff5b3a", shape: "cctv", secret: true, glow: true,
+      hint: "A derelict robot that reactivated and drifted off — it only powers back on for the fastest diver. Move at MAXIMUM SPEED to trigger it.", condition: { fast: true } },
 
     // ---- The "Kraken" fake-out + the true Kraken ----
     { id: "blobfish",   name: "Blobfish",     area: "trench", rarity: "legendary", size: 6, value: 50, minDepth: 800, color: "#e0909e", shape: "blob",
@@ -525,6 +542,11 @@
     { id: "wraithwhale",name: "Wraith Whale", area: "boneyard", rarity: "legendary",size: 9, value: 6500, minDepth: 600, color: "#cfd6dc", shape: "wraithwhale" },
     { id: "bonecrab",   name: "Bone Crab",    area: "boneyard", creature: true, rarity: "uncommon", size: 2, value: 280, color: "#ded6c2", shape: "crab" },
     { id: "skeletonshark", name: "Skeleton Shark", area: "boneyard", areaBoss: true, rarity: "mythic", size: 13, value: 22000, minDepth: 300, color: "#f2eede", accent: "#cfc6b0", shape: "skeletonshark", hp: 5, reward: "" },
+    { id: "boneskate", name: "Skeletal Skate", area: "boneyard", rarity: "uncommon", size: 2, value: 340, minDepth: 60, color: "#e0dcd0", accent: "#cfc6b0", shape: "ray" },
+    { id: "spectraleel", name: "Spectral Eel", area: "boneyard", rarity: "rare", size: 3, value: 580, minDepth: 180, color: "#d8d4c8", accent: "#9fd0ff", shape: "eel" },
+    { id: "dustcod", name: "Dust Cod", area: "boneyard", rarity: "common", size: 1, value: 120, minDepth: 0, color: "#e8e0cc", accent: "#a09880", shape: "codfish" },
+    { id: "ghostlobster", name: "Ghost Lobster", area: "boneyard", creature: true, rarity: "rare", size: 2, value: 500, color: "#e0dcd4", accent: "#cfc6b8", shape: "lobster" },
+    { id: "bonegull", name: "Bone Gull", area: "boneyard", bird: true, rarity: "uncommon", size: 1, value: 400, color: "#e0dcd4", accent: "#cfc6b8", shape: "gull", seedCost: 800 },
 
     // ======== Stormy Seas ========
     { id: "stormjack", name: "Storm Jack",    area: "storm", rarity: "common",   size: 2, value: 180, minDepth: 0,   color: "#5a6a7a", accent: "#cfe0ff", shape: "longfish" },
@@ -538,6 +560,11 @@
     { id: "stormpetrel2", name: "Storm Albatross", area: "storm", bird: true, rarity: "rare", size: 3, value: 700, color: "#3a4452", accent: "#dfeaff", shape: "seabird", seedCost: 1200 },
     { id: "stormgull", name: "Squall Gull",   area: "storm", bird: true, night: true, rarity: "uncommon", size: 2, value: 360, color: "#5a6470", accent: "#cfe0ff", shape: "gull", seedCost: 700 },
     { id: "leviathanking", name: "The Leviathan King", area: "storm", areaBoss: true, rarity: "mythic", size: 14, value: 34000, minDepth: 250, color: "#2a3a5a", accent: "#9fd0ff", shape: "leviathanking", hp: 6, reward: "" },
+    { id: "squallkoi", name: "Squall Koi", area: "storm", rarity: "uncommon", size: 2, value: 340, minDepth: 0, color: "#5a7a9a", accent: "#9fd0ff", shape: "koi" },
+    { id: "thundermanta", name: "Thunder Manta", area: "storm", rarity: "epic", size: 5, value: 2200, minDepth: 200, color: "#3a4a6a", accent: "#7afcff", shape: "manta" },
+    { id: "wavesardine", name: "Wave Sardine", area: "storm", rarity: "common", size: 1, value: 160, minDepth: 0, color: "#6a8aaa", accent: "#cfe0ff", shape: "sardine" },
+    { id: "stormurchin", name: "Storm Urchin", area: "storm", creature: true, rarity: "uncommon", size: 1, value: 300, color: "#3a4a5a", accent: "#9fd0ff", shape: "urchin" },
+    { id: "thunderbird", name: "Thunderbird", area: "storm", bird: true, rarity: "rare", size: 2, value: 650, color: "#2a3a5a", accent: "#7afcff", shape: "raptor", seedCost: 1100 },
 
     // ======== Sunlit Peaks (rocky mountain) ========
     { id: "ridgeperch", name: "Ridge Perch",  area: "mountain", rarity: "common",   size: 1, value: 170, minDepth: 0,   color: "#6a7a8a", accent: "#cfe0ee", shape: "perch" },
@@ -784,6 +811,8 @@
     { id: "secretcavelux", name: "Diamond Fish", area: "secretcave", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 85266, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "ray" },
     { id: "kelplux", name: "Crystal Forest", area: "kelp", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 93500, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "ray" },
     { id: "arcticlux", name: "Platinum Fish", area: "arctic", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 66666, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "ray" },
+    { id: "sunphantom", name: "Sun Phantom", area: "desert", rarity: "epic", size: 4, value: 1800, minDepth: 180, color: "#e0c868", accent: "#fff3b0", shape: "ghostray" },
+    { id: "dungeoneel", name: "Dungeon Eel", area: "desert", rarity: "rare", size: 3, value: 680, minDepth: 120, color: "#c8a060", accent: "#8a6a3a", shape: "eel" },
     { id: "desertlux", name: "Opal Fish", area: "desert", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 79333, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "tang" },
     { id: "opensealux", name: "Sapphire Fish", area: "opensea", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 92000, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "tang" },
     { id: "ancientlux", name: "Golden Fish", area: "ancient", luxury: true, legendary: true, rarity: "mythic", size: 4, value: 115666, minDepth: 0, color: "#ffd24a", accent: "#fff3b0", trim: "#5bf0ff", shape: "tang" },
@@ -1154,13 +1183,13 @@
     shiny: {
       name: "Shiny Charm",
       desc: "Each charm slightly raises your chance of a shiny variant. Stacks — but each one costs more than the last!",
-      cost: 9000,
-      perStack: 0.004,  // +0.4% absolute shiny chance per charm
+      cost: 12000,
+      perStack: 0.002,  // +0.2% absolute shiny chance per charm
       maxStack: 40,
     },
   };
 
-  const BASE_SHINY_CHANCE = 0.0025; // 0.25% baseline (rarer — shinies are special)
+  const BASE_SHINY_CHANCE = 0.001; // 0.1% baseline (rarer — shinies are special)
   const SHINY_VALUE_MULT = 9;       // shinies sell for ~9x
 
   // One-time purchasable items
@@ -1169,6 +1198,11 @@
       name: "Night-Vision Goggles",
       desc: "Crystal-clear goggles — see much further underwater, AND a night-vision mode that turns night dives bright as day (toggle in your Items).",
       cost: 7500,
+    },
+    wideGoggles: {
+      name: "Wide-View Goggles",
+      desc: "Panoramic dive goggles — dramatically widen your field of view underwater and help you spot fish further away. Stacks with Night-Vision Goggles.",
+      cost: 15000,
     },
     shinyPocket: {
       name: "Shiny Pocket",
