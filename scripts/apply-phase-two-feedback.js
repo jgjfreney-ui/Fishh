@@ -30,5 +30,5 @@ if(changed){
   fs.writeFileSync(path,s);
   console.log('Applied Phase Two on-device feedback patch.');
 }else{
-  console.log('Phase Two feedback patch already applied.');
+  console.log('Phase Two diver and both net renderer handoffs are already applied.');
 }
