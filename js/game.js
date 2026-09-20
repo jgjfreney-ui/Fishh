@@ -1,5 +1,6 @@
 /* ===========================================================================
  * Deep Sea Diver — Engine & Game Logic
+ * RESTORATION-PASS-1: reliability/progression restoration fixes applied.
  * Plain script (no modules) so it runs by double-clicking index.html.
  * ======================================================================== */
 (function () {
@@ -17,7 +18,7 @@
 
   function defaultState() {
     return {
-      version: 2,
+      version: 3,
       created: Date.now(),
       username: "Diver",
       money: 0,
@@ -30,7 +31,7 @@
       davyjonesCaught: false,
       openseaClams: 0,       // clams dug in the Open Sea (15 summons the Leatherback)
       leatherbackCaught: false,
-      cargoSearched: 0,      // cargo ships fully stripped (5 opens the Flooded Freighter)
+      cargoSearched: 0,      // cargo ships fully stripped (3 opens the Flooded Freighter)
       jewels: {},            // red/blue/green/yellow gems collected (4 open the Ancient Grotto)
       ufoTreasures: 0,       // alien artifacts from crashed UFOs (100 opens the Xeno Planet)
       areaBossCaught: {}, // areaBoss id -> true
@@ -857,21 +858,29 @@
     for (var i = 0; i < D.REQUIRED_FISH.length; i++) if (state.discovered[D.REQUIRED_FISH[i]]) n++;
     return n;
   }
-  // TRUE 100% — EVERYTHING: every fish/creature/bird and every secret across
-  // every dive site, INCLUDING the hidden secret locations and all new content.
-  // (The Sanctuary itself is excluded only because it is unlocked AFTER the
-  // Kraken; you can't be asked to finish it first.)
-  function trueComplete() {
+  // TRUE 100% — EVERYTHING required by the real Kraken rule. Sanctuary is
+  // post-game, and bosses are encounters rather than collection prerequisites.
+  function completionProgressFor(profile) {
+    profile = profile || state || {};
+    var discovered = profile.discovered || {}, seen = {}, done = 0, total = 0;
+    function add(id) {
+      if (!id || seen[id]) return;
+      seen[id] = true; total++;
+      if (discovered[id]) done++;
+    }
     for (var i = 0; i < D.COMPLETION_FISH.length; i++) {
       var cf = D.FISH_BY_ID[D.COMPLETION_FISH[i]];
-      if (cf.area === "sanctuary") continue;
-      if (!state.discovered[cf.id]) return false;
+      if (cf && cf.area !== "sanctuary") add(cf.id);
     }
     for (var j = 0; j < D.FISH.length; j++) {
       var f = D.FISH[j];
-      if (f.secret && f.area !== "sanctuary" && !state.discovered[f.id]) return false;
+      if (f.secret && f.area !== "sanctuary") add(f.id);
     }
-    return true;
+    return { done: done, total: total };
+  }
+  function trueComplete() {
+    var p = completionProgressFor(state);
+    return p.total > 0 && p.done === p.total;
   }
   // every ordinary (non-secret/boss/creature/bird) fish in an area discovered?
   function areaFishComplete(area) {
@@ -902,7 +911,7 @@
       at: function (d, loc) { return d.x < 26 && d.y > loc.maxDepth * PXPM - 46; },
       guide: "Dive to the wreck-strewn far-LEFT floor of the Stormy Seas." },
   ];
-  // How to reach every hidden dive site (revealed by the $35k guide)
+  // How to reach every hidden dive site (individual purchasable hints)
   // Each hidden dive site has its OWN hint to buy. Early ones share a base
   // price; later-game sites cost more. `teaser` is shown before purchase (no
   // spoilers — it never names the hidden site); `how` is revealed after.
@@ -923,6 +932,10 @@
       how: "Own the <b>Storm Summoner</b>, climb to the tallest peak of the <b>Sunlit Peaks</b>, line up with its tip and summon a storm." },
     { area: "grotto",     requires: "desert", price: 30000, teaser: "Legends tell of four ancient jewels and a tomb sealed beneath the dunes.",
       how: "Collect the four jewels — RED in Prism Reef, BLUE in the Open Sea, GREEN in River Run, YELLOW in the Buried Dunes — then enter the pyramid that rises in the <b>Buried Dunes</b>." },
+    { area: "jungle",     requires: "forest", price: 24000, teaser: "Divers in the <b>Tidal Grove</b> keep finding coconut shells tangled in a wall of vines.",
+      how: "Catch <b>20 Coconut Puffers</b> in the Tidal Grove. On the twentieth catch, the vine wall parts and reveals the Emerald Jungle." },
+    { area: "alien",      requires: "opensea", price: 50000, teaser: "Salvagers swear some wreckage in the open ocean was never built on Earth.",
+      how: "Search wrecks for crashed <b>UFOs</b> and recover <b>100 alien artifacts</b>. The hundredth artifact opens the route to the Xeno Planet." },
   ];
   var pendingSecretEnter = null; // area id to dive into after this frame
   // hidden-area discovery checks, run every dive frame
@@ -1139,18 +1152,24 @@
   // ----- Touch joystick (floating: drag anywhere on the dive screen) -----
   var joy = { active: false, id: null, sx: 0, sy: 0, cx: 0, cy: 0, dx: 0, dy: 0, mag: 0 };
   var JOY_MAX = 60; // px to full tilt
+  var lastAquaFocusTouch = 0; // suppress synthetic click after a mobile tap
 
   function setupTouch() {
     canvas.addEventListener("touchstart", onTouchStart, { passive: false });
     canvas.addEventListener("touchmove", onTouchMove, { passive: false });
     canvas.addEventListener("touchend", onTouchEnd, { passive: false });
     canvas.addEventListener("touchcancel", onTouchEnd, { passive: false });
-    // desktop: click to flip through close-up specimens
-    canvas.addEventListener("click", function () { if (scene === "aquarium" && aqua && aqua.focus) aquaNav(1); });
+    // desktop: click to flip through close-up specimens. Mobile may synthesize
+    // a click after touchstart, so ignore it briefly after a real touch.
+    canvas.addEventListener("click", function () {
+      if (scene === "aquarium" && aqua && aqua.focus && Date.now() - lastAquaFocusTouch > 650) aquaNav(1);
+    });
   }
   function onTouchStart(e) {
     // in the aquarium close-up, tap anywhere to flip to the next specimen
-    if (scene === "aquarium" && aqua && aqua.focus) { e.preventDefault(); aquaNav(1); return; }
+    if (scene === "aquarium" && aqua && aqua.focus) {
+      e.preventDefault(); lastAquaFocusTouch = Date.now(); aquaNav(1); return;
+    }
     if (scene !== "dive" && !(scene === "aquarium" && aqua && aqua.diverActive)) return;
     if (joy.active) return;
     var t = e.changedTouches[0];
@@ -2473,11 +2492,12 @@
     // Night-Vision Goggles: with goggles + night vision toggled on, the night
     // reads as bright as day (no nocturnal gloom, full sun rays/caustics).
     var nvOn = nightVisionOn();
-    // the open sky never goes dark; the cavern is extra gloomy
+    // the open sky never goes dark; caves remain gloomy but must stay playable.
     var darkness = loc.airArea ? 0 : depthFactor(run.diver.y, loc);
-    // caves are moody-dark but never blinding (capped so you can always see to play)
-    if (loc.caveArea) darkness = Math.min(0.5, darkness * 0.5 + 0.25);
-    if (run.night && !nvOn) darkness = Math.min(0.95, darkness + (loc.airArea ? 0.3 : 0.4)); // nocturnal gloom
+    if (loc.caveArea) darkness = darkness * 0.5 + 0.25;
+    if (run.night && !nvOn) darkness += (loc.airArea ? 0.3 : 0.4); // nocturnal gloom
+    // IMPORTANT: clamp after all modifiers. The old order let night caves reach ~0.9.
+    darkness = Math.min(loc.caveArea ? 0.68 : 0.95, darkness);
 
     // --- background, lighting & scenery ---
     drawBackground(loc);
@@ -3258,33 +3278,38 @@
   function drawLighting(loc, darkness) {
     var dx = run.diver.x - cam.x, dy = run.diver.y - cam.y;
     var gog = (state.items.goggles ? 260 : 0) + (state.items.wideGoggles ? 180 : 0);
-    // FOV grows with each Dive Light upgrade level (and again with goggles)
+    // FOV grows with each Dive Light upgrade level (and again with goggles).
     var fov = lightRadius() * 1.5 + gog;
-    // caves are dim but you can always see a wide area (never pitch black)
+    // Caves are dim but always grant a broad minimum playable field of view.
     if (loc.caveArea) fov += 300;
-    // warm dive-light glow that grows useful as it gets darker (subtle, never blinding)
-    if (darkness > 0.2) {
-      drawGlow(dx, dy, 130 + fov, "#ffe7a8", Math.min(0.26, darkness * 0.3));
-    }
-    // depth darkness vignette with a clear hole around the diver
+
+    // Paint the depth vignette BEFORE lamps/glows so light actually cuts through it.
     if (darkness > 0.22) {
       var lr = 150 + fov;
       var rg = ctx.createRadialGradient(dx, dy, lr * 0.35, dx, dy, lr * 1.15);
-      var a = Math.min(0.86, (darkness - 0.22) * 1.5) * (state.items.goggles ? 0.72 : 1); // goggles also lighten the gloom
+      var a = Math.min(0.86, (darkness - 0.22) * 1.5) * (state.items.goggles ? 0.72 : 1);
       rg.addColorStop(0, "rgba(0,0,8,0)");
       rg.addColorStop(1, "rgba(0,0,10," + a + ")");
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, W, H);
     }
-    // Torch: a bright beam in the direction you steer — only lit at night
-    if (state.items.torch && run.night) {
+
+    // Warm dive-light halo is composited after darkness so upgrades remain useful.
+    if (darkness > 0.2) {
+      drawGlow(dx, dy, 130 + fov, "#ffe7a8", Math.min(0.30, darkness * 0.34));
+    }
+
+    // A cave can be dark in daytime. The old night-only condition made the
+    // purchased torch mysteriously stop working in Gloom/Hollow on every other dive.
+    var torchUseful = state.items.torch && (run.night || loc.caveArea || darkness > 0.35);
+    if (torchUseful) {
       var reach = 320, halfW = 130;
       var aim = Math.atan2(run.aimY || 0, run.aimX != null ? run.aimX : (run.diver.face < 0 ? -1 : 1));
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
       ctx.translate(dx, dy); ctx.rotate(aim);
       var lg = ctx.createLinearGradient(0, 0, reach, 0);
-      lg.addColorStop(0, "rgba(255,244,200,0.42)");
+      lg.addColorStop(0, "rgba(255,244,200,0.48)");
       lg.addColorStop(1, "rgba(255,244,200,0)");
       ctx.fillStyle = lg;
       ctx.beginPath();
@@ -3294,7 +3319,7 @@
       ctx.lineTo(reach, -halfW);
       ctx.closePath(); ctx.fill();
       ctx.restore();
-      drawGlow(dx + Math.cos(aim) * 18, dy + Math.sin(aim) * 18, 50, "#fff4c8", 0.5); // bright lamp at the source
+      drawGlow(dx + Math.cos(aim) * 18, dy + Math.sin(aim) * 18, 50, "#fff4c8", 0.55);
     }
   }
 
@@ -4182,8 +4207,9 @@
     saves.forEach(function (s) {
       if (s.data) {
         var d = s.data;
-        var caught = Object.keys(d.discovered || {}).length;
-        var total = D.COMPLETION_FISH.length;
+        var prog = completionProgressFor(d);
+        var caught = prog.done;
+        var total = prog.total;
         html += '<div class="slot filled">'
           + '<div class="slot-main"><b>' + (d.username || "Diver") + ' <span class="slot-num">· Slot ' + s.slot + '</span></b>'
           + '<span>$' + fmt(d.money) + ' · ' + caught + '/' + total + ' fish · ' + (d.stats ? d.stats.maxDepth : 0) + 'm deep</span></div>'
@@ -4250,7 +4276,7 @@
     ["pink", "orange", "gold", "neon", "void", "rainbow"].forEach(function (id) { state.diverUnlocks[id] = true; });
     state.money = 9999999;
     state.jewels = { red: true, blue: true, green: true, yellow: true };
-    state.keyPieces = 4; state.openseaClams = 15; state.cargoSearched = 5;
+    state.keyPieces = 4; state.openseaClams = 15; state.cargoSearched = 3;
     state.locHints = {}; SECRET_SITE_GUIDE.forEach(function (g) { state.locHints[g.area] = true; });
     state.nightVision = true;
   }
@@ -4258,20 +4284,30 @@
     if (name && name.trim().toLowerCase() === "devdev") { applyDevSave(); toast("🛠️ DEV SAVE — everything unlocked at 200%!", "epic", 3500); return true; }
     return false;
   }
+  function fillMissing(dst, defaults) {
+    if (!dst || typeof dst !== "object" || Array.isArray(dst)) dst = {};
+    for (var k in defaults) {
+      var dv = defaults[k], has = Object.prototype.hasOwnProperty.call(dst, k) && dst[k] != null;
+      if (!has) {
+        dst[k] = (dv && typeof dv === "object") ? JSON.parse(JSON.stringify(dv)) : dv;
+      } else if (dv && typeof dv === "object" && !Array.isArray(dv)) {
+        dst[k] = fillMissing(dst[k], dv);
+      }
+    }
+    return dst;
+  }
   function migrate(s) {
     var base = defaultState();
-    for (var k in base) if (!(k in s)) s[k] = base[k];
-    for (var u in base.upgrades) if (s.upgrades[u] == null) s.upgrades[u] = 0;
-    for (var a in base.areas) if (s.areas[a] == null) s.areas[a] = base.areas[a];
+    s = fillMissing(s || {}, base);
     // carry over the old one-time hammer/shovel items into the new upgrade tracks
     if (s.items) {
       if (s.items.sledgehammer && !s.upgrades.hammer) s.upgrades.hammer = 1;
       if (s.items.shovel && !s.upgrades.shovel) s.upgrades.shovel = 1;
     }
-    if (!s.stats) s.stats = base.stats;
-    if (!s.locHints) s.locHints = {};
     // anyone who'd bought the old all-in-one guide keeps every location hint
     if (s.secretGuide) { SECRET_SITE_GUIDE.forEach(function (g) { s.locHints[g.area] = true; }); }
+    // Version 3 denotes the restoration-safe nested save schema.
+    if (!s.version || s.version < 3) s.version = 3;
     return s;
   }
 
@@ -4288,6 +4324,7 @@
     var ov = overlay("modal");
     var bagCount = run ? run.bag.length : 0;
     var saleVal = run ? totalBagValue() : 0;
+    var completion = completionProgressFor(state);
     var html = '<div class="panel boat-panel">';
     html += '<h2>⛵ The Boat</h2>';
     html += '<div class="captain-line">Captain <b>' + (state.username || "Diver") + '</b> <button id="btn-rename" class="mini-btn">✏️</button></div>';
@@ -4331,7 +4368,7 @@
       } else if (requiredMet() && !state.blobfishCaught) {
         html += '<div class="kraken-alert">🦑 You\'ve caught every <b>required</b> fish... surely the Kraken awaits in the deep <b>Final Trench</b>? Dive and find out.</div>';
       } else if (state.blobfishCaught) {
-        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything</b> caught. You\'re at ' + Object.keys(state.discovered).length + '... keep going!</div>';
+        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of the pre-Sanctuary collection</b>. Progress: ' + completion.done + '/' + completion.total + '... keep going!</div>';
       }
     } else if (state.blobfishCaught && !state.areas.sanctuary) {
       html += '<div class="kraken-alert">✦ Every boss is beaten! The <b>Starlight Sanctuary</b> can now be unlocked ($50k) — <b>every</b> creature gathers there, with sky-high shiny odds. 🗺️</div>';
@@ -5409,6 +5446,7 @@
     var ov = overlay("shop");
     var s = state.stats;
     var disc = Object.keys(state.discovered).length;
+    var completion = completionProgressFor(state);
     var shiny = Object.keys(state.shinyFound).length;
     var treas = 0; for (var t in state.treasures) treas += state.treasures[t];
     var html = '<div class="panel shop-panel"><div class="panel-head"><h2>📊 Logbook</h2>'
@@ -5416,7 +5454,8 @@
       + '<div class="stats-list">'
       + statRow("Money", "$" + fmt(state.money))
       + statRow("Total earned", "$" + fmt(s.earned))
-      + statRow("Fish species found", disc + " / " + (D.FISH.length - 1))
+      + statRow("Kraken collection", completion.done + " / " + completion.total)
+      + statRow("All species discovered", disc)
       + statRow("Shiny species found", shiny + " ✦")
       + statRow("Total fish caught", fmt(s.totalCaught))
       + statRow("Treasures recovered", fmt(treas))

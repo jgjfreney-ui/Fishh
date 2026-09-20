@@ -199,10 +199,9 @@ exact(
   'boat completion snapshot'
 );
 
-exact(
-`        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything</b> caught. You\'re at ' + Object.keys(state.discovered).length + '... keep going!</div>';
-`,
-`        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of the pre-Sanctuary collection</b>. You\'re at ' + completion.done + '/' + completion.total + '... keep going!</div>';
+regex(
+/        html \+= '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything<\/b> caught\. You(?:\\)?'re at ' \+ Object\.keys\(state\.discovered\)\.length \+ '\.\.\. keep going!<\/div>';\n/,
+`        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of the pre-Sanctuary collection</b>. Progress: ' + completion.done + '/' + completion.total + '... keep going!</div>';
 `,
   'boat Kraken progress text'
 );
