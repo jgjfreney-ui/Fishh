@@ -1,7 +1,7 @@
 {
-  "name": "Ocean of Discovery",
-  "short_name": "Ocean",
-  "description": "A cozy deep-sea fishing & diving game.",
+  "name": "Deep Sea Diver: Recasted",
+  "short_name": "DSD Recasted",
+  "description": "A cozy deep-sea fishing & diving adventure, recast with richer creatures, bosses, treasures and living dive sites.",
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#02060c",
