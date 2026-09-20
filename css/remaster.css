@@ -35,9 +35,15 @@ button:active{transform:scale(.965)}
 .shiny,.shiny-name{filter:drop-shadow(0 0 6px rgba(255,234,118,.42))}
 .coll-secret{filter:drop-shadow(0 0 5px rgba(194,130,255,.25))}
 
+/* Brief location card when a new dive site is entered. */
+#remaster-area-card{position:absolute;left:50%;top:calc(82px + env(safe-area-inset-top));transform:translate(-50%,-10px);z-index:4;min-width:min(420px,82vw);max-width:min(560px,88vw);padding:10px 16px 11px;border-radius:15px;background:linear-gradient(180deg,rgba(5,22,36,.82),rgba(4,13,24,.64));border:1px solid rgba(140,220,255,.22);box-shadow:0 12px 32px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.04);text-align:center;pointer-events:none;opacity:0;transition:opacity .35s ease,transform .35s ease;backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+#remaster-area-card.show{opacity:1;transform:translate(-50%,0)}
+.rac-kicker{font-size:9px;font-weight:900;letter-spacing:.2em;color:#8fe7ff;margin-bottom:2px}.rac-name{font-size:19px;font-weight:900;color:#f3fbff;text-shadow:0 0 14px rgba(90,210,255,.22)}.rac-blurb{font-size:11px;line-height:1.38;color:rgba(225,241,249,.76);margin-top:3px}
+
 @media(max-width:720px){
   .hud-block{padding:6px 10px;border-radius:10px}
   .hud-block>div:last-child{font-size:17px}
   .remaster-title{font-size:18px}
   .update-banner,.remaster-banner{padding:13px}
+  #remaster-area-card{top:calc(72px + env(safe-area-inset-top));min-width:78vw;padding:8px 12px}.rac-name{font-size:16px}.rac-blurb{font-size:10px}
 }
