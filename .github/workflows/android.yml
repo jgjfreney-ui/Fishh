@@ -64,6 +64,7 @@ jobs:
           node --check js/remaster-ui.js
           node --check js/remaster-audio.js
           node --check js/remaster-foreground.js
+          node --check js/remaster-trap.js
           node scripts/restoration-audit.js
           node scripts/progression-reachability-v2.js
           npm install --no-save jsdom@24
