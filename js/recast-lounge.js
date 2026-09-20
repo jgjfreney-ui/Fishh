@@ -8,14 +8,31 @@
   function tracks(){return window.AUDIO&&AUDIO.recastTracks?AUDIO.recastTracks():[];}
   function meta(id){var a=tracks();for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null;}
 
+  function installStartButton(panel){
+    if(!panel||panel.querySelector('.recast-soundtrack-btn'))return;
+    var b=document.createElement('button');b.className='big recast-soundtrack-btn';b.type='button';b.textContent='🎵 Soundtrack Lounge';b.onclick=open;
+    var sub=panel.querySelector('.sub');
+    if(sub&&sub.nextSibling)panel.insertBefore(b,sub.nextSibling);else panel.appendChild(b);
+  }
+
+  function installBoatButton(panel){
+    if(!panel||panel.querySelector('.recast-soundtrack-btn'))return;
+    var grid=panel.querySelector('.boat-grid');if(!grid)return;
+    var b=document.createElement('button');b.className='big recast-soundtrack-btn';b.type='button';b.textContent='🎵 Soundtrack Lounge';b.onclick=open;grid.appendChild(b);
+  }
+
+  function enhancePanel(panel){
+    if(!panel||panel.nodeType!==1)return;
+    if(panel.matches&&panel.matches('.start-panel'))installStartButton(panel);
+    if(panel.matches&&panel.matches('.boat-panel'))installBoatButton(panel);
+  }
+
   function ensureButton(root){
     root=root||document;
-    var panels=root.querySelectorAll?root.querySelectorAll('.start-panel'):[];
-    for(var i=0;i<panels.length;i++){
-      var p=panels[i];if(p.querySelector('.recast-soundtrack-btn'))continue;
-      var b=document.createElement('button');b.className='big recast-soundtrack-btn';b.type='button';b.textContent='🎵 Soundtrack Lounge';b.onclick=open;
-      var sub=p.querySelector('.sub');if(sub&&sub.nextSibling)p.insertBefore(b,sub.nextSibling);else p.appendChild(b);
-    }
+    if(root.nodeType===1)enhancePanel(root); // MutationObserver hands us the panel itself.
+    if(!root.querySelectorAll)return;
+    var panels=root.querySelectorAll('.start-panel,.boat-panel');
+    for(var i=0;i<panels.length;i++)enhancePanel(panels[i]);
   }
 
   function groupName(cat){return cat==='Dive Site'?'DIVE SITES':cat==='Boss Theme'?'BOSS THEMES':cat==='Lounge'?'RECAST':cat==='Menu'?'RECAST':cat.toUpperCase();}
@@ -78,7 +95,11 @@
   addEventListener('keydown',function(e){if(e.key==='Escape'&&overlay)close();});
   addEventListener('recasttrackheard',function(){if(overlay)bindTracks();});
   ensureButton(document);
-  var obs=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++)for(var j=0;j<ms[i].addedNodes.length;j++){var n=ms[i].addedNodes[j];if(n&&n.nodeType===1)ensureButton(n);}});
+  var obs=new MutationObserver(function(ms){
+    for(var i=0;i<ms.length;i++)for(var j=0;j<ms[i].addedNodes.length;j++){
+      var n=ms[i].addedNodes[j];if(n&&n.nodeType===1)ensureButton(n);
+    }
+  });
   if(document.body)obs.observe(document.body,{childList:true,subtree:true});
-  window.RECAST_LOUNGE={open:open,close:close};
+  window.RECAST_LOUNGE={open:open,close:close,refresh:function(){ensureButton(document);}};
 })();
