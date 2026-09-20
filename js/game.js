@@ -3584,7 +3584,7 @@
     var x = run.buddyX - cam.x, y = run.buddyY - cam.y;
     var flip = !!run.buddyFlip;
     var th = 14;
-    if (state.buddy.shiny) drawGlow(x, y, th, "#fff0a0", 0.4);
+    // Shiny buddies use their alternate palette; no artificial shiny aura.
     var arch = SPRITES.archetypeForShape(def.shape);
     if (def.bird) drawFlapBird(arch, x, y, { color: def.color, accent: def.accent, shiny: state.buddy.shiny, flip: flip, targetH: th }, run.time * 5);
     else SPRITES.draw(ctx, arch, x, y, { color: def.color, accent: def.accent, shiny: state.buddy.shiny, flip: flip, targetH: th });
@@ -3819,9 +3819,10 @@
   function fishTargetH(f) { return f.isKraken ? 160 : 22 + f.size * 6; }
 
   function fishGlow(f) {
-    if (f.isKraken) return { color: f.shiny ? "#fff2a0" : "#ff5b7f", alpha: 0.55 };
-    if (f.legendary) return { color: f.shiny ? "#fff2a0" : "#ffd24a", alpha: 0.5 };
-    if (f.shiny) return { color: "#fff0a0", alpha: 0.38 };
+    // Recast shinies are palette variants, not a light source. Natural/legendary
+    // glows remain independent of shiny status.
+    if (f.isKraken) return { color: "#ff5b7f", alpha: 0.55 };
+    if (f.legendary) return { color: "#ffd24a", alpha: 0.5 };
     var d = f.def;
     var biolum = d.glow || d.shape === "jelly" || d.shape === "angler" || d.shape === "lantern"
       || (d.area === "trench" && D.RARITY[d.rarity].order >= 2) || d.area === "sanctuary";
@@ -3870,8 +3871,8 @@
       if (x < -120 || x > W + 120 || y < -120 || y > H + 120) continue;
       var th = 18 + c.size * 5;
       var arch = SPRITES.archetypeForShape(c.def.shape);
-      var biolum = c.shiny || c.def.area === "sanctuary";
-      if (biolum) drawGlow(x, y, th * 0.9, c.shiny ? "#fff0a0" : c.def.color, c.shiny ? 0.4 : 0.22);
+      var biolum = c.def.area === "sanctuary";
+      if (biolum) drawGlow(x, y, th * 0.9, c.def.color, 0.22);
       // clams: a hinged shell that opens & closes, with a pearl visible when open
       if (c.def.shape === "clam") { drawClam(x, y, th, c.def.color, c.def.accent, Math.max(0, Math.sin(c.phase)), c.hasPearl, c.shiny); continue; }
       // movement animation: crabs/lobsters/bugs scuttle (little hops); starfish
@@ -3970,10 +3971,10 @@
       var th = 14 + b.def.size * 4;
       var SC = Math.max(2, Math.round(th / 7));
       var flip = run.diver.x < b.x;
-      if (b.shiny) drawGlow(x, y, th * 1.1, "#fff0a0", 0.4);
+      // Recast shiny birds are identified by palette, not glow.
       if (birdUsesSprite(b.def)) drawFlapBird(SPRITES.archetypeForShape(b.def.shape), x, y, { color: b.def.color, accent: b.def.accent, shiny: b.shiny, flip: flip, targetH: th + 8 }, b.phase * 5);
       else drawBirdPixel(ctx, x, y, SC, b.def.color, b.phase, flip);
-      if (b.shiny && Math.sin(run.time * 3 + b.phase) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.95)"; ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2); }
+      // No literal sparkle particle: the alternate palette is the shiny tell.
       ctx.fillStyle = b.shiny ? "#ffe66d" : D.RARITY[b.def.rarity].color;
       ctx.font = "11px 'Segoe UI', sans-serif"; ctx.textAlign = "center";
       ctx.fillText((b.shiny ? "✦" : "") + b.def.name, x, y - th - 4);
@@ -4949,7 +4950,7 @@
     else { g.addColorStop(0, loc.topColor); g.addColorStop(1, mix(loc.topColor, loc.deepColor, 0.7)); }
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
     // soft spotlight
-    drawGlow(W / 2, H / 2 - 10, Math.min(W, H) * 0.5, e.shiny ? "#fff0a0" : mix(e.def.color, "#ffffff", 0.4), 0.18);
+    drawGlow(W / 2, H / 2 - 10, Math.min(W, H) * 0.5, mix(e.def.color, "#ffffff", 0.4), 0.18);
     var cx = W / 2, cy = H / 2 - 6;
     var bob = Math.sin(aqua.time * 1.4) * 8, tilt = Math.sin(aqua.time * 1.4) * 0.06;
     if (e.kind === "bird" && !birdUsesSprite(e.def)) {
@@ -4959,7 +4960,7 @@
       var d = SPRITES.dims(arch);
       // fit the sprite to ~62% height AND ~82% width so long/tall fish both fit
       var scale = Math.max(3, Math.floor(Math.min((H * 0.62) / d.h, (W * 0.82) / d.w)));
-      if (e.shiny) drawGlow(cx, cy + bob, d.h * scale * 0.6, "#fff0a0", 0.4);
+      // Close-up shiny identity comes from the alternate palette itself.
       ctx.save(); ctx.translate(cx, cy + bob); ctx.rotate(tilt);
       SPRITES.draw(ctx, arch, 0, 0, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, scale: scale });
       ctx.restore();
@@ -5064,7 +5065,7 @@
   }
   function drawAquaEntity(e) {
     var x = e.x, y = e.y, th = e.th;
-    if (e.shiny) drawGlow(x, y, th * 0.9, "#fff0a0", 0.4);
+    // Aquarium shinies keep the same lighting as normals; their palette changes.
     if (e.kind === "bird") {
       if (birdUsesSprite(e.def)) drawFlapBird(SPRITES.archetypeForShape(e.def.shape), x, y, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, flip: e.vx < 0, targetH: th }, (e.phase + aqua.time) * 4);
       else drawBirdPixel(ctx, x, y, Math.max(2, Math.round(th / 7)), e.def.color, e.phase, e.vx < 0);
@@ -5074,7 +5075,7 @@
       SPRITES.draw(ctx, SPRITES.archetypeForShape(e.def.shape), 0, 0, { color: e.def.color, accent: e.def.accent, shiny: e.shiny, flip: e.vx < 0, targetH: th });
       ctx.restore();
     }
-    if (e.shiny && Math.sin(aqua.time * 3 + e.phase) > 0.6) { ctx.fillStyle = "rgba(255,255,255,0.9)"; ctx.fillRect((x + th * 0.3) | 0, (y - th * 0.3) | 0, 2, 2); }
+    // No aquarium shiny sparkle particle in Recast.
   }
 
 
