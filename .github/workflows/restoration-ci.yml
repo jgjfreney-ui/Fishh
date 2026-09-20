@@ -28,6 +28,7 @@ jobs:
           node --check js/sprites.js
           node --check js/audio.js
           node --check js/game.js
+          node --check js/remaster-scenes.js
           node --check js/remaster.js
           node --check js/remaster-ui.js
           node --check js/remaster-audio.js
@@ -54,6 +55,7 @@ jobs:
           npm run build:web
           test -f www/index.html
           test -f www/js/game.js
+          test -f www/js/remaster-scenes.js
           test -f www/js/remaster.js
           test -f www/js/remaster-ui.js
           test -f www/js/remaster-audio.js
