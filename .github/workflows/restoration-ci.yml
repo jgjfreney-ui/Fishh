@@ -40,6 +40,7 @@ jobs:
           if [ -f js/recast-audio.js ]; then node --check js/recast-audio.js; fi
           if [ -f js/recast-shiny.js ]; then node --check js/recast-shiny.js; fi
           if [ -f js/recast-lounge.js ]; then node --check js/recast-lounge.js; fi
+          if [ -f scripts/recast-visual-sanity.js ]; then node --check scripts/recast-visual-sanity.js; fi
 
       - name: Validate content and progression
         run: node scripts/restoration-audit.js
@@ -62,6 +63,10 @@ jobs:
       - name: Verify Recast Phase Three features
         if: hashFiles('scripts/recast-phase-three-smoke.js') != ''
         run: node scripts/recast-phase-three-smoke.js
+
+      - name: Verify Recast visual sanity
+        if: hashFiles('scripts/recast-visual-sanity.js') != ''
+        run: node scripts/recast-visual-sanity.js
 
       - name: Verify web package can be assembled
         run: |
