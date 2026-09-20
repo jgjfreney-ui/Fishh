@@ -31,6 +31,9 @@ jobs:
       - name: Validate content and progression
         run: node scripts/restoration-audit.js
 
+      - name: Verify progression reachability
+        run: node scripts/progression-reachability.js
+
       - name: Install dependencies
         run: |
           npm install
