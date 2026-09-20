@@ -1,0 +1,44 @@
+name: Apply Phase Two Feedback Patch
+
+on:
+  push:
+    branches:
+      - remaster/phase-two
+    paths:
+      - "scripts/apply-phase-two-feedback.js"
+      - ".github/workflows/apply-phase-two-feedback.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Phase Two
+        uses: actions/checkout@v4
+        with:
+          ref: remaster/phase-two
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Apply feedback patch
+        run: node scripts/apply-phase-two-feedback.js
+
+      - name: Syntax-check patched engine
+        run: node --check js/game.js
+
+      - name: Commit patch if needed
+        run: |
+          if git diff --quiet -- js/game.js; then
+            echo "No engine patch needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/game.js
+          git commit -m "Use remastered diver and scoop-net renderers"
+          git push origin HEAD:remaster/phase-two
