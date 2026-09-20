@@ -3239,6 +3239,8 @@
     }
   }
   function drawTrap() {
+    // Phase Two trap renderer replaces the legacy circular deployed-net grid.
+    if (window.REMASTER_TRAP_LAYER) return;
     if (!run.trap || !run.trap.active || run.trap.r <= 0) return;
     var x = run.trap.x - cam.x, y = run.trap.y - cam.y, r = run.trap.r;
     if (x < -r - 40 || x > W + r + 40 || y < -r - 40 || y > H + r + 40) return;
