@@ -16,17 +16,19 @@ w.HTMLCanvasElement.prototype.getContext=function(){return this.__ctx||(this.__c
 w.HTMLCanvasElement.prototype.toDataURL=function(){return 'data:image/png;base64,'};
 w.HTMLCanvasElement.prototype.getBoundingClientRect=function(){return{left:0,top:0,width:960,height:540,right:960,bottom:540}};
 function evalFile(rel){w.eval(fs.readFileSync(path.join(__dirname,'..',rel),'utf8')+'\n//# sourceURL='+rel)}
-evalFile('js/data.js');evalFile('js/sprites.js');evalFile('js/audio.js');evalFile('js/remaster-audio.js');evalFile('js/game.js');evalFile('js/remaster-scenes.js');evalFile('js/remaster.js');evalFile('js/remaster-ui.js');evalFile('js/remaster-foreground.js');
+evalFile('js/data.js');evalFile('js/sprites.js');evalFile('js/audio.js');evalFile('js/remaster-audio.js');evalFile('js/game.js');evalFile('js/remaster-scenes.js');evalFile('js/remaster.js');evalFile('js/remaster-ui.js');evalFile('js/remaster-foreground.js');evalFile('js/remaster-trap.js');
 if(!w.DEEPSEA||!w.DEEPSEA._test) throw new Error('game test API missing');
 w.DEEPSEA._test.newGame();w.DEEPSEA._test.devSave();w.DEEPSEA._test.dive('coral');w.DEEPSEA._test.frame(.016);
 if(!w.document.getElementById('remaster-scenery')) throw new Error('remaster scenery canvas missing');
 if(!w.document.getElementById('remaster-fx')) throw new Error('remaster effects canvas missing');
 if(!w.document.getElementById('remaster-foreground')) throw new Error('remaster foreground canvas missing');
-if(!w.REMASTER_DIVER_LAYER||!w.REMASTER_NET_LAYER) throw new Error('foreground handoff flags missing');
+if(!w.document.getElementById('remaster-trap')) throw new Error('remaster deployed-net canvas missing');
+if(!w.REMASTER_DIVER_LAYER||!w.REMASTER_NET_LAYER||!w.REMASTER_TRAP_LAYER) throw new Error('remaster render handoff flags missing');
 if(!w.SPRITES.__remastered) throw new Error('sprite remaster wrapper missing');
 const gameSrc=fs.readFileSync(path.join(__dirname,'..','js','game.js'),'utf8');
 if(!gameSrc.includes('window.REMASTER_DIVER_LAYER) return;')) throw new Error('legacy diver handoff not installed');
-if(!gameSrc.includes('window.REMASTER_NET_LAYER) return;')) throw new Error('legacy net handoff not installed');
+if(!gameSrc.includes('window.REMASTER_NET_LAYER) return;')) throw new Error('legacy scoop-net handoff not installed');
+if(!gameSrc.includes('window.REMASTER_TRAP_LAYER) return;')) throw new Error('legacy deployed-net handoff not installed');
 const sceneSrc=fs.readFileSync(path.join(__dirname,'..','js','remaster-scenes.js'),'utf8');
 if(!/function camera\(/.test(sceneSrc)||!/worldX\(/.test(sceneSrc)||!/floorY\(/.test(sceneSrc)) throw new Error('world-anchored scenery helpers missing');
 const dummy=w.document.createElement('div');dummy.innerHTML='<div class="update-banner">old tools text</div><h1>Ocean of Discovery</h1><p class="sub">Dive deep. Catch everything. Awaken the Kraken.</p>';w.document.body.appendChild(dummy);
