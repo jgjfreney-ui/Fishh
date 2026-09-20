@@ -1,17 +1,17 @@
-/* Deep Sea Diver: Remastered — UI + sprite presentation controller */
+/* Deep Sea Diver: Recast — UI + sprite presentation controller */
 (function(){
   'use strict';
 
   var REMASTER_BANNER=''+
-    '<div class="remaster-kicker">Deep Sea Diver: Remastered</div>'+
+    '<div class="remaster-kicker">Deep Sea Diver: Recast</div>'+
     '<div class="remaster-title">🌊 Welcome back below the surface.</div>'+
-    '<div class="remaster-copy">The original adventure has been restored and remastered: every dive site now carries its own living atmosphere, shinies have more individual colour and sparkle, bosses carry more presence, and the old cozy pixel-world is getting the polish it always deserved. Your progression, secrets and wonderfully questionable fish lore are still here.</div>'+
-    '<div class="remaster-pills"><span class="remaster-pill">28 dive sites</span><span class="remaster-pill">animated biomes</span><span class="remaster-pill">restored progression</span><span class="remaster-pill">species shinies</span><span class="remaster-pill">classic saves supported</span></div>';
+    '<div class="remaster-copy">The original adventure has been restored and recast: every dive site now carries its own living atmosphere, shinies have more individual colour and sparkle, bosses carry more presence, and the old cozy pixel-world is being rebuilt creature by creature. Your progression, secrets and wonderfully questionable fish lore are still here.</div>'+
+    '<div class="remaster-pills"><span class="remaster-pill">28 dive sites</span><span class="remaster-pill">recast creatures</span><span class="remaster-pill">restored progression</span><span class="remaster-pill">species shinies</span><span class="remaster-pill">classic saves supported</span></div>';
 
   function celebrate(root){
     if(!root||!root.querySelectorAll)return;
     root.querySelectorAll('.update-banner').forEach(function(el){if(el.dataset.remastered)return;el.dataset.remastered='1';el.classList.add('remaster-banner');el.innerHTML=REMASTER_BANNER;});
-    root.querySelectorAll('h1').forEach(function(h){if(/Ocean of Discovery/i.test(h.textContent||''))h.innerHTML='🌊 Deep Sea Diver <span class="rm-title-tag">REMASTERED</span> 🐙';});
+    root.querySelectorAll('h1').forEach(function(h){if(/Ocean of Discovery/i.test(h.textContent||''))h.innerHTML='🌊 Deep Sea Diver <span class="rm-title-tag">RECAST</span> 🐙';});
     root.querySelectorAll('.sub').forEach(function(p){if(/Dive deep/i.test(p.textContent||''))p.textContent='Dive deeper. Find stranger things. Bring the whole ocean home.';});
   }
   celebrate(document);
@@ -30,15 +30,10 @@
       var api=window.DEEPSEA,st=api&&api.state?api.state():null;if(!st||!result)return;
       var dir=opts.flip?-1:1,w=result.w,h=result.h;
       c.save();c.imageSmoothingEnabled=false;
-      // tank silhouette
       if(st.upgrades&&st.upgrades.oxygen>0){c.fillStyle='rgba(155,205,220,.82)';c.fillRect(Math.round(x-dir*w*.27),Math.round(y-h*.16),Math.max(2,Math.round(w*.09)),Math.max(6,Math.round(h*.35)));c.fillStyle='rgba(40,85,105,.9)';c.fillRect(Math.round(x-dir*w*.28),Math.round(y-h*.04),Math.max(2,Math.round(w*.11)),2);}
-      // dive-light pixel at the leading shoulder
       if(st.upgrades&&st.upgrades.light>0){c.globalCompositeOperation='screen';c.fillStyle='rgba(220,250,255,.9)';c.fillRect(Math.round(x+dir*w*.30),Math.round(y-h*.22),3,2);}
-      // goggles become a cool cyan visor if owned
       if(st.items&&st.items.goggles){c.fillStyle='rgba(100,235,255,.72)';c.fillRect(Math.round(x+dir*w*.08),Math.round(y-h*.31),Math.max(3,Math.round(w*.16)),2);}
-      // maxed fins exaggerate the trailing kick slightly
       if(st.upgrades&&st.upgrades.fins>=3){c.fillStyle='rgba(70,190,210,.75)';c.fillRect(Math.round(x-dir*w*.18),Math.round(y+h*.30),Math.max(4,Math.round(w*.18)),2);}
-      // one of the most memorable boss rewards deserves to be visible
       if(st.items&&st.items.crabcrown&&!(st.itemsOff&&st.itemsOff.crabcrown)){c.fillStyle='#ffd879';var cy=Math.round(y-h*.48),cx=Math.round(x);c.fillRect(cx-5,cy,10,2);c.fillRect(cx-4,cy-3,2,3);c.fillRect(cx,cy-4,2,4);c.fillRect(cx+3,cy-3,2,3);}
       c.restore();
     }
@@ -68,8 +63,6 @@
   }
   if(!installSpriteRemaster())setTimeout(installSpriteRemaster,0);
 
-  // Remaster location introductions. They are informational only and never touch
-  // area state, unlocks or saves.
   var stage=document.getElementById('stage'),card=null,lastArea=null,hideTimer=null;
   if(stage){card=document.createElement('div');card.id='remaster-area-card';card.setAttribute('aria-live','polite');stage.appendChild(card);}
   function showAreaCard(id){
