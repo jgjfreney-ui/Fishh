@@ -1,0 +1,41 @@
+/* Deep Sea Diver: Remastered — Phase Two presentation skin */
+#remaster-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:normal}
+#game{position:relative;z-index:1}
+#hud,#btn-return,#btn-harpoon,#btn-breath,#btn-cloak,#btn-seed,#btn-vent,#btn-trap,#btn-sling,#btn-storm,#btn-enter-secret,#surface-hint,#aqua-ui,.overlay,#toasts{z-index:5}
+
+:root{--rm-glass:rgba(5,18,30,.54);--rm-edge:rgba(130,220,255,.22);--rm-glow:rgba(72,204,255,.18);--rm-gold:#ffe28a}
+
+.hud-block{background:linear-gradient(180deg,rgba(9,31,48,.46),rgba(4,16,27,.3));border-color:var(--rm-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 5px 18px rgba(0,0,0,.12)}
+#area-name{text-shadow:0 0 12px rgba(63,208,255,.25)}
+.ox-bar{border:1px solid rgba(150,220,255,.12);box-shadow:inset 0 2px 5px rgba(0,0,0,.36)}
+#ox-fill{box-shadow:0 0 14px rgba(63,208,255,.32)}
+
+.overlay>div,.panel,.modal-card,.boat-card,.shop-card{box-shadow:0 16px 55px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.025)}
+button{transition:transform .12s ease,filter .15s ease,box-shadow .15s ease}
+button:active{transform:scale(.965)}
+
+/* Any existing update panel becomes the remaster celebration card. */
+.update-banner,.remaster-banner{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(11,55,78,.76),rgba(48,28,75,.74));border:1px solid rgba(139,224,255,.48);border-radius:16px;padding:16px 16px 15px;margin:10px 0 15px;line-height:1.48;box-shadow:0 10px 30px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.06)}
+.update-banner:before,.remaster-banner:before{content:"";position:absolute;inset:-70% -10%;background:linear-gradient(100deg,transparent 34%,rgba(255,255,255,.07) 48%,transparent 62%);transform:translateX(-45%);animation:rmShimmer 8s ease-in-out infinite;pointer-events:none}
+@keyframes rmShimmer{0%,70%{transform:translateX(-55%)}100%{transform:translateX(55%)}}
+.remaster-kicker{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#99eaff;font-weight:900;margin-bottom:5px}
+.remaster-title{font-size:21px;font-weight:900;letter-spacing:.01em;color:#f5fbff;text-shadow:0 0 18px rgba(110,220,255,.25);margin-bottom:5px}
+.remaster-copy{font-size:13px;color:rgba(235,248,255,.87)}
+.remaster-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.remaster-pill{font-size:10px;font-weight:800;padding:5px 8px;border-radius:999px;background:rgba(108,213,255,.11);border:1px solid rgba(130,220,255,.2);color:#dff7ff}
+
+/* Start/save screens get a cleaner celebratory hierarchy without changing DOM. */
+.overlay h1{letter-spacing:.015em;text-shadow:0 2px 18px rgba(55,200,255,.24)}
+.overlay h2{color:#eaf8ff}
+.overlay .subtitle,.overlay small{color:rgba(222,241,250,.72)}
+
+/* Collection rarity/shiny accents read more clearly on mobile. */
+.shiny,.shiny-name{filter:drop-shadow(0 0 6px rgba(255,234,118,.42))}
+.coll-secret{filter:drop-shadow(0 0 5px rgba(194,130,255,.25))}
+
+@media(max-width:720px){
+  .hud-block{padding:6px 10px;border-radius:10px}
+  .hud-block>div:last-child{font-size:17px}
+  .remaster-title{font-size:18px}
+  .update-banner,.remaster-banner{padding:13px}
+}
