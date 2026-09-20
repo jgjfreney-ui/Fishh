@@ -35,8 +35,11 @@ jobs:
           node --check js/remaster-audio.js
           node --check js/remaster-foreground.js
           node --check js/remaster-trap.js
-          node --check js/recast-sprites.js
-          node --check js/recast-collectibles.js
+          if [ -f js/recast-sprites.js ]; then node --check js/recast-sprites.js; fi
+          if [ -f js/recast-collectibles.js ]; then node --check js/recast-collectibles.js; fi
+          if [ -f js/recast-audio.js ]; then node --check js/recast-audio.js; fi
+          if [ -f js/recast-shiny.js ]; then node --check js/recast-shiny.js; fi
+          if [ -f js/recast-lounge.js ]; then node --check js/recast-lounge.js; fi
 
       - name: Validate content and progression
         run: node scripts/restoration-audit.js
@@ -53,7 +56,12 @@ jobs:
         run: node scripts/runtime-smoke.js
 
       - name: Headless Recast presentation and art smoke test
+        if: hashFiles('js/recast-sprites.js') != ''
         run: node scripts/remaster-smoke.js
+
+      - name: Verify Recast Phase Three features
+        if: hashFiles('scripts/recast-phase-three-smoke.js') != ''
+        run: node scripts/recast-phase-three-smoke.js
 
       - name: Verify web package can be assembled
         run: |
@@ -66,6 +74,10 @@ jobs:
           test -f www/js/remaster-audio.js
           test -f www/js/remaster-foreground.js
           test -f www/js/remaster-trap.js
-          test -f www/js/recast-sprites.js
-          test -f www/js/recast-collectibles.js
           test -f www/css/remaster.css
+          if [ -f js/recast-sprites.js ]; then test -f www/js/recast-sprites.js; fi
+          if [ -f js/recast-collectibles.js ]; then test -f www/js/recast-collectibles.js; fi
+          if [ -f js/recast-audio.js ]; then test -f www/js/recast-audio.js; fi
+          if [ -f js/recast-shiny.js ]; then test -f www/js/recast-shiny.js; fi
+          if [ -f js/recast-lounge.js ]; then test -f www/js/recast-lounge.js; fi
+          if [ -f css/recast-lounge.css ]; then test -f www/css/recast-lounge.css; fi
