@@ -14,6 +14,10 @@ on:
       - "capacitor.config.json"
       - ".github/workflows/android.yml"
 
+concurrency:
+  group: deep-sea-diver-phase-two-android
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
