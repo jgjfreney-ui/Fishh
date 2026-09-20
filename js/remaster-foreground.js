@@ -1,17 +1,25 @@
-/* Deep Sea Diver: Remastered — foreground art pass (diver + scoop net) */
+/* Deep Sea Diver: Recast — foreground art pass (diver + scoop net) */
 (function(){
   'use strict';
   window.REMASTER_DIVER_LAYER=true;
   window.REMASTER_NET_LAYER=true;
+  window.RECAST_DIVER_FOREGROUND_VERSION='2.0';
   var stage=document.getElementById('stage'); if(!stage) return;
   var D=window.GAMEDATA;
   var c=document.createElement('canvas');c.id='remaster-foreground';c.setAttribute('aria-hidden','true');stage.appendChild(c);
   var g=c.getContext('2d'),dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1));
   var SKIN=['#f4c9a3','#e8b088','#d39a6e','#b87a4f','#8d5524','#5a3318'];
   function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-  function hex(h){h=(h||'#1f7d9c').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];return[parseInt(h.slice(0,2),16)||0,parseInt(h.slice(2,4),16)||0,parseInt(h.slice(4,6),16)||0];}
-  function rgb(a){return'rgb('+Math.round(a[0])+','+Math.round(a[1])+','+Math.round(a[2])+')';}
-  function mix(a,b,t){var x=hex(a),y=hex(b);return rgb([x[0]+(y[0]-x[0])*t,x[1]+(y[1]-x[1])*t,x[2]+(y[2]-x[2])*t]);}
+  function colorRGB(v){
+    if(Array.isArray(v)&&v.length>=3)return[+v[0]||0,+v[1]||0,+v[2]||0];
+    var s=String(v==null?'#1f7d9c':v).trim(),m;
+    if((m=s.match(/^#([0-9a-f]{3})$/i))){var h=m[1];return[parseInt(h[0]+h[0],16),parseInt(h[1]+h[1],16),parseInt(h[2]+h[2],16)];}
+    if((m=s.match(/^#([0-9a-f]{6})$/i))){var x=m[1];return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)];}
+    if((m=s.match(/^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i)))return[clamp(+m[1],0,255),clamp(+m[2],0,255),clamp(+m[3],0,255)];
+    return[31,125,156];
+  }
+  function rgb(a){function h(n){return Math.round(clamp(n,0,255)).toString(16).padStart(2,'0');}return'#'+h(a[0])+h(a[1])+h(a[2]);}
+  function mix(a,b,t){var x=colorRGB(a),y=colorRGB(b);return rgb([x[0]+(y[0]-x[0])*t,x[1]+(y[1]-x[1])*t,x[2]+(y[2]-x[2])*t]);}
   function size(){var w=stage.clientWidth||innerWidth,h=stage.clientHeight||innerHeight,rw=Math.floor(w*dpr),rh=Math.floor(h*dpr);if(c.width!==rw||c.height!==rh){c.width=rw;c.height=rh;c.style.width=w+'px';c.style.height=h+'px';g.setTransform(dpr,0,0,dpr,0,0);}}
   function camera(run,state,w,h){var loc=run.loc||D.LOCATIONS[run.area];var skyReveal=(state&&state.items&&state.items.rocfeather&&run.diver.y<120)?-470:(run.diver.y<80?-290:-150);return{x:Math.round(clamp(run.diver.x-w/2,0,Math.max(0,loc.worldWidth-w))),y:Math.round(clamp(run.diver.y-h/2,skyReveal,Math.max(0,loc.maxDepth*D.PXPM+120-h)))};}
   function itemOn(state,id){return !!(state.items&&state.items[id]&&!(state.itemsOff&&state.itemsOff[id]));}
@@ -20,15 +28,20 @@
     var d=run.diver,x=Math.round(d.x-cam.x),y=Math.round(d.y-cam.y),face=d.face<0?-1:1;
     var dv=state.diver||{},up=state.upgrades||{},items=state.items||{};
     var suit=dv.suit||'#1f7d9c';if(suit==='camo'){var loc=run.loc||D.LOCATIONS[run.area];suit=mix(loc.topColor||'#3b9fc0',loc.deepColor||'#05243a',clamp(d.y/Math.max(1,loc.maxDepth*D.PXPM),0,1));}
-    var accent=dv.suitAccent||'#ffd24a',trim=dv.suitTrim||'#bfe9ff',skin=SKIN[dv.skin==null?2:dv.skin]||SKIN[2];
+    var accent=dv.suitAccent||'#ffd24a',trim=dv.suitTrim||'#bfe9ff';
+    var skin=(typeof dv.skin==='string'&&/^(#|rgb)/i.test(dv.skin))?dv.skin:(SKIN[dv.skin==null?2:dv.skin]||SKIN[2]);
     var dark=mix(suit,'#000000',.45),deep=mix(suit,'#000000',.68),light=mix(suit,'#ffffff',.3),glass=mix(suit,'#dff7ff',.78);
-    var SC=4, moving=Math.abs(d.vx)+Math.abs(d.vy)>5,kick=t*.012*(moving?1.15:.35),k1=Math.round(Math.sin(kick)*2),k2=Math.round(Math.sin(kick+Math.PI)*2);
+    var SC=4,moving=Math.abs(d.vx)+Math.abs(d.vy)>5,kick=t*.012*(moving?1.15:.35),k1=Math.round(Math.sin(kick)*2),k2=Math.round(Math.sin(kick+Math.PI)*2);
     var tilt=clamp((d.vy||0)*.0012,-.16,.16);
     g.save();g.translate(x,y);g.rotate(tilt);g.scale(face,1);
     if(items.cuttlecloak&&run.cloakActive>0)g.globalAlpha=.25+.08*Math.sin(t*.01);
     function R(ax,ay,aw,ah,col){g.fillStyle=col;g.fillRect(Math.round(ax*SC),Math.round(ay*SC),Math.round(aw*SC),Math.round(ah*SC));}
-    // bold outline mass first so the remaster fully replaces the old diver silhouette
-    R(-11,-8,17,13,'rgba(3,12,18,.92)');R(4,-10,8,11,'rgba(3,12,18,.92)');R(-16,-3,8,8,'rgba(3,12,18,.92)');
+
+    // Pixel contour only. The previous version used three opaque rectangular
+    // backplates here; on-device those showed up as black boxes around the diver.
+    R(-6,-4,12,1,deep);R(-6,4,12,1,deep);R(-6,-3,1,7,deep);R(5,-3,1,7,deep);
+    R(4,-10,7,1,deep);R(3,-9,9,1,deep);R(2,-7,1,6,deep);R(12,-7,1,6,deep);R(3,0,9,1,deep);
+
     // tank assembly — visibly grows with oxygen upgrades
     var ox=Math.min(3,Math.floor((up.oxygen||0)/2));
     R(-9-ox,-6-ox,3+ox,8+ox*2,'#46535f');R(-9-ox,-6-ox,3+ox,1,'#91a5b4');R(-8,-7-ox,1,1,'#d7e3ea');
