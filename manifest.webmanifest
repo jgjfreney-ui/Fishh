@@ -1,7 +1,7 @@
 {
-  "name": "Ocean of Discovery",
-  "short_name": "Ocean",
-  "description": "A cozy deep-sea fishing & diving game.",
+  "name": "Ocean of Discovery: Remastered",
+  "short_name": "Ocean Remaster",
+  "description": "The remastered cozy deep-sea fishing and diving adventure.",
   "display": "fullscreen",
   "orientation": "portrait",
   "background_color": "#02060c",
