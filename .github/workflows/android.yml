@@ -13,6 +13,7 @@ on:
       - "package.json"
       - "capacitor.config.json"
       - "manifest.webmanifest"
+      - "android-signing/**"
       - ".github/workflows/android.yml"
 
 concurrency:
@@ -71,22 +72,37 @@ jobs:
           node --check js/recast-audio.js
           node --check js/recast-shiny.js
           node --check js/recast-lounge.js
+          node --check scripts/recast-visual-sanity.js
           node scripts/restoration-audit.js
           node scripts/progression-reachability-v2.js
           npm install --no-save jsdom@24
           node scripts/runtime-smoke.js
           node scripts/remaster-smoke.js
           node scripts/recast-phase-three-smoke.js
+          node scripts/recast-visual-sanity.js
 
       - name: Copy web assets into www
         run: npm run build:web
 
-      - name: Verify Recast Phase Three web assets
+      - name: Verify Recast web assets
         run: |
           test -f www/js/recast-audio.js
           test -f www/js/recast-shiny.js
           test -f www/js/recast-lounge.js
           test -f www/css/recast-lounge.css
+          node -e "const c=require('./capacitor.config.json'); if(c.appId!=='com.deepsea.diver') throw new Error('Unexpected Android appId: '+c.appId)"
+
+      - name: Verify committed Recast signing key
+        run: |
+          keytool -list -v \
+            -keystore android-signing/debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android > /tmp/recast-key.txt
+          SIGNING_SHA256=$(awk -F': ' '/SHA256:/{print $2; exit}' /tmp/recast-key.txt | tr -d '\r')
+          test -n "$SIGNING_SHA256"
+          echo "Stable Recast signer SHA256: $SIGNING_SHA256"
+          echo "RECAST_SIGNING_SHA256=$SIGNING_SHA256" >> "$GITHUB_ENV"
 
       - name: Add Android platform
         run: npx --no-install cap add android
@@ -94,17 +110,35 @@ jobs:
       - name: Sync Capacitor
         run: npx --no-install cap sync android
 
+      - name: Force stable debug signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/build.gradle')
+          s = p.read_text()
+          if 'stableRecast' not in s:
+              signing = '''android {\n    signingConfigs {\n        stableRecast {\n            storeFile file("../../android-signing/debug.keystore")\n            storePassword "android"\n            keyAlias "androiddebugkey"\n            keyPassword "android"\n        }\n    }'''
+              if 'android {' not in s:
+                  raise SystemExit('android block not found in generated build.gradle')
+              s = s.replace('android {', signing, 1)
+              if 'buildTypes {' not in s:
+                  raise SystemExit('buildTypes block not found in generated build.gradle')
+              s = s.replace('buildTypes {', 'buildTypes {\n        debug {\n            signingConfig signingConfigs.stableRecast\n        }', 1)
+          p.write_text(s)
+          if 'signingConfig signingConfigs.stableRecast' not in s:
+              raise SystemExit('stable Recast debug signing was not installed')
+          PY
+          grep -n -A8 -B2 "stableRecast" android/app/build.gradle
+
       - name: Set Recast version
         run: |
+          DAY_CODE=$(date -u +%y%m%d)
+          VERSION_CODE=$((DAY_CODE * 1000 + GITHUB_RUN_NUMBER % 1000))
           cd android/app
-          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" build.gradle
-          sed -i "s/versionName \"1.0\"/versionName \"3.1-recast.${{ github.run_number }}\"/" build.gradle
-          grep -E "versionCode|versionName" build.gradle
-
-      - name: Use stable debug signing key
-        run: |
-          mkdir -p ~/.android
-          cp android-signing/debug.keystore ~/.android/debug.keystore
+          sed -i -E "s/versionCode [0-9]+/versionCode $VERSION_CODE/" build.gradle
+          sed -i -E "s/versionName \"[^\"]+\"/versionName \"3.2-recast.${{ github.run_number }}\"/" build.gradle
+          echo "Recast versionCode=$VERSION_CODE"
+          grep -E "versionCode|versionName|applicationId" build.gradle
 
       - name: Build debug APK
         env:
@@ -114,6 +148,13 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Verify APK signer is stable
+        run: |
+          ACTUAL_SHA256=$(keytool -printcert -jarfile android/app/build/outputs/apk/debug/app-debug.apk 2>/dev/null | awk -F': ' '/SHA256:/{print $2; exit}' | tr -d '\r')
+          echo "Built APK signer SHA256: $ACTUAL_SHA256"
+          test -n "$ACTUAL_SHA256"
+          test "$ACTUAL_SHA256" = "$RECAST_SIGNING_SHA256"
 
       - name: Rename APK
         run: cp android/app/build/outputs/apk/debug/app-debug.apk deep-sea-diver-recast.apk
