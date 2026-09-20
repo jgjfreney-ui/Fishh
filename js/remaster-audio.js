@@ -6,6 +6,7 @@
   var AC=window.AudioContext||window.webkitAudioContext;
   if(!AC) return;
   var ctx=null, gain=null, timer=null, current='menu', muted=false;
+  var MUSIC_GAIN=0.045;
 
   var THEMES={
     menu:{root:60,mode:[0,4,7,11],pace:7.5,wave:'sine'},
@@ -44,7 +45,7 @@
     if(ctx) return true;
     try{
       ctx=new AC();
-      gain=ctx.createGain(); gain.gain.value=0.035; gain.connect(ctx.destination);
+      gain=ctx.createGain(); gain.gain.value=MUSIC_GAIN; gain.connect(ctx.destination);
       return true;
     }catch(e){return false;}
   }
@@ -79,5 +80,5 @@
   A.playBoss=function(){if(timer)clearTimeout(timer);current='menu';return playBoss();};
   A.playBlob=function(){if(timer)clearTimeout(timer);current='menu';return playBlob();};
   A.stopAll=function(){if(timer)clearTimeout(timer);timer=null;return stopAll();};
-  A.setMusicMuted=function(m){muted=!!m;if(gain&&ctx)gain.gain.linearRampToValueAtTime(muted?0:.035,ctx.currentTime+.18);return setMusicMuted(m);};
+  A.setMusicMuted=function(m){muted=!!m;if(gain&&ctx)gain.gain.linearRampToValueAtTime(muted?0:MUSIC_GAIN,ctx.currentTime+.18);return setMusicMuted(m);};
 })();
