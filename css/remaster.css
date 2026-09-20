@@ -1,6 +1,7 @@
 /* Deep Sea Diver: Remastered — Phase Two presentation skin */
 #remaster-scenery{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;mix-blend-mode:screen}
 #remaster-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;mix-blend-mode:normal}
+#remaster-trap{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;image-rendering:pixelated}
 #remaster-foreground{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;image-rendering:pixelated}
 #game{position:relative;z-index:1}
 #hud,#btn-return,#btn-harpoon,#btn-breath,#btn-cloak,#btn-seed,#btn-vent,#btn-trap,#btn-sling,#btn-storm,#btn-enter-secret,#surface-hint,#aqua-ui,.overlay,#toasts{z-index:5}
