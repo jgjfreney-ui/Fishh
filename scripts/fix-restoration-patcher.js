@@ -13,13 +13,23 @@ const oldBlock = `exact(
 
 const newBlock = `regex(
 /        html \\+= '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of everything<\\/b> caught\\. You(?:\\\\)?'re at ' \\+ Object\\.keys\\(state\\.discovered\\)\\.length \\+ '\\.\\.\\. keep going!<\\/div>';\\n/,
-\`        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of the pre-Sanctuary collection</b>. You\\'re at ' + completion.done + '/' + completion.total + '... keep going!</div>';\n\`,
+\`        html += '<div class="kraken-alert">🫠 The real Kraken needs <b>100% of the pre-Sanctuary collection</b>. Progress: ' + completion.done + '/' + completion.total + '... keep going!</div>';\n\`,
   'boat Kraken progress text'
 );`;
 
 if (!src.includes(oldBlock)) {
-  if (src.includes("'boat Kraken progress text'")) throw new Error('Boat progress patch exists but its expected block changed');
-  console.log('Boat progress patch already transformed.');
+  if (src.includes("'boat Kraken progress text'")) {
+    // A previous hardening pass may already have transformed the block. Ensure
+    // its generated message cannot break the single-quoted game.js string.
+    src = src.replace(
+      "You\\\\'re at ' + completion.done + '/' + completion.total + '... keep going!</div>';\\n`",
+      "Progress: ' + completion.done + '/' + completion.total + '... keep going!</div>';\\n`"
+    );
+    fs.writeFileSync(file, src);
+    console.log('Boat progress patch already transformed; normalised generated text.');
+    process.exit(0);
+  }
+  console.log('Boat progress patch not present; nothing to harden.');
   process.exit(0);
 }
 src = src.replace(oldBlock, newBlock);
