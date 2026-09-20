@@ -3603,6 +3603,8 @@
     ctx.restore();
     ctx.strokeStyle = "rgba(160,230,255,0.12)";
     ctx.beginPath(); ctx.arc(x, y, mr, 0, 7); ctx.stroke();
+    // Phase Two foreground renderer owns the diver art; keep the engine aura/hitbox logic intact.
+    if (window.REMASTER_DIVER_LAYER) return;
     var moving = Math.abs(run.diver.vx) + Math.abs(run.diver.vy) > 5;
     var kick = run.time * (moving ? 11 : 3.5);
     // Camo Suit: tint the diver to the surrounding water and render faint so you
@@ -3901,6 +3903,8 @@
       size: 12 + netR * 0.16, def: c.def, shiny: c.shiny });
   }
   function drawNetFx() {
+    // Phase Two foreground renderer replaces the legacy circular scoop-net art.
+    if (window.REMASTER_NET_LAYER) return;
     for (var i = 0; i < run.netFx.length; i++) {
       var fx = run.netFx[i];
       var p = 1 - fx.life / fx.max;                 // 0 -> 1
