@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - remaster/restoration-pass
+      - remaster/phase-2
     paths:
       - "index.html"
       - "css/**"
@@ -12,6 +12,7 @@ on:
       - "scripts/**"
       - "package.json"
       - "capacitor.config.json"
+      - "manifest.webmanifest"
       - ".github/workflows/android.yml"
 
 permissions:
@@ -21,10 +22,10 @@ jobs:
   build-apk:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout restoration branch
+      - name: Checkout remaster branch
         uses: actions/checkout@v4
         with:
-          ref: remaster/restoration-pass
+          ref: remaster/phase-2
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -58,11 +59,11 @@ jobs:
       - name: Sync Capacitor
         run: npx --no-install cap sync android
 
-      - name: Set restoration version
+      - name: Set remaster version
         run: |
           cd android/app
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" build.gradle
-          sed -i "s/versionName \"1.0\"/versionName \"1.0-restoration.${{ github.run_number }}\"/" build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"2.0-remaster.${{ github.run_number }}\"/" build.gradle
           grep -E "versionCode|versionName" build.gradle
 
       - name: Use stable debug signing key
@@ -80,11 +81,11 @@ jobs:
           ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk deep-sea-diver-restoration.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk ocean-of-discovery-remastered.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deep-sea-diver-restoration-apk
-          path: deep-sea-diver-restoration.apk
+          name: ocean-of-discovery-remastered-apk
+          path: ocean-of-discovery-remastered.apk
           if-no-files-found: error
