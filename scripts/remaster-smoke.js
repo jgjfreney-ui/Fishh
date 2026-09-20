@@ -23,9 +23,11 @@ if(!w.document.getElementById('remaster-scenery')) throw new Error('remaster sce
 if(!w.document.getElementById('remaster-fx')) throw new Error('remaster effects canvas missing');
 if(!w.SPRITES.__remastered) throw new Error('sprite remaster wrapper missing');
 const dummy=w.document.createElement('div');dummy.innerHTML='<div class="update-banner">old tools text</div><h1>Ocean of Discovery</h1><p class="sub">Dive deep. Catch everything. Awaken the Kraken.</p>';w.document.body.appendChild(dummy);
-return Promise.resolve().then(()=>new Promise(r=>setTimeout(r,0))).then(()=>{
+Promise.resolve().then(()=>new Promise(r=>setTimeout(r,0))).then(()=>{
  const banner=dummy.querySelector('.update-banner');
  if(!banner||!/Remastered/i.test(banner.textContent)) throw new Error('remaster celebration banner not applied');
  if(!/Deep Sea Diver/i.test(dummy.querySelector('h1').textContent)) throw new Error('remaster title not applied');
  console.log('Phase Two remaster smoke passed.');
-});
+ dom.window.close();
+ process.exit(0);
+}).catch(err=>{console.error(err);dom.window.close();process.exit(1);});
