@@ -68,14 +68,25 @@ jobs:
           node --check js/remaster-trap.js
           node --check js/recast-sprites.js
           node --check js/recast-collectibles.js
+          node --check js/recast-audio.js
+          node --check js/recast-shiny.js
+          node --check js/recast-lounge.js
           node scripts/restoration-audit.js
           node scripts/progression-reachability-v2.js
           npm install --no-save jsdom@24
           node scripts/runtime-smoke.js
           node scripts/remaster-smoke.js
+          node scripts/recast-phase-three-smoke.js
 
       - name: Copy web assets into www
         run: npm run build:web
+
+      - name: Verify Recast Phase Three web assets
+        run: |
+          test -f www/js/recast-audio.js
+          test -f www/js/recast-shiny.js
+          test -f www/js/recast-lounge.js
+          test -f www/css/recast-lounge.css
 
       - name: Add Android platform
         run: npx --no-install cap add android
@@ -87,7 +98,7 @@ jobs:
         run: |
           cd android/app
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" build.gradle
-          sed -i "s/versionName \"1.0\"/versionName \"3.0-recast.${{ github.run_number }}\"/" build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"3.1-recast.${{ github.run_number }}\"/" build.gradle
           grep -E "versionCode|versionName" build.gradle
 
       - name: Use stable debug signing key
