@@ -19,6 +19,13 @@ if(!s.includes('window.REMASTER_NET_LAYER) return;')){
   changed=true;
 }
 
+const trapNeedle='  function drawTrap() {\n    if (!run.trap || !run.trap.active || run.trap.r <= 0) return;';
+if(!s.includes('window.REMASTER_TRAP_LAYER) return;')){
+  if(!s.includes(trapNeedle)) throw new Error('Could not find deployed-net remaster insertion point');
+  s=s.replace(trapNeedle,'  function drawTrap() {\n    // Phase Two trap renderer replaces the legacy circular deployed-net grid.\n    if (window.REMASTER_TRAP_LAYER) return;\n    if (!run.trap || !run.trap.active || run.trap.r <= 0) return;');
+  changed=true;
+}
+
 if(changed){
   fs.writeFileSync(path,s);
   console.log('Applied Phase Two on-device feedback patch.');
