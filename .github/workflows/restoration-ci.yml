@@ -31,9 +31,16 @@ jobs:
       - name: Validate content and progression
         run: node scripts/restoration-audit.js
 
-      - name: Verify web package can be assembled
+      - name: Install dependencies
         run: |
           npm install
+          npm install --no-save jsdom@24
+
+      - name: Headless gameplay and aquarium smoke test
+        run: node scripts/runtime-smoke.js
+
+      - name: Verify web package can be assembled
+        run: |
           npm run build:web
           test -f www/index.html
           test -f www/js/game.js
