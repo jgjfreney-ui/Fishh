@@ -39,12 +39,13 @@
   function mark(id){if(!id||heard[id])return;heard[id]=true;persist();try{window.dispatchEvent(new CustomEvent('recasttrackheard',{detail:{id:id}}));}catch(e){}}
 
   var AC=window.AudioContext||window.webkitAudioContext,ctx=null,master=null,timer=null,step=0,currentCustom=null,customMuted=false;
+  var CUSTOM_MUSIC_GAIN=.14;
   function mtof(m){return 440*Math.pow(2,(m-69)/12);}
   function ensure(){
     if(ctx||!AC)return !!ctx;
-    try{ctx=new AC();master=ctx.createGain();master.gain.value=.11;master.connect(ctx.destination);syncMute();return true;}catch(e){return false;}
+    try{ctx=new AC();master=ctx.createGain();master.gain.value=CUSTOM_MUSIC_GAIN;master.connect(ctx.destination);syncMute();return true;}catch(e){return false;}
   }
-  function syncMute(){if(!master||!ctx)return;var off=customMuted||(A.isMusicMuted&&A.isMusicMuted())||(A.isMuted&&A.isMuted());master.gain.setTargetAtTime(off?0:.11,ctx.currentTime,.04);}
+  function syncMute(){if(!master||!ctx)return;var off=customMuted||(A.isMusicMuted&&A.isMusicMuted())||(A.isMuted&&A.isMuted());master.gain.setTargetAtTime(off?0:CUSTOM_MUSIC_GAIN,ctx.currentTime,.04);}
   function stopCustom(){if(timer){clearInterval(timer);timer=null;}currentCustom=null;step=0;}
   function voice(midi,dur,type,vol,cutoff,when){
     if(!ensure()||!master)return;var t=when==null?ctx.currentTime:when,o=ctx.createOscillator(),g=ctx.createGain(),lp=ctx.createBiquadFilter();
