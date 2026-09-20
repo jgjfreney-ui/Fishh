@@ -72,7 +72,9 @@ jobs:
           node --check js/recast-audio.js
           node --check js/recast-shiny.js
           node --check js/recast-lounge.js
+          node --check js/recast-gameplay.js
           node --check scripts/recast-visual-sanity.js
+          node --check scripts/recast-gameplay-smoke.js
           node scripts/restoration-audit.js
           node scripts/progression-reachability-v2.js
           npm install --no-save jsdom@24
@@ -80,6 +82,7 @@ jobs:
           node scripts/remaster-smoke.js
           node scripts/recast-phase-three-smoke.js
           node scripts/recast-visual-sanity.js
+          node scripts/recast-gameplay-smoke.js
 
       - name: Copy web assets into www
         run: npm run build:web
@@ -89,7 +92,9 @@ jobs:
           test -f www/js/recast-audio.js
           test -f www/js/recast-shiny.js
           test -f www/js/recast-lounge.js
+          test -f www/js/recast-gameplay.js
           test -f www/css/recast-lounge.css
+          grep -q "musicMuted ? 0 : 1.28" www/js/audio.js
           node -e "const c=require('./capacitor.config.json'); if(c.appId!=='com.deepsea.diver') throw new Error('Unexpected Android appId: '+c.appId)"
 
       - name: Verify committed Recast signing key
