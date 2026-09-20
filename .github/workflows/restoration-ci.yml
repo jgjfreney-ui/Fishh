@@ -1,9 +1,10 @@
-name: Restoration Audit
+name: Restoration + Remaster Audit
 
 on:
   push:
     branches:
       - remaster/restoration-pass
+      - remaster/phase-two
   workflow_dispatch:
 
 permissions:
@@ -27,6 +28,9 @@ jobs:
           node --check js/sprites.js
           node --check js/audio.js
           node --check js/game.js
+          node --check js/remaster.js
+          node --check js/remaster-ui.js
+          node --check js/remaster-audio.js
 
       - name: Validate content and progression
         run: node scripts/restoration-audit.js
@@ -42,8 +46,15 @@ jobs:
       - name: Headless gameplay and aquarium smoke test
         run: node scripts/runtime-smoke.js
 
+      - name: Headless remaster presentation smoke test
+        run: node scripts/remaster-smoke.js
+
       - name: Verify web package can be assembled
         run: |
           npm run build:web
           test -f www/index.html
           test -f www/js/game.js
+          test -f www/js/remaster.js
+          test -f www/js/remaster-ui.js
+          test -f www/js/remaster-audio.js
+          test -f www/css/remaster.css
