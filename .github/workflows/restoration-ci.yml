@@ -1,0 +1,39 @@
+name: Restoration Audit
+
+on:
+  push:
+    branches:
+      - remaster/restoration-pass
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Syntax-check game JavaScript
+        run: |
+          node --check js/data.js
+          node --check js/sprites.js
+          node --check js/audio.js
+          node --check js/game.js
+
+      - name: Validate content and progression
+        run: node scripts/restoration-audit.js
+
+      - name: Verify web package can be assembled
+        run: |
+          npm install
+          npm run build:web
+          test -f www/index.html
+          test -f www/js/game.js
