@@ -32,6 +32,7 @@ jobs:
           node --check js/remaster.js
           node --check js/remaster-ui.js
           node --check js/remaster-audio.js
+          node --check js/remaster-foreground.js
 
       - name: Validate content and progression
         run: node scripts/restoration-audit.js
@@ -59,4 +60,5 @@ jobs:
           test -f www/js/remaster.js
           test -f www/js/remaster-ui.js
           test -f www/js/remaster-audio.js
+          test -f www/js/remaster-foreground.js
           test -f www/css/remaster.css
