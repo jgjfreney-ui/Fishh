@@ -94,11 +94,19 @@ jobs:
           test -f www/js/recast-lounge.js
           test -f www/js/recast-gameplay.js
           test -f www/css/recast-lounge.css
+          node --check www/js/game.js
+          node --check www/js/remaster.js
+          node --check www/js/remaster-scenes.js
+          node --check www/js/remaster-trap.js
+          node --check www/js/remaster-foreground.js
+          node --check www/js/audio.js
+          node --check www/js/recast-audio.js
           grep -q "RECAST_MOBILE_PERFORMANCE" www/js/game.js
           grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster.js
           grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster-scenes.js
           grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster-trap.js
-          grep -q "RECAST_FOREGROUND_DPR" www/js/remaster-foreground.js
+          grep -q "RECAST_FOREGROUND_DISABLED" www/js/remaster-foreground.js
+          grep -q "RECAST_CORE_DIVER" www/js/remaster-foreground.js
           grep -q "musicMuted ? 0 : 1.65" www/js/audio.js
           grep -q "CUSTOM_MUSIC_GAIN=.42" www/js/recast-audio.js
           grep -q "MUSIC_GAIN=0.055" www/js/remaster-audio.js
@@ -148,7 +156,7 @@ jobs:
           VERSION_CODE=$((DAY_CODE * 1000 + GITHUB_RUN_NUMBER % 1000))
           cd android/app
           sed -i -E "s/versionCode [0-9]+/versionCode $VERSION_CODE/" build.gradle
-          sed -i -E "s/versionName \"[^\"]+\"/versionName \"3.3-recast.${{ github.run_number }}\"/" build.gradle
+          sed -i -E "s/versionName \"[^\"]+\"/versionName \"3.4-recast.${{ github.run_number }}\"/" build.gradle
           echo "Recast versionCode=$VERSION_CODE"
           grep -E "versionCode|versionName|applicationId" build.gradle
 
