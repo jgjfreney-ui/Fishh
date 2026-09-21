@@ -74,7 +74,7 @@ jobs:
         if: hashFiles('scripts/recast-gameplay-smoke.js') != ''
         run: node scripts/recast-gameplay-smoke.js
 
-      - name: Verify web package can be assembled
+      - name: Verify packaged Recast mobile profile
         run: |
           npm run build:web
           test -f www/index.html
@@ -93,4 +93,18 @@ jobs:
           if [ -f js/recast-lounge.js ]; then test -f www/js/recast-lounge.js; fi
           if [ -f js/recast-gameplay.js ]; then test -f www/js/recast-gameplay.js; fi
           if [ -f css/recast-lounge.css ]; then test -f www/css/recast-lounge.css; fi
-          grep -q "musicMuted ? 0 : 1.28" www/js/audio.js
+          node --check www/js/game.js
+          node --check www/js/remaster.js
+          node --check www/js/remaster-scenes.js
+          node --check www/js/remaster-trap.js
+          node --check www/js/remaster-foreground.js
+          node --check www/js/audio.js
+          node --check www/js/recast-audio.js
+          grep -q "RECAST_MOBILE_PERFORMANCE" www/js/game.js
+          grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster.js
+          grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster-scenes.js
+          grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster-trap.js
+          grep -q "RECAST_FOREGROUND_DPR" www/js/remaster-foreground.js
+          grep -q "musicMuted ? 0 : 1.65" www/js/audio.js
+          grep -q "CUSTOM_MUSIC_GAIN=.42" www/js/recast-audio.js
+          grep -q "MUSIC_GAIN=0.055" www/js/remaster-audio.js
