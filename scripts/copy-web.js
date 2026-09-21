@@ -44,12 +44,12 @@ ITEMS.forEach(function (item) {
 
 // -------------------------------------------------------------------------
 // Android friend-build performance profile.
-// Modern phones can expose DPR 3-4. The core game plus several independent
-// full-screen remaster canvases was redrawing far too many physical pixels each
-// frame, producing visible movement hitches. Recast is pixel art, so on a coarse
-// pointer / Android device we intentionally use a 1x game backing buffer and
-// skip presentation-only duplicate full-screen animation layers. The upgraded
-// creature art and foreground diver remain active.
+// Modern phones can expose DPR 3-4. Recast is pixel art, so the Android build
+// intentionally uses a 1x backing buffer. More importantly, Android now keeps
+// the diver, scoop net and deployed net in the proven core renderer instead of
+// running separate full-screen foreground/trap canvases. This removes the last
+// box-shaped foreground artifact and leaves gameplay on one animation canvas.
+// Creature/boss/loot Recast sprite wrappers still render inside that core pass.
 // -------------------------------------------------------------------------
 var bundledGame = path.join(out, "js", "game.js");
 replaceRequired(
@@ -68,11 +68,17 @@ var mobileGuard = '  var recastMobileLite=(window.matchMedia&&window.matchMedia(
 installMobileLiteGuard("js/remaster.js", "  'use strict';\n\n  var stage", "  'use strict';\n" + mobileGuard + "\n  var stage", "mobile atmosphere guard");
 installMobileLiteGuard("js/remaster-scenes.js", "  'use strict';\n  var stage", "  'use strict';\n" + mobileGuard + "  var stage", "mobile scenery guard");
 installMobileLiteGuard("js/remaster-trap.js", "  'use strict';\n  window.REMASTER_TRAP_LAYER=true;", "  'use strict';\n" + mobileGuard + "  window.REMASTER_TRAP_LAYER=true;", "mobile trap-canvas guard");
-replaceRequired(
-  path.join(out, "js", "remaster-foreground.js"),
-  "var g=c.getContext('2d'),dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1));",
-  "var g=c.getContext('2d'),mobileLite=(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches)||/Android/i.test((navigator&&navigator.userAgent)||''),dpr=mobileLite?1:Math.max(1,Math.min(2,window.devicePixelRatio||1)); // RECAST_FOREGROUND_DPR",
-  "mobile foreground DPR"
+
+// The separate foreground canvas caused both a phone-visible rectangular dark
+// contour and extra frame pacing cost. On Android we return before it claims
+// REMASTER_DIVER_LAYER/REMASTER_NET_LAYER, so game.js draws the stable diver
+// and scoop net directly on the main canvas with normal transparency/lighting.
+var foregroundMobileGuard = '  var recastMobileCore=(window.matchMedia&&window.matchMedia("(pointer: coarse)").matches)||/Android/i.test((navigator&&navigator.userAgent)||"");\n  if(recastMobileCore){window.RECAST_CORE_DIVER=true;return;} // RECAST_FOREGROUND_DISABLED: core owns diver/net on mobile\n';
+installMobileLiteGuard(
+  "js/remaster-foreground.js",
+  "  'use strict';\n  window.REMASTER_DIVER_LAYER=true;",
+  "  'use strict';\n" + foregroundMobileGuard + "  window.REMASTER_DIVER_LAYER=true;",
+  "mobile core diver handoff"
 );
 
 // -------------------------------------------------------------------------
@@ -97,5 +103,5 @@ replaceRequired(path.join(out, "js", "recast-audio.js"), "  var CUSTOM_MUSIC_GAI
 replaceRequired(path.join(out, "js", "remaster-audio.js"), "  var MUSIC_GAIN=0.045;", "  var MUSIC_GAIN=0.055; // subtle ambience stays below the main soundtrack", "ambient gain");
 
 console.log("Copied web assets -> www/ (" + ITEMS.join(", ") + ")");
-console.log("Applied Recast Android performance profile: 1x core/foreground, decorative overlay loops disabled.");
+console.log("Applied Recast Android stability profile: 1x core canvas, decorative overlays disabled, core diver/net restored.");
 console.log("Applied Recast music balance: base bus 1.65x, Lounge/boss master 0.42, ambience 0.055; SFX unchanged.");
