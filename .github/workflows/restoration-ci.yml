@@ -104,7 +104,8 @@ jobs:
           grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster.js
           grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster-scenes.js
           grep -q "RECAST_MOBILE_LIGHTWEIGHT" www/js/remaster-trap.js
-          grep -q "RECAST_FOREGROUND_DPR" www/js/remaster-foreground.js
+          grep -q "RECAST_FOREGROUND_DISABLED" www/js/remaster-foreground.js
+          grep -q "RECAST_CORE_DIVER" www/js/remaster-foreground.js
           grep -q "musicMuted ? 0 : 1.65" www/js/audio.js
           grep -q "CUSTOM_MUSIC_GAIN=.42" www/js/recast-audio.js
           grep -q "MUSIC_GAIN=0.055" www/js/remaster-audio.js
